@@ -1,4 +1,8 @@
-﻿  Decoder.cpp
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(26): warning C4101: 'fgmv': unreferenced local variable
-  Decoder.vcxproj -> C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\Debug\Decoder.exe
-  Decoder.vcxproj -> C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\Debug\Decoder.pdb (Full PDB)
+﻿  stdafx.cpp
+  Decoder.cpp
+c:\users\juanfuentes\source\repos\ece1718h\decoder\decoder.cpp(7): fatal error C1083: Cannot open include file: 'residual.h': No such file or directory
+  residual.cpp
+c:\users\juanfuentes\source\repos\ece1718h\source\residual.cpp(1): fatal error C1083: Cannot open include file: 'residual.h': No such file or directory
+  reconstructed.cpp
+c:\users\juanfuentes\source\repos\ece1718h\source\reconstructed.cpp(1): fatal error C1083: Cannot open include file: 'reconstructed.h': No such file or directory
+  Generating Code...
