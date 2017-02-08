@@ -216,7 +216,7 @@ int main(int argCnt, char **args)
 
 }
 
-struct GMV MotionEstimate(	unsigned int row, // Pixel Row in Current Frame
+/*struct GMV MotionEstimate(	unsigned int row, // Pixel Row in Current Frame
 							unsigned int col, // Pixel Col in Current Frame
 							unsigned int width, 
 							unsigned int height, 
@@ -225,7 +225,7 @@ struct GMV MotionEstimate(	unsigned int row, // Pixel Row in Current Frame
 							unsigned char* CUR_FRAME, 
 							unsigned char* REC_FRAME) {
 
-	struct GMV BEST_GMV;
+	struct GMV BEST_GMV;*/
 
 	/*for (int x_range = -range; x_range <= range; range++) {
 		for (int y_range = -range; y_range <= range; range++) {
@@ -249,9 +249,9 @@ struct GMV MotionEstimate(	unsigned int row, // Pixel Row in Current Frame
 	}
 	Return GVM
 	}*/
-	return BEST_GMV;
+	//return BEST_GMV;
 
-}
+//}
 
 void FILL_MOTION_BLOCK(struct GMV BEST_GMV, unsigned char** MOTION_FRAME) {
 
