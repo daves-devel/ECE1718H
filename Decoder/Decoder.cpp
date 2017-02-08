@@ -1,4 +1,6 @@
-// Decoder.cpp : Defines the entry point for the console application.
+// Decoder.cpp : Parses residual file and MV file (that were generated in the encoding process) and combines the values to generate a Y-only-decoded file.
+//				 Decoded files will be compared against the Y - only - reconstructed files
+
 #define _CRT_SECURE_NO_DEPRECATE
 #include <stdio.h>      /* printf, scanf, NULL */
 #include <stdlib.h>     /* malloc, free, rand */
@@ -10,10 +12,40 @@
 #include <reconstructed.h>
 
 void parse_residual_file() {
+
 }
 
 void parse_gmv_file() {
+
 }
+
+void create_y_file() {
+}
+
+void parse_reconstructed() {
+
+}
+
+void compare_decode_recon() {
+
+}
+
+//#include <iostream>
+//#include <algorithm>
+//#include <boost/iostreams/device/mapped_file.hpp>
+//	namespace io = boost::iostreams;
+//	int main()
+//	{
+//		io::mapped_file_source f1("test.1");
+//		io::mapped_file_source f2("test.2");
+//
+//		if (f1.size() == f2.size()
+//			&& std::equal(f1.data(), f1.data() + f1.size(), f2.data())
+//			)
+//			std::cout << "The files are equal\n";
+//		else
+//			std::cout << "The files are not equal\n";
+//	}
 
 int main()
 {
