@@ -32,6 +32,8 @@ int main(int argCnt, char **args)
 	char mvfile_name[500];
 	char resfile_name[500];
 	char recfile_name[500];
+	char gmvx_name[500];
+	char gmvy_name[500];
 
 	unsigned int width		= 0;
 	unsigned int height		= 0;
@@ -109,6 +111,24 @@ int main(int argCnt, char **args)
 			args++;
 			tmpArgCnt += 2;
 		}
+		else if (!strcmp((*args) + 1, "round")) {
+			args++;
+			round = atoi(*args);
+			args++;
+			tmpArgCnt += 2;
+		}
+		else if (!strcmp((*args) + 1, "gmvx")) {
+			args++;
+			sscanf(*args, "%s", gmvx_name);
+			args++;
+			tmpArgCnt += 2;
+		}
+		else if (!strcmp((*args) + 1, "gmvy")) {
+			args++;
+			sscanf(*args, "%s", gmvy_name);
+			args++;
+			tmpArgCnt += 2;
+		}
 
 		else {
 			printf("Huh? I don't know %s (option #%d) \n", *args, tmpArgCnt);
@@ -117,9 +137,11 @@ int main(int argCnt, char **args)
 	}
 
 	FILE* curfile = fopen(curfile_name, "rb");
-	FILE* mvfile = fopen(mvfile_name, "wb");
+	FILE* mvfile = fopen(mvfile_name, "w");
 	FILE* resfile = fopen(resfile_name, "wb");
 	FILE* recfile = fopen(recfile_name, "w+b");
+	FILE* gmvXfile = fopen(gmvx_name, "wb");
+	FILE* gmvYfile = fopen(gmvy_name, "wb");
 
 	if (curfile == NULL) {
 		printf("Cannot open input file <%s>\n", curfile_name);
@@ -161,7 +183,7 @@ int main(int argCnt, char **args)
 
 	// Encode Each Frame
 	for (unsigned int frame = 0; frame < frames; frame++) {
-
+		fprintf(mvfile, "Frame %d\n", frame);
 		if (frame == 0) {
 			for (unsigned int i = 0; i < FRAME_SIZE; i++)
 				REC_FRAME[i] = 128; // Prefill with GREY
@@ -187,8 +209,9 @@ int main(int argCnt, char **args)
 				int GMV_X = GMV_VECTOR[((row*width/block) / block) + (col / block)].X;
 				int GMV_Y = GMV_VECTOR[((row*width/block) / block) + (col / block)].Y;
 
-				int test;
-
+				fwrite(&GMV_X, sizeof(int), 1, gmvXfile);
+				fwrite(&GMV_Y, sizeof(int), 1, gmvYfile);
+				fprintf(mvfile, "Block_size %d Block_X %d Block_Y %d GVM_X %d GMV_Y %d\n", block, col / block, row / block, GMV_X, GMV_Y);
 				// Fill the Motion Frame with the best matching block
 				for (unsigned int i = 0; i < block; i++) {
 					for (unsigned int j = 0; j < block; j++) {
@@ -217,7 +240,7 @@ int main(int argCnt, char **args)
 		recfile = fopen(recfile_name, "a+b");
 		fwrite(REC_FRAME, sizeof(unsigned char), FRAME_SIZE, recfile);
 		// Dump Reconstructed 
-
+		fprintf(mvfile, "End of frame %d\n", frame);
 	}
 
 	delete CUR_FRAME;
