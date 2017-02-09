@@ -15,9 +15,9 @@ int main(int argCnt, char **args)
 {
 
 	char decodedfile_name[500];
-	char mvfile_name[500];
+	char mvxfile_name[500];
+	char mvyfile_name[500];
 	char resfile_name[500];
-	char recfile_name[500];
 
 	unsigned int width = 0;
 	unsigned int height = 0;
@@ -50,21 +50,21 @@ int main(int argCnt, char **args)
 			args++;
 			tmpArgCnt += 2;
 		}
-		else if (!strcmp((*args) + 1, "mvfile")) {
+		else if (!strcmp((*args) + 1, "mvxfile")) {
 			args++;
-			sscanf(*args, "%s", mvfile_name);
+			sscanf(*args, "%s", mvxfile_name);
+			args++;
+			tmpArgCnt += 2;
+		}
+		else if (!strcmp((*args) + 1, "mvyfile")) {
+			args++;
+			sscanf(*args, "%s", mvyfile_name);
 			args++;
 			tmpArgCnt += 2;
 		}
 		else if (!strcmp((*args) + 1, "resfile")) {
 			args++;
 			sscanf(*args, "%s", resfile_name);
-			args++;
-			tmpArgCnt += 2;
-		}
-		else if (!strcmp((*args) + 1, "recfile")) {
-			args++;
-			sscanf(*args, "%s", recfile_name);
 			args++;
 			tmpArgCnt += 2;
 		}
@@ -94,95 +94,76 @@ int main(int argCnt, char **args)
 	}
 
 	FILE* decodedfile = fopen(decodedfile_name, "wb");
-	FILE* mvfile = fopen(mvfile_name, "rb");
+	FILE* mvxfile = fopen(mvxfile_name, "rb");
+	FILE* mvyfile = fopen(mvyfile_name, "rb");
 	FILE* resfile = fopen(resfile_name, "rb");
 
 	if (decodedfile == NULL) {
 		printf("Cannot open input file <%s>\n", decodedfile_name);
 		exit(-1);
 	}
-	if (mvfile == NULL) {
-		printf("Cannot open output file <%s>\n", mvfile_name);
+	if (mvxfile == NULL) {
+		printf("Cannot open output file <%s>\n", mvxfile_name);
+		exit(-1);
+	}
+	if (mvyfile == NULL) {
+		printf("Cannot open output file <%s>\n", mvxfile_name);
 		exit(-1);
 	}
 	if (resfile == NULL) {
 		printf("Cannot open output file <%s>\n", resfile_name);
 		exit(-1);
 	}
-	if (recfile == NULL) {
-		printf("Cannot open output file <%s>\n", recfile_name);
-		exit(-1);
-	}
-	if (block == 0) {
-		printf("Invalid Block Dimension <%d>", block);
-	}
 
 	unsigned int  FRAME_SIZE = width*height;
-	unsigned char* CUR_FRAME = new unsigned char[width * height];
-	unsigned char* INTERMEDIATE_FRAME = new unsigned char[width * height];
-	unsigned char* REC_FRAME_OUT = new unsigned char[width * height];
-	unsigned char* RES_FRAME = new unsigned char[width * height];
-
-
-	// This 2D Buffer Will containe the best blocks for 
-	// estimation in their corresponding block locations
-	unsigned char** MOTION_FRAME = new unsigned char*[height];
-	for (unsigned int row = 0; row < height; row++) {
-		MOTION_FRAME[row] = new unsigned char[width];
-	}
+	unsigned int index = 0;
+	int MVX = 0;
+	int MVY = 0;
+	unsigned char* INTER_FRAME = new unsigned char[width * height];
+	unsigned char*  DEC_FRAME = new unsigned char[width * height];
+	signed char* RES_FRAME = new signed char[width * height];
 
 	// Decode Each Frame
 	for (unsigned int frame = 0; frame < frames; frame++) {
 
 		if (frame == 0) {
 			for (unsigned int i = 0; i < FRAME_SIZE; i++)
-				INTERMEDIATE_FRAME[i] = 128; // Prefill with GREY
+				INTER_FRAME[i] = 128; // Prefill with GREY
 		}
 		else {
-			// Create a intermediate frame from previous 
-			fseek(recfile, (frame - 1)*FRAME_SIZE, SEEK_SET);
-			fread(REC_FRAME, sizeof(unsigned char), FRAME_SIZE, recfile);
-		}
-
-		// Go to the beginning of the current frame and copy it to buffer
-		fseek(curfile, frame*FRAME_SIZE, SEEK_SET);
-		fread(CUR_FRAME, sizeof(unsigned char), FRAME_SIZE, curfile);
-		for (unsigned int row = 0; row < height; row += block) {
-			for (unsigned int col = 0; col < width; col += block) {
-
-
+			// Create a intermediate frame from the previous decoded frame and the motion vectors for the frame
+			for (unsigned int i = 0; i < height; i++) {
+				for (unsigned int j = 0; j < width; j++) {
+					fread(&MVX, sizeof(int), 1, mvxfile);
+					fread(&MVY, sizeof(int), 1, mvyfile);
+					index = MVX + MVY;
+					INTER_FRAME[i + j] = DEC_FRAME[index];
+				}
 			}
+		}
+        
+		//Get residual frame
+		fread(RES_FRAME, sizeof(unsigned char), FRAME_SIZE, resfile);
 
+		//Decoded frame = intermediate + residual 
+		for (unsigned int i = 0; i < height; i ++) {
+			for (unsigned int j = 0; j < width; j ++) {
+				DEC_FRAME[i + j] = INTER_FRAME[i+j] + RES_FRAME[i+j];
+			}
 		}
 
-		// MV FILE GENERATION
-		// ===================
-		// Dump GMV 1D array to mvfile					-> Keep 1D array buffer alive in mem still
-
-		// RESIDUAL FILE GENERATION
-		// =========================
-		// Use motion frame to create residual frame	-> Keep Motion Frame buffer alive in mem still 
-		residual(RES_FRAME, CUR_FRAME, block, width, height, 2);//TODO substract motion estimation value and add N
-																// Dump residual frame to file resfile			-> Keep Resisdual Frame buffer alive in mem still
-		fwrite(RES_FRAME, sizeof(unsigned char), FRAME_SIZE, resfile);
-		// RECONSTRUCTED FILE GENERATION
-		// ==============================
-		// Use motion frame								-> Decoder will do this too so it should be valid
-		// and the residual frame and the GMVs			-> all this stuff should still be alive in mem.
-		recon(RES_FRAME, REC_FRAME, block, width, height); //TODO add motion estimation value
-		fclose(recfile);
-		recfile = fopen(recfile_name, "a+b");
-		fwrite(REC_FRAME, sizeof(unsigned char), FRAME_SIZE, recfile);
-		// Dump Reconstructed 
+		// Dump decoded frame
+		fwrite(DEC_FRAME, sizeof(unsigned char), FRAME_SIZE, decodedfile);
 
 	}
 
-	delete CUR_FRAME;
-	delete REC_FRAME;
+	delete INTER_FRAME;
+	delete DEC_FRAME;
+	delete RES_FRAME;
 	fclose(decodedfile);
-	fclose(mvfile);
+	fclose(mvxfile);
+	fclose(mvyfile);
 	fclose(resfile);
-	fclose(recfile);
 
 	return 0;
 
