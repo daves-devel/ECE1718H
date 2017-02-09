@@ -16,13 +16,14 @@
 
 
 struct GMV {
-	unsigned char x;
-	unsigned char y;
+	int X;
+	int Y;
+	unsigned int SAD;
+	unsigned int NORM;
 };
 
-struct GMV MotionEstimate(unsigned int row,	unsigned int col, unsigned int width, unsigned int height, unsigned int block, unsigned int range, unsigned char* CUR_FRAME, unsigned char* REC_FRAME);
-void FILL_MOTION_BLOCK(struct GMV BEST_GMV, unsigned char** MOTION_FRAME);
-void GMV_COMPARE(unsigned int X, unsigned int Y, unsigned int SADD);
+struct GMV MotionEstimate(unsigned int row, unsigned int col, unsigned int width, unsigned int height, 
+							unsigned int block, int range, unsigned char* CUR_FRAME, unsigned char* REC_FRAME);
 
 int main(int argCnt, char **args)
 {
@@ -35,10 +36,11 @@ int main(int argCnt, char **args)
 	unsigned int width		= 0;
 	unsigned int height		= 0;
 	unsigned int frames		= 0;
-	unsigned int range		= 0;
+	int range		= 0;
 	unsigned int block		= 0;
 	unsigned int padRight	= 0;
 	unsigned int padBottom	= 0;
+	unsigned int round		= 0;
 
 	args++;
 	int tmpArgCnt = 1;
@@ -101,6 +103,12 @@ int main(int argCnt, char **args)
 			args++;
 			tmpArgCnt += 2;
 		}
+		else if (!strcmp((*args) + 1, "round")) {
+			args++;
+			round = atoi(*args);
+			args++;
+			tmpArgCnt += 2;
+		}
 
 		else {
 			printf("Huh? I don't know %s (option #%d) \n", *args, tmpArgCnt);
@@ -137,7 +145,7 @@ int main(int argCnt, char **args)
 	unsigned char* CUR_FRAME = new unsigned char[width * height];
 	unsigned char* REC_FRAME = new unsigned char[width * height];
 	unsigned char* REC_FRAME_OUT = new unsigned char[width * height];
-	unsigned char* RES_FRAME = new unsigned char[width * height];
+	signed char* RES_FRAME = new signed char[width * height];
 
 	// This 2D Buffer Will containe the best blocks for 
 	// estimation in their corresponding block locations
@@ -148,7 +156,7 @@ int main(int argCnt, char **args)
 	
 	// This 1D Buffer Will Contain the GMV for each block
 	// in raster row order
-	struct GMV* GMV_VECTOR = new struct GMV[width/block*height/block];
+	struct GMV* GMV_VECTOR = new struct GMV[(width/block)*(height/block)];
 
 
 	// Encode Each Frame
@@ -167,20 +175,27 @@ int main(int argCnt, char **args)
 		// Go to the beginning of the current frame and copy it to buffer
 		fseek(curfile, frame*FRAME_SIZE, SEEK_SET);
 		fread(CUR_FRAME, sizeof(unsigned char), FRAME_SIZE, curfile);
-		for (unsigned int row = 0; row < height; row+=block) {
-			for (unsigned int col = 0; col < width; col+=block){
+		for (unsigned int row = 0; row < height; row += block) {
+			for (unsigned int col = 0; col < width; col += block) {
 
 				// IDEALLY THREAD EVERYTHING IN THIS FOR LOOP
-				
+
 				// Motion estimate for block x = row/block, y = col/block					
 				// Store the result GMV in its spot in 1D array 
-				//GMV_VECTOR[row*width/block + col/block] = MotionEstimate(row,col, width, height, block, range, CUR_FRAME, REC_FRAME);
+				GMV_VECTOR[((row*width/block) / block) + (col / block)] = MotionEstimate(row, col, width, height, block, range, CUR_FRAME, REC_FRAME);
+
+				int GMV_X = GMV_VECTOR[((row*width/block) / block) + (col / block)].X;
+				int GMV_Y = GMV_VECTOR[((row*width/block) / block) + (col / block)].Y;
+
+				int test;
 
 				// Fill the Motion Frame with the best matching block
-				//FILL_MOTION_BLOCK(GMV_VECTOR[row*width / block + col / block], MOTION_FRAME);
-
+				for (unsigned int i = 0; i < block; i++) {
+					for (unsigned int j = 0; j < block; j++) {
+						MOTION_FRAME[row + i][col + j] = REC_FRAME[(row + GMV_Y + i) * width + (col + GMV_X + j)];
+					}
+				}
 			}
-
 		}
 
 		// MV FILE GENERATION
@@ -190,14 +205,14 @@ int main(int argCnt, char **args)
 		// RESIDUAL FILE GENERATION
 		// =========================
 		// Use motion frame to create residual frame	-> Keep Motion Frame buffer alive in mem still 
-		residual(RES_FRAME, CUR_FRAME, block, width, height, 2);//TODO substract motion estimation value and add N
+		residual(RES_FRAME, CUR_FRAME, block, width, height, round, MOTION_FRAME);
 		// Dump residual frame to file resfile			-> Keep Resisdual Frame buffer alive in mem still
 		fwrite(RES_FRAME, sizeof(unsigned char), FRAME_SIZE, resfile);
 		// RECONSTRUCTED FILE GENERATION
 		// ==============================
 		// Use motion frame								-> Decoder will do this too so it should be valid
 		// and the residual frame and the GMVs			-> all this stuff should still be alive in mem.
-		recon(RES_FRAME, REC_FRAME, block, width, height); //TODO add motion estimation value
+		recon(RES_FRAME, REC_FRAME, block, width, height, MOTION_FRAME); //TODO add motion estimation value
 		fclose(recfile);
 		recfile = fopen(recfile_name, "a+b");
 		fwrite(REC_FRAME, sizeof(unsigned char), FRAME_SIZE, recfile);
@@ -216,48 +231,84 @@ int main(int argCnt, char **args)
 
 }
 
-/*struct GMV MotionEstimate(	unsigned int row, // Pixel Row in Current Frame
-							unsigned int col, // Pixel Col in Current Frame
-							unsigned int width, 
-							unsigned int height, 
-							unsigned int block, 
-							unsigned int range, 
-							unsigned char* CUR_FRAME, 
-							unsigned char* REC_FRAME) {
+struct GMV MotionEstimate(unsigned int row, // Pixel Row in Current Frame
+	unsigned int col, // Pixel Col in Current Frame
+	unsigned int width,
+	unsigned int height,
+	unsigned int block,
+	int range,
+	unsigned char* CUR_FRAME,
+	unsigned char* REC_FRAME) {
 
-	struct GMV BEST_GMV;*/
+	struct GMV BEST_GMV;
+	bool firstGMV = true;
 
-	/*for (int x_range = -range; x_range <= range; range++) {
-		for (int y_range = -range; y_range <= range; range++) {
-			if (((x_range + row) < 0) || ((x_range + row) > width)){
-				continue; //Block outisde search space
+	for (int GMV_X = 0 - range; GMV_X <= range; GMV_X++) {
+		for (int GMV_Y = 0 - range; GMV_Y <= range; GMV_Y++) {
+			if (((GMV_X + col) < 0) || ((GMV_X + col) >= width)) {
+				continue; //Block outisde search space so don't compute
 			}
-			if ((y_range + col))
+			if (((GMV_Y + row) < 0) || ((GMV_Y + row) >= height)) {
+				continue; //Block outisde search space so don't compute
+			}
+
+			int X = GMV_X;
+			int Y = GMV_Y;
+			unsigned int SAD = 0;
+			unsigned int NORM = abs(X) + abs(Y);
+
+			//Calculate SAD
+			for (int i = 0; i < block; i++) {
+				for (int j = 0; j < block; j++) {
+					SAD += abs(CUR_FRAME[(X + row + i)*width + Y + col + j] - REC_FRAME[(X + row + i)*width + Y + col + j]);
+				}
+			}
+
+			// Pick Best Global Motion Vector 
+			if (firstGMV) {
+				firstGMV = false;
+				BEST_GMV.X = X;
+				BEST_GMV.Y = Y;
+				BEST_GMV.SAD = SAD;
+				BEST_GMV.NORM = NORM;
+				continue;
+			}
+
+			if (BEST_GMV.SAD > SAD) {
+				BEST_GMV.X = X;
+				BEST_GMV.Y = Y;
+				BEST_GMV.SAD = SAD;
+				BEST_GMV.NORM = NORM;
+			}
+			else if (BEST_GMV.SAD == SAD) {
+				if (BEST_GMV.NORM > NORM) {
+					BEST_GMV.X = X;
+					BEST_GMV.Y = Y;
+					BEST_GMV.SAD = SAD;
+					BEST_GMV.NORM = NORM;
+				}
+				else if (BEST_GMV.NORM == NORM) {
+					if (abs(BEST_GMV.Y) > abs(Y)) {
+						BEST_GMV.X = X;
+						BEST_GMV.Y = Y;
+						BEST_GMV.SAD = SAD;
+						BEST_GMV.NORM = NORM;
+					}
+					else if (abs(BEST_GMV.Y) == abs(Y)) {
+						if (abs(BEST_GMV.X) > abs(X)) {
+							BEST_GMV.X = X;
+							BEST_GMV.Y = Y;
+							BEST_GMV.SAD = SAD;
+							BEST_GMV.NORM = NORM;
+						}
+						else if (abs(BEST_GMV.X) == abs(X)) {
+							// Either Do Nothing
+							// Or we could Overwrite
+						}
+					}
+				}
+			}
 		}
-	}*/
-	/*
-	Search 2D array space
-
-	Nested for loop {
-
-	Calculate SAD and norm
-
-	IF: New GMV is better than current GMV
-	Overwrite GMV
-	Else:
-	Go to Next block
 	}
-	Return GVM
-	}*/
-	//return BEST_GMV;
-
-//}
-
-void FILL_MOTION_BLOCK(struct GMV BEST_GMV, unsigned char** MOTION_FRAME) {
-
-
-}
-
-void GMV_COMPARE(unsigned int X, unsigned int Y, unsigned int SADD) {
-
+	return BEST_GMV;
 }
