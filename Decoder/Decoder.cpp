@@ -136,7 +136,7 @@ int main(int argCnt, char **args)
 				for (unsigned int j = 0; j < width; j++) {
 					fread(&MVX, sizeof(int), 1, mvxfile);
 					fread(&MVY, sizeof(int), 1, mvyfile);
-					index = MVX + MVY;
+					index = MVX + MVY + i + j;//current plus delta 
 					INTER_FRAME[i + j] = DEC_FRAME[index];
 				}
 			}
