@@ -177,7 +177,7 @@ int main(int argCnt, char **args)
 
 	// Encode Each Frame
 	for (unsigned int frame = 0; frame < frames; frame++) {
-		fprintf(mvfile, "Frame %d\n", frame);
+		fprintf(mvfile, "Frame %d Block_size %d \n", frame, block);
 		if (frame == 0) {
 			for (unsigned int i = 0; i < FRAME_SIZE; i++)
 				REC_FRAME[i] = 128; // Prefill with GREY
@@ -205,7 +205,7 @@ int main(int argCnt, char **args)
 
 				fwrite(&GMV_X, sizeof(int), 1, gmvXfile);
 				fwrite(&GMV_Y, sizeof(int), 1, gmvYfile);
-				fprintf(mvfile, "Block_size %d Block_X %d Block_Y %d GVM_X %d GMV_Y %d\n", block, col / block, row / block, GMV_X, GMV_Y);
+				fprintf(mvfile, "B(%d,%d)_V(%d,%d)\t", col / block, row / block, GMV_X, GMV_Y);
 				// Fill the Motion Frame with the best matching block
 				for (unsigned int i = 0; i < block; i++) {
 					for (unsigned int j = 0; j < block; j++) {
@@ -213,6 +213,7 @@ int main(int argCnt, char **args)
 					}
 				}
 			}
+			fprintf(mvfile, "\n\n");
 		}
 
 		// MV FILE GENERATION
@@ -279,7 +280,7 @@ struct GMV MotionEstimate(unsigned int row, // Pixel Row in Current Frame
 			//Calculate SAD
 			for (int i = 0; i < block; i++) {
 				for (int j = 0; j < block; j++) {
-					SAD += abs(CUR_FRAME[(Y + row + i)*width + X + col + j] - REC_FRAME[(Y + row + i)*width + X + col + j]);
+					SAD += abs(CUR_FRAME[(row + i)*width + col + j] - REC_FRAME[(GMV_Y + row + i)*width + GMV_X + col + j]);
 				}
 			}
 
