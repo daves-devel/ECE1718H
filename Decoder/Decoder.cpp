@@ -123,12 +123,19 @@ int main(int argCnt, char **args)
 	unsigned char*  DEC_FRAME = new unsigned char[width * height];
 	signed char* RES_FRAME = new signed char[width * height];
 
+	// This 2D Buffer Will containe the best blocks for 
+	// estimation in their corresponding block locations
+	/*unsigned char** INTER_FRAME = new unsigned char*[height];
+	for (unsigned int row = 0; row < height; row++) {
+		INTER_FRAME[row] = new unsigned char[width];
+	}*/
+
 	// Decode Each Frame
 	for (unsigned int frame = 0; frame < frames; frame++) {
 
 		if (frame == 0) {
 			for (unsigned int i = 0; i < FRAME_SIZE; i++)
-				INTER_FRAME[i] = 128; // Prefill with GREY
+				DEC_FRAME[i] = 128; // Prefill with GREY
 		}
 		else {
 			// Create a intermediate frame from the previous decoded frame and the motion vectors for the frame
@@ -140,18 +147,18 @@ int main(int argCnt, char **args)
 					INTER_FRAME[i + j] = DEC_FRAME[index];
 				}
 			}
-		}
-        
-		//Get residual frame
-		fread(RES_FRAME, sizeof(unsigned char), FRAME_SIZE, resfile);
 
-		//Decoded frame = intermediate + residual 
-		for (unsigned int i = 0; i < height; i ++) {
-			for (unsigned int j = 0; j < width; j ++) {
-				DEC_FRAME[i + j] = INTER_FRAME[i+j] + RES_FRAME[i+j];
+			//Get residual frame
+			fseek(resfile, frame*FRAME_SIZE, SEEK_SET);
+			fread(RES_FRAME, sizeof(unsigned char), FRAME_SIZE, resfile);
+
+			//Decoded frame = intermediate + residual 
+			for (unsigned int i = 0; i < height; i++) {
+				for (unsigned int j = 0; j < width; j++) {
+					DEC_FRAME[i + j] = RES_FRAME[i + j];//INTER_FRAME[i + j] + RES_FRAME[i + j];
+				}
 			}
 		}
-
 		// Dump decoded frame
 		fwrite(DEC_FRAME, sizeof(unsigned char), FRAME_SIZE, decodedfile);
 
