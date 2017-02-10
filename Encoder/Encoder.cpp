@@ -111,12 +111,6 @@ int main(int argCnt, char **args)
 			args++;
 			tmpArgCnt += 2;
 		}
-		else if (!strcmp((*args) + 1, "round")) {
-			args++;
-			round = atoi(*args);
-			args++;
-			tmpArgCnt += 2;
-		}
 		else if (!strcmp((*args) + 1, "gmvx")) {
 			args++;
 			sscanf(*args, "%s", gmvx_name);
@@ -247,6 +241,8 @@ int main(int argCnt, char **args)
 	delete REC_FRAME;
 	fclose(curfile);
 	fclose(mvfile);
+	fclose(gmvXfile);
+	fclose(gmvYfile);
 	fclose(resfile);
 	fclose(recfile);
 
@@ -283,7 +279,7 @@ struct GMV MotionEstimate(unsigned int row, // Pixel Row in Current Frame
 			//Calculate SAD
 			for (int i = 0; i < block; i++) {
 				for (int j = 0; j < block; j++) {
-					SAD += abs(CUR_FRAME[(X + row + i)*width + Y + col + j] - REC_FRAME[(X + row + i)*width + Y + col + j]);
+					SAD += abs(CUR_FRAME[(Y + row + i)*width + X + col + j] - REC_FRAME[(Y + row + i)*width + X + col + j]);
 				}
 			}
 
