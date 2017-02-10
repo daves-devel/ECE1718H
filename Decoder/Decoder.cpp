@@ -116,7 +116,6 @@ int main(int argCnt, char **args)
 	}
 
 	unsigned int  FRAME_SIZE = width*height;
-	unsigned int index = 0;
 	int MVX = 0;
 	int MVY = 0;
 	unsigned char* INTER_FRAME = new unsigned char[width * height];
@@ -125,40 +124,48 @@ int main(int argCnt, char **args)
 
 	// This 2D Buffer Will containe the best blocks for 
 	// estimation in their corresponding block locations
-	/*unsigned char** INTER_FRAME = new unsigned char*[height];
+	unsigned char** MOTION_FRAME = new unsigned char*[height];
 	for (unsigned int row = 0; row < height; row++) {
-		INTER_FRAME[row] = new unsigned char[width];
-	}*/
+		MOTION_FRAME[row] = new unsigned char[width];
+	}
 
 	// Decode Each Frame
 	for (unsigned int frame = 0; frame < frames; frame++) {
 
 		if (frame == 0) {
 			for (unsigned int i = 0; i < FRAME_SIZE; i++)
-				DEC_FRAME[i] = 128; // Prefill with GREY
+				INTER_FRAME[i] = 128; // Prefill with GREY
 		}
 		else {
 			// Create a intermediate frame from the previous decoded frame and the motion vectors for the frame
-			for (unsigned int i = 0; i < height; i++) {
-				for (unsigned int j = 0; j < width; j++) {
+			for (unsigned int row = 0; row < height; row += block) {
+				for (unsigned int col = 0; col < width; col += block) {
 					fread(&MVX, sizeof(int), 1, mvxfile);
 					fread(&MVY, sizeof(int), 1, mvyfile);
-					index = MVX + MVY + i + j;//current plus delta 
-					INTER_FRAME[i + j] = DEC_FRAME[index];
+
+					for (unsigned int i = 0; i < block; i++) {
+						for (unsigned int j = 0; j < block; j++) {
+							MOTION_FRAME[row + i][col + j] = DEC_FRAME[(row + MVY + i) * width + (col + MVX + j)];
+						}
+					}
 				}
 			}
 
+			for (unsigned int i = 0; i < height; i++) {
+				for (unsigned int j = 0; j < width; j++) {
+					INTER_FRAME[i*width + j] = MOTION_FRAME[i][j];
+				}
+			}
+		}
 			//Get residual frame
-			fseek(resfile, frame*FRAME_SIZE, SEEK_SET);
 			fread(RES_FRAME, sizeof(unsigned char), FRAME_SIZE, resfile);
 
 			//Decoded frame = intermediate + residual 
 			for (unsigned int i = 0; i < height; i++) {
 				for (unsigned int j = 0; j < width; j++) {
-					DEC_FRAME[i + j] = RES_FRAME[i + j];//INTER_FRAME[i + j] + RES_FRAME[i + j];
+					DEC_FRAME[i*width + j] = INTER_FRAME[i*width + j] + RES_FRAME[i*width + j];
 				}
 			}
-		}
 		// Dump decoded frame
 		fwrite(DEC_FRAME, sizeof(unsigned char), FRAME_SIZE, decodedfile);
 

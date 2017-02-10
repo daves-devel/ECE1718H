@@ -2,6 +2,6 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommandArguments>-width 176 -height 144 -decodedfile C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\decoded -resfile C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\resource\residual -frames 10 -mvxfile C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\resource\GMVX -mvyfile C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\resource\GMVY</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>-width 176 -block 2 -height 144 -decodedfile C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\decoded -resfile C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\resource\residual -frames 10 -mvxfile C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\resource\GMVX -mvyfile C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\resource\GMVY</LocalDebuggerCommandArguments>
   </PropertyGroup>
 </Project>
