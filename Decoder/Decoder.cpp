@@ -171,6 +171,7 @@ int main(int argCnt, char **args)
 
 	}
 
+	delete MOTION_FRAME;
 	delete INTER_FRAME;
 	delete DEC_FRAME;
 	delete RES_FRAME;
