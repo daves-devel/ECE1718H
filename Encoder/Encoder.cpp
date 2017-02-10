@@ -38,7 +38,7 @@ int main(int argCnt, char **args)
 	unsigned int width		= 0;
 	unsigned int height		= 0;
 	unsigned int frames		= 0;
-	int range		= 0;
+			 int range		= 0;
 	unsigned int block		= 0;
 	unsigned int padRight	= 0;
 	unsigned int padBottom	= 0;
@@ -174,9 +174,12 @@ int main(int argCnt, char **args)
 	// in raster row order
 	struct GMV* GMV_VECTOR = new struct GMV[(width/block)*(height/block)];
 
-
 	// Encode Each Frame
 	for (unsigned int frame = 0; frame < frames; frame++) {
+
+		// MV FILE GENERATION (BEGINNING of FRAME)
+		// =========================================
+
 		fprintf(mvfile, "Frame %d Block_size %d \n", frame, block);
 		if (frame == 0) {
 			for (unsigned int i = 0; i < FRAME_SIZE; i++)
@@ -203,9 +206,12 @@ int main(int argCnt, char **args)
 				int GMV_X = GMV_VECTOR[((row*width/block) / block) + (col / block)].X;
 				int GMV_Y = GMV_VECTOR[((row*width/block) / block) + (col / block)].Y;
 
+				// MV FILE GENERATION (VECTOR DUMP)
+				// =======================================
 				fwrite(&GMV_X, sizeof(int), 1, gmvXfile);
 				fwrite(&GMV_Y, sizeof(int), 1, gmvYfile);
 				fprintf(mvfile, "B(%d,%d)_V(%d,%d)\t", col / block, row / block, GMV_X, GMV_Y);
+
 				// Fill the Motion Frame with the best matching block
 				for (unsigned int i = 0; i < block; i++) {
 					for (unsigned int j = 0; j < block; j++) {
@@ -213,28 +219,27 @@ int main(int argCnt, char **args)
 					}
 				}
 			}
+			// MV FILE GENERATION (END of ROW)
+			// =========================================
 			fprintf(mvfile, "\n\n");
 		}
 
-		// MV FILE GENERATION
-		// ===================
-		// Dump GMV 1D array to mvfile					-> Keep 1D array buffer alive in mem still
+
 
 		// RESIDUAL FILE GENERATION
-		// =========================
-		// Use motion frame to create residual frame	-> Keep Motion Frame buffer alive in mem still 
+		// =========================================================================
 		residual(RES_FRAME, CUR_FRAME, block, width, height, round, MOTION_FRAME);
-		// Dump residual frame to file resfile			-> Keep Resisdual Frame buffer alive in mem still
 		fwrite(RES_FRAME, sizeof(unsigned char), FRAME_SIZE, resfile);
+
 		// RECONSTRUCTED FILE GENERATION
 		// ==============================
-		// Use motion frame								-> Decoder will do this too so it should be valid
-		// and the residual frame and the GMVs			-> all this stuff should still be alive in mem.
-		recon(RES_FRAME, REC_FRAME, block, width, height, MOTION_FRAME); //TODO add motion estimation value
+		recon(RES_FRAME, REC_FRAME, block, width, height, MOTION_FRAME);
 		fclose(recfile);
 		recfile = fopen(recfile_name, "a+b");
 		fwrite(REC_FRAME, sizeof(unsigned char), FRAME_SIZE, recfile);
-		// Dump Reconstructed 
+
+		// MV FILE GENERATION (END of FRAME)
+		// =======================================
 		fprintf(mvfile, "End of frame %d\n", frame);
 	}
 
