@@ -157,11 +157,11 @@ int main(int argCnt, char **args)
 		printf("Invalid Block Dimension <%d>", block);
 	}
 
-	unsigned int  FRAME_SIZE = width*height;
-	unsigned char* CUR_FRAME = new unsigned char[width * height];
-	unsigned char* REC_FRAME = new unsigned char[width * height];
-	unsigned char* REC_FRAME_OUT = new unsigned char[width * height];
-	signed char* RES_FRAME = new signed char[width * height];
+	unsigned int  FRAME_SIZE		= width*height;
+	unsigned char* CUR_FRAME		= new unsigned char[FRAME_SIZE];
+	unsigned char* REC_FRAME		= new unsigned char[FRAME_SIZE];
+	unsigned char* REC_FRAME_OUT	= new unsigned char[FRAME_SIZE];
+	  signed char* RES_FRAME	    = new   signed char[FRAME_SIZE];
 
 	// This 2D Buffer Will containe the best blocks for 
 	// estimation in their corresponding block locations
@@ -210,7 +210,7 @@ int main(int argCnt, char **args)
 				// =======================================
 				fwrite(&GMV_X, sizeof(int), 1, gmvXfile);
 				fwrite(&GMV_Y, sizeof(int), 1, gmvYfile);
-				fprintf(mvfile, "B(%d,%d)_V(%d,%d)\t", col / block, row / block, GMV_X, GMV_Y);
+				fprintf(mvfile, "B(%d,%d)_V(%d,%d)\t", row / block, col / block, GMV_X, GMV_Y);
 
 				// Fill the Motion Frame with the best matching block
 				for (unsigned int i = 0; i < block; i++) {
@@ -243,6 +243,11 @@ int main(int argCnt, char **args)
 		fprintf(mvfile, "End of frame %d\n", frame);
 	}
 
+
+	for (unsigned int row = 0; row < height; row++) {
+		delete MOTION_FRAME[row];
+	}
+	delete MOTION_FRAME;
 	delete CUR_FRAME;
 	delete REC_FRAME;
 	fclose(curfile);
