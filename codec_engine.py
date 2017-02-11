@@ -56,34 +56,33 @@ def main(argv):
 
 	# LumaExtractor
 	# -------------------------------
-	command = "LumaExtractor\Debug\LumaExtractor.exe -frames %d -filein %s -width %d -height %d -fileout %s_LumaExtracted_%dx%d@%d.yuv" %(frames, infile, width, height, testname, width, height, frames)
+	command = "LumaExtractor\Debug\LumaExtractor.exe -frames %d -filein %s -width %d -height %d -fileout %s_LumaExtracted_%dx%d@%df.yuv" %(frames, infile, width, height, testname, width, height, frames)
 	print ("\nLumaExtractor\n" + command)
 	os.system (command)
 
-	height_old	= height
 	width_old	= width
-
-	if (( width % block) > 0):
-		width = (width/block)*block + block;
+	height_old	= height
 
 	if ((height%block) > 0):
-		height = (height/block)*block + block;
+		height = int(height/block) * block + block;
+	if (( width % block) > 0):
+		width = int(width/block) * block + block;
 
 	# LumaPadder
 	# -------------------------------
-	command = "LumaPad\Debug\LumaPad.exe -frames %d -width %d -height %d -block %d -filein %s_LumaExtracted_%dx%d@%d.yuv -fileout %s_LumaPadded_%dx%d@%d.yuv" %(frames,width_old,height_old,block,testname,width,height,frames,testname,width,height,frames)
+	command = "LumaPad\Debug\LumaPad.exe -frames %d -width %d -height %d -block %d -filein %s_LumaExtracted_%dx%d@%df.yuv -fileout %s_LumaPadded_%dx%d@%df.yuv" %(frames,width_old,height_old,block,testname,width_old,height_old,frames,testname,width,height,frames)
 	print ("\nLumaPadder:\n" + command)
 	os.system (command)
 
 	# Encoder
 	# -------------------------------
-	command = "Encoder\Debug\Encoder.exe -frames %d -width %d -height %d -block %d -range %d -round %d -curfile %s_LumaPadded_%dx%d@%d.yuv -recfile %s_Reconstructed_%dx%d@%d.yuv -resfile %s_Residual_%dx%d@%d.yuv -mvfile %s_mvfile.txt -gmvx %s_GMVX -gmvy %s_GMVY" %(frames,width,height,block,searchrange,rounding,testname,width,height,frames,testname,width,height,frames,testname,width,height,frames,testname,testname,testname)
+	command = "Encoder\Debug\Encoder.exe -frames %d -width %d -height %d -block %d -range %d -round %d -curfile %s_LumaPadded_%dx%d@%df.yuv -recfile %s_Reconstructed_%dx%d@%df.yuv -resfile %s_Residual_%dx%d@%df.yuv -mvfile %s_mvfile.txt -gmvx %s_GMVX -gmvy %s_GMVY" %(frames,width,height,block,searchrange,rounding,testname,width,height,frames,testname,width,height,frames,testname,width,height,frames,testname,testname,testname)
 	print ("\nEncoder:\n" + command)
 	os.system(command)
 
 	# Decoder
 	# -------------------------------
-	command = "Decoder\Debug\Decoder.exe -frames %d -width %d -height %d -block %d -decodedfile %s_Decoded_%dx%d@%d.yuv -resfile %s_Residual_%dx%d@%d.yuv -mvxfile %s_GMVX -mvyfile %s_GMVY" %(frames,width,height,block,testname,width,height,frames,testname,width,height,frames,testname,testname)
+	command = "Decoder\Debug\Decoder.exe -frames %d -width %d -height %d -block %d -decodedfile %s_Decoded_%dx%d@%df.yuv -resfile %s_Residual_%dx%d@%df.yuv -mvxfile %s_GMVX -mvyfile %s_GMVY" %(frames,width,height,block,testname,width,height,frames,testname,width,height,frames,testname,testname)
 	print ("\nDecoder:\n" + command)
 	os.system(command)
 
