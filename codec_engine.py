@@ -12,13 +12,15 @@ def main(argv):
 	testname	= ""
 	infile 		= ""
 	outfile		= ""
-	int width		= 0
-	int height 		= 0
-	int frames		= 0
-	int searchrange	= 0
-	int rounding	= 0
-	int with_old	= 0
-	int height_old  = 0
+	command		= ""
+	width		= 0
+	height 		= 0
+	frames		= 0
+	searchrange	= 0
+	rounding	= 0
+	with_old	= 0
+	height_old  = 0
+	block 		= 0
 
 	# Parse Input Arguments 
 	# ------------------------------
@@ -29,6 +31,9 @@ def main(argv):
 
 		if (argv[index] == "-outfile"):
 			outfile = argv[index+1]
+
+		if (argv[index] == "-test"):
+			testname = argv[index+1]
 
 		if (argv[index] == "-width"):
 			width = int(argv[index+1])
@@ -45,35 +50,48 @@ def main(argv):
 		if (argv[index] == "-round"):
 			rounding = int(argv[index+1])
 
-	# YUV Pre-Processing
-	# -------------------------------
+		if (argv[index] == "-block"):
+			block = int(argv[index+1])
+
 
 	# LumaExtractor
-	LumaExtractor/LumaExtractor.exe -frames frames -filein infile -width width -height height -outfile testname_LumaExtracted_frames@widthxheight.yuv 
-
+	# -------------------------------
+	command = "LumaExtractor\Debug\LumaExtractor.exe -frames %d -filein %s -width %d -height %d -fileout %s_LumaExtracted_%dx%d@%d.yuv" %(frames, infile, width, 
+		height, testname, width, height, frames)
+	print (command)
+	os.system (command)
 
 	height_old	= height
 	width_old	= width
 
-	if (( width% block) > 0):
+	if (( width % block) > 0):
 		width = (width/block)*block + 1;
 
-	if ((height%block) > 0);
+	if ((height%block) > 0):
 		height = (height/block)*block + 1;
 
 	# LumaPadder
-	LumaPad/LumaPad.exe -frames frames -width width_old -height height_old -block block -filein testname_LumaExtracted_frames@widthxheight.yuv -fileout testname_LumaPadded_frames@widthxheight.yuv
+	# -------------------------------
+	command = "LumaPad\Debug\LumaPad.exe -frames %d -width %d -height %d -block %d -filein %s_LumaExtracted_%dx%d@%d.yuv -fileout %s_LumaPadded_%dx%d@%d.yuv" %(frames,width_old,height_old,block,testname,width,height,frames,testname,width,height,frames)
+	print (command)
+	os.system (command)
 
 	# Encoder
 	# -------------------------------
-	Encoder/Encoder.exe -frames frames -width width -height height -block block -range searchrange -round rounding -curfile testname_LumaPadded_frames@widthxheight.yuv -recfile testname_Reconstructed_frames@widthxheight.yuv -resfile testname_Residual_frames@widthxheight.yuv -mvfile testname_mvfile.txt -gmvx GMVX -gmvy GMVY
+	command = "Encoder\Debug\Encoder.exe -frames %d -width %d -height %d -block %d -range %d -round %d -curfile %s_LumaPadded_%dx%d@%d.yuv -recfile %s_Reconstructed_%dx%d@%d.yuv -resfile %s_Residual_%dx%d@%d.yuv -mvfile %s_mvfile.txt -gmvx %s_GMVX -gmvy %s_GMVY" %(frames,width,height,block,searchrange,rounding,testname,width,height,frames,testname,width,height,frames,testname,width,height,frames,testname,testname,testname)
+
+	print (command)
+	os.system(command)
 
 	# Decoder
 	# -------------------------------
-	Decoder/Decoder.exe -frames frames -width width -height height -block block 
+	#Decoder\Decoder\Debug -frames frames -width width -height height -block block  -decodedfile testname_Decoded_widthxheight@frames.yuv -resfile testname_Residual_widthxheight@frames.yuv -gmvx testname_GMVX -gmvy testname_GMVY
 
-	# Verification
+	# Verification //TODO We need to write something
 	# -------------------------------
 
-	# Analysis
+	# Analysis //TODO We need to write something
 	# --------------------------------
+
+
+main (sys.argv)
