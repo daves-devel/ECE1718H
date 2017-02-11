@@ -89,8 +89,10 @@ def main(argv):
 	# Verification //TODO We need to write something
 	# -------------------------------
 
-	# Analysis //TODO We need to write something
+	# Analyze SAD
 	# --------------------------------
-
+	command = "AnalyzeSAD\Debug\AnalyzeSAD.exe -frames %d -width %d -height %d -reffile %s_LumaPadded_%dx%d@%df.yuv -decfile %s_Decoded_%dx%d@%df.yuv -SAD %s_SAD.txt" %(frames,width,height,testname,width,height,frames,testname,width,height,frames,testname)
+	print ("\nAnalyze SAD:\n" + command)
+	os.system(command)
 
 main (sys.argv)
