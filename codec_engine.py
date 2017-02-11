@@ -56,36 +56,36 @@ def main(argv):
 
 	# LumaExtractor
 	# -------------------------------
-	command = "LumaExtractor\Debug\LumaExtractor.exe -frames %d -filein %s -width %d -height %d -fileout %s_LumaExtracted_%dx%d@%d.yuv" %(frames, infile, width, 
-		height, testname, width, height, frames)
-	print (command)
+	command = "LumaExtractor\Debug\LumaExtractor.exe -frames %d -filein %s -width %d -height %d -fileout %s_LumaExtracted_%dx%d@%d.yuv" %(frames, infile, width, height, testname, width, height, frames)
+	print ("\nLumaExtractor\n" + command)
 	os.system (command)
 
 	height_old	= height
 	width_old	= width
 
 	if (( width % block) > 0):
-		width = (width/block)*block + 1;
+		width = (width/block)*block + block;
 
 	if ((height%block) > 0):
-		height = (height/block)*block + 1;
+		height = (height/block)*block + block;
 
 	# LumaPadder
 	# -------------------------------
 	command = "LumaPad\Debug\LumaPad.exe -frames %d -width %d -height %d -block %d -filein %s_LumaExtracted_%dx%d@%d.yuv -fileout %s_LumaPadded_%dx%d@%d.yuv" %(frames,width_old,height_old,block,testname,width,height,frames,testname,width,height,frames)
-	print (command)
+	print ("\nLumaPadder:\n" + command)
 	os.system (command)
 
 	# Encoder
 	# -------------------------------
 	command = "Encoder\Debug\Encoder.exe -frames %d -width %d -height %d -block %d -range %d -round %d -curfile %s_LumaPadded_%dx%d@%d.yuv -recfile %s_Reconstructed_%dx%d@%d.yuv -resfile %s_Residual_%dx%d@%d.yuv -mvfile %s_mvfile.txt -gmvx %s_GMVX -gmvy %s_GMVY" %(frames,width,height,block,searchrange,rounding,testname,width,height,frames,testname,width,height,frames,testname,width,height,frames,testname,testname,testname)
-
-	print (command)
+	print ("\nEncoder:\n" + command)
 	os.system(command)
 
 	# Decoder
 	# -------------------------------
-	#Decoder\Decoder\Debug -frames frames -width width -height height -block block  -decodedfile testname_Decoded_widthxheight@frames.yuv -resfile testname_Residual_widthxheight@frames.yuv -gmvx testname_GMVX -gmvy testname_GMVY
+	command = "Decoder\Debug\Decoder.exe -frames %d -width %d -height %d -block %d -decodedfile %s_Decoded_%dx%d@%d.yuv -resfile %s_Residual_%dx%d@%d.yuv -mvxfile %s_GMVX -mvyfile %s_GMVY" %(frames,width,height,block,testname,width,height,frames,testname,width,height,frames,testname,testname)
+	print ("\nDecoder:\n" + command)
+	os.system(command)
 
 	# Verification //TODO We need to write something
 	# -------------------------------
