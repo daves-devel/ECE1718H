@@ -56,7 +56,7 @@ def main(argv):
 
 	# LumaExtractor
 	# -------------------------------
-	command = "LumaExtractor\Debug\LumaExtractor.exe -frames %d -filein %s -width %d -height %d -fileout %s_LumaExtracted_%dx%d@%df.yuv" %(frames, infile, width, height, testname, width, height, frames)
+	command = "LumaExtractor\Debug\LumaExtractor.exe -frames %d -filein %s -width %d -height %d -fileout testdata\%s_LumaExtracted_%dx%d@%df.yuv" %(frames, infile, width, height, testname, width, height, frames)
 	print ("\nLumaExtractor\n" + command)
 	os.system (command)
 
@@ -70,31 +70,31 @@ def main(argv):
 
 	# LumaPadder
 	# -------------------------------
-	command = "LumaPad\Debug\LumaPad.exe -frames %d -width %d -height %d -block %d -filein %s_LumaExtracted_%dx%d@%df.yuv -fileout %s_LumaPadded_%dx%d@%df.yuv" %(frames,width_old,height_old,block,testname,width_old,height_old,frames,testname,width,height,frames)
+	command = "LumaPad\Debug\LumaPad.exe -frames %d -width %d -height %d -block %d -filein testdata\%s_LumaExtracted_%dx%d@%df.yuv -fileout testdata\%s_LumaPadded_%dx%d@%df.yuv" %(frames,width_old,height_old,block,testname,width_old,height_old,frames,testname,width,height,frames)
 	print ("\nLumaPadder:\n" + command)
 	os.system (command)
 
 	# Encoder
 	# -------------------------------
-	command = "Encoder\Debug\Encoder.exe -frames %d -width %d -height %d -block %d -range %d -round %d -curfile %s_LumaPadded_%dx%d@%df.yuv -recfile %s_Reconstructed_%dx%d@%df.yuv -resfile %s_Residual_%dx%d@%df.yuv -mvfile %s_mvfile.txt -gmvx %s_GMVX -gmvy %s_GMVY" %(frames,width,height,block,searchrange,rounding,testname,width,height,frames,testname,width,height,frames,testname,width,height,frames,testname,testname,testname)
+	command = "Encoder\Debug\Encoder.exe -frames %d -width %d -height %d -block %d -range %d -round %d -curfile testdata\%s_LumaPadded_%dx%d@%df.yuv -recfile testdata\%s_Reconstructed_%dx%d@%df.yuv -resfile testdata\%s_Residual_%dx%d@%df.yuv -mvfile testdata\%s_mvfile.txt -gmvx testdata\%s_GMVX -gmvy testdata\%s_GMVY" %(frames,width,height,block,searchrange,rounding,testname,width,height,frames,testname,width,height,frames,testname,width,height,frames,testname,testname,testname)
 	print ("\nEncoder:\n" + command)
 	os.system(command)
 
 	# Decoder
 	# -------------------------------
-	command = "Decoder\Debug\Decoder.exe -frames %d -width %d -height %d -block %d -decodedfile %s_Decoded_%dx%d@%df.yuv -resfile %s_Residual_%dx%d@%df.yuv -mvxfile %s_GMVX -mvyfile %s_GMVY" %(frames,width,height,block,testname,width,height,frames,testname,width,height,frames,testname,testname)
+	command = "Decoder\Debug\Decoder.exe -frames %d -width %d -height %d -block %d -decodedfile testdata\%s_Decoded_%dx%d@%df.yuv -resfile testdata\%s_Residual_%dx%d@%df.yuv -mvxfile testdata\%s_GMVX -mvyfile testdata\%s_GMVY" %(frames,width,height,block,testname,width,height,frames,testname,width,height,frames,testname,testname)
 	print ("\nDecoder:\n" + command)
 	os.system(command)
 
 	# DIFF
 	# --------------------------------
-	command = "DIFF\Debug\DIFF.exe -frames %d -width %d -height %d -recfile %s_Reconstructed_%dx%d@%df.yuv -decfile %s_Decoded_%dx%d@%df.yuv" %(frames,width,height,testname,width,height,frames,testname,width,height,frames)
+	command = "DIFF\Debug\DIFF.exe -frames %d -width %d -height %d -recfile testdata\%s_Reconstructed_%dx%d@%df.yuv -decfile testdata\%s_Decoded_%dx%d@%df.yuv" %(frames,width,height,testname,width,height,frames,testname,width,height,frames)
 	print ("\nDIFF:\n" + command)
 	os.system(command)
 
 	# Analyze SAD
 	# --------------------------------
-	command = "AnalyzeSAD\Debug\AnalyzeSAD.exe -frames %d -width %d -height %d -reffile %s_LumaPadded_%dx%d@%df.yuv -decfile %s_Decoded_%dx%d@%df.yuv -SAD %s_SAD.txt" %(frames,width,height,testname,width,height,frames,testname,width,height,frames,testname)
+	command = "AnalyzeSAD\Debug\AnalyzeSAD.exe -frames %d -width %d -height %d -reffile testdata\%s_LumaPadded_%dx%d@%df.yuv -decfile testdata\%s_Decoded_%dx%d@%df.yuv -SAD %s_SAD.txt" %(frames,width,height,testname,width,height,frames,testname,width,height,frames,testname)
 	print ("\nAnalyze SAD:\n" + command)
 	os.system(command)
 
