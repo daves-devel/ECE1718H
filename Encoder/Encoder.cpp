@@ -181,7 +181,7 @@ int main(int argCnt, char **args)
 		// MV FILE GENERATION (BEGINNING of FRAME)
 		// =========================================
 		//fprintf(debug_inter_frame, "Frame %d\n",  frame);DEBUG
-		fprintf(mvfile, "Frame %d Block_size %d \n", frame, block);
+		fprintf(mvfile, "Frame %d Block_size %d \n", frame + 1, block);
 		if (frame == 0) {
 			for (int i = 0; i < FRAME_SIZE; i++)
 				REC_FRAME[i] = 128; // Prefill with GREY
@@ -209,7 +209,7 @@ int main(int argCnt, char **args)
 				// =======================================
 				fwrite(&GMV_X, sizeof(int), 1, gmvXfile);
 				fwrite(&GMV_Y, sizeof(int), 1, gmvYfile);
-				fprintf(mvfile, "B(%d,%d)_V(%d,%d)\t", row / block, col / block, GMV_X, GMV_Y);
+				fprintf(mvfile, "B(%d,%d)_V(%d,%d)\n", row / block, col / block, GMV_X, GMV_Y);
 				//fprintf(debug_inter_frame, "block x %d y %d\n", col, row);DEBUG
 				// Fill the Motion Frame with the best matching block
 				for (int i = 0; i < block; i++) {
@@ -220,9 +220,6 @@ int main(int argCnt, char **args)
 					//fprintf(debug_inter_frame, "\n");//DEBUG
 				}
 			}
-			// MV FILE GENERATION (END of ROW)
-			// =========================================
-			fprintf(mvfile, "\n\n");
 		}
 		// RESIDUAL FILE GENERATION
 		// =========================================================================
@@ -238,7 +235,7 @@ int main(int argCnt, char **args)
 
 		// MV FILE GENERATION (END of FRAME)
 		// =======================================
-		fprintf(mvfile, "End of frame %d\n", frame);
+		fprintf(mvfile, "End of frame %d\n\n", frame+1);
 	}
 
 	for (unsigned int row = 0; row < height; row++) {
