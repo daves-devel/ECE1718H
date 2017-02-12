@@ -86,8 +86,11 @@ def main(argv):
 	print ("\nDecoder:\n" + command)
 	os.system(command)
 
-	# Verification //TODO We need to write something
-	# -------------------------------
+	# DIFF
+	# --------------------------------
+	command = "DIFF\Debug\DIFF.exe -frames %d -width %d -height %d -recfile %s_Reconstructed_%dx%d@%df.yuv -decfile %s_Decoded_%dx%d@%df.yuv" %(frames,width,height,testname,width,height,frames,testname,width,height,frames)
+	print ("\nAnalyze SAD:\n" + command)
+	os.system(command)
 
 	# Analyze SAD
 	# --------------------------------
