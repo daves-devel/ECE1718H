@@ -94,7 +94,7 @@ def main(argv):
 
 	# Analyze SAD
 	# --------------------------------
-	command = "AnalyzeSAD\Debug\AnalyzeSAD.exe -frames %d -width %d -height %d -reffile testdata\%s_LumaPadded_%dx%d@%df.yuv -decfile testdata\%s_Decoded_%dx%d@%df.yuv -SAD %s_SAD.txt" %(frames,width,height,testname,width,height,frames,testname,width,height,frames,testname)
+	command = "AnalyzeSAD\Debug\AnalyzeSAD.exe -frames %d -width %d -height %d -reffile testdata\%s_LumaPadded_%dx%d@%df.yuv -decfile testdata\%s_Decoded_%dx%d@%df.yuv -SAD testdata\%s_SAD.txt" %(frames,width,height,testname,width,height,frames,testname,width,height,frames,testname)
 	print ("\nAnalyze SAD:\n" + command)
 	os.system(command)
 
