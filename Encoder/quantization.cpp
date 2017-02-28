@@ -17,7 +17,32 @@ bool ValidQP(unsigned int QP,unsigned int block) {
 
 }
 
-char** GenerateQMatrix(unsigned int QP, unsigned int block) {
 
+void GenerateQ_Matrix(unsigned char ** Q_Matrix, unsigned int QP, unsigned int block) {
 
+	for (unsigned int row = 0; row < block; row++) {
+		for (unsigned int col = 0; col < block; col++) {
+			
+			if (row + col < (block - 1)) {
+				Q_Matrix[row][col] = 1 << QP;
+			}
+			else if (row + col == (block -1 )) {
+				Q_Matrix[row][col] = 1 << (QP + 1);
+			}
+			else {
+				Q_Matrix[row][col] = 1 << (QP + 2);
+			}
+		}
+	}
+}
+
+void GenerateQTC_Matrix(signed char** TC_Matrix, unsigned char ** Q_Matrix, unsigned char ** QTC_Matrix, unsigned int block) {
+
+	for (unsigned int row = 0; row < block; row++) {
+		for (unsigned int col = 0; col < block; col++) {
+
+			QTC_Matrix[row][col] = round(TC_Matrix[row][col] / Q_Matrix[row][col]);
+
+		}
+	}
 }
