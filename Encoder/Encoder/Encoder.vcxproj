@@ -121,10 +121,12 @@
     <ClCompile Include="..\Encoder.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\ikhan1\Source\Repo_1\ECE1718H\Encoder</AdditionalIncludeDirectories>
     </ClCompile>
+    <ClCompile Include="..\quantization.cpp" />
     <ClCompile Include="..\reconstructed.cpp" />
     <ClCompile Include="..\residual.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\quantization.h" />
     <ClInclude Include="..\reconstructed.h" />
     <ClInclude Include="..\residual.h" />
     <ClInclude Include="..\stdint.h" />
