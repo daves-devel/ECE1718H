@@ -32,9 +32,10 @@ int main(int argCnt, char **args)
 	char mvfile_name[500];
 	char resfile_name[500];
 	char recfile_name[500];
+	char motionfile_name[500];
 	char gmvx_name[500];
 	char gmvy_name[500];
-
+	
 	int width		= 0;
 	int height		= 0;
 	int frames		= 0;
@@ -87,6 +88,12 @@ int main(int argCnt, char **args)
 			args++;
 			tmpArgCnt += 2;
 		}
+		else if (!strcmp((*args) + 1, "motionfile")) {
+			args++;
+			sscanf(*args, "%s", motionfile_name);
+			args++;
+			tmpArgCnt += 2;
+		}
 		else if (!strcmp((*args) + 1, "frames")) {
 			args++;
 			frames = atoi(*args);
@@ -134,6 +141,7 @@ int main(int argCnt, char **args)
 	FILE* mvfile = fopen(mvfile_name, "w");
 	FILE* resfile = fopen(resfile_name, "wb");
 	FILE* recfile = fopen(recfile_name, "w+b");
+	FILE* motionfile = fopen(motionfile_name, "wb");
 	FILE* gmvXfile = fopen(gmvx_name, "wb");
 	FILE* gmvYfile = fopen(gmvy_name, "wb");
 	//FILE* debug_inter_frame = fopen("C:\\Users\\JuanFuentes\\Desktop\\test\\inter_frame_enc.txt", "w");DEBUG
@@ -163,7 +171,7 @@ int main(int argCnt, char **args)
 	unsigned char* CUR_FRAME		= new unsigned char[FRAME_SIZE];
 	unsigned char* REC_FRAME		= new unsigned char[FRAME_SIZE];
 	unsigned char* REC_FRAME_OUT	= new unsigned char[FRAME_SIZE];
-	  signed char* RES_FRAME	    = new   signed char[FRAME_SIZE];
+	unsigned char* RES_FRAME	    = new unsigned char[FRAME_SIZE];
 
 	// This 2D Buffer Will containe the best blocks for 
 	// estimation in their corresponding block locations
@@ -172,7 +180,7 @@ int main(int argCnt, char **args)
 		MOTION_FRAME[row] = new unsigned char[width];
 	}
 	
-	// This 1D Buffer Will Contain the GMV for each block
+	// This 1D Buffer will Contain the GMV for each block
 	// in raster row order
 	struct GMV* GMV_VECTOR = new struct GMV[(width/block)*(height/block)];
 
@@ -210,17 +218,24 @@ int main(int argCnt, char **args)
 				fwrite(&GMV_X, sizeof(int), 1, gmvXfile);
 				fwrite(&GMV_Y, sizeof(int), 1, gmvYfile);
 				fprintf(mvfile, "B(%d,%d)_V(%d,%d)\n", row / block, col / block, GMV_X, GMV_Y);
-				//fprintf(debug_inter_frame, "block x %d y %d\n", col, row);DEBUG
+
 				// Fill the Motion Frame with the best matching block
 				for (int i = 0; i < block; i++) {
 					for (int j = 0; j < block; j++) {
 						MOTION_FRAME[row + i][col + j] = REC_FRAME[(row + GMV_Y + i) * width + (col + GMV_X + j)];
-						//fprintf(debug_inter_frame, "%x ", MOTION_FRAME[row + i][col + j]);//DEBUG
+						unsigned int temp = REC_FRAME[(row + GMV_Y + i) * width + (col + GMV_X + j)];
 					}
-					//fprintf(debug_inter_frame, "\n");//DEBUG
 				}
 			}
 		}
+
+		
+		for (unsigned int row = 0; row < height; row++) {
+			fwrite(MOTION_FRAME[row], sizeof(unsigned char), width, motionfile);
+		}
+		fclose(motionfile);
+		motionfile = fopen(motionfile_name, "a+b");
+		//fwrite(MOTION_FRAME, sizeof(unsigned char), width, motionfile);
 		// RESIDUAL FILE GENERATION
 		// =========================================================================
 		residual(RES_FRAME, CUR_FRAME, block, width, height, round, MOTION_FRAME);
@@ -250,7 +265,7 @@ int main(int argCnt, char **args)
 	fclose(gmvYfile);
 	fclose(resfile);
 	fclose(recfile);
-
+	fclose(motionfile);
 	return 0;
 
 }

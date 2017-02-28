@@ -76,7 +76,7 @@ def main(argv):
 
 	# Encoder
 	# -------------------------------
-	command = "Encoder\Debug\Encoder.exe -frames %d -width %d -height %d -block %d -range %d -round %d -curfile testdata\%s_LumaPadded_%dx%d@%df.yuv -recfile testdata\%s_Reconstructed_%dx%d@%df.yuv -resfile testdata\%s_Residual_%dx%d@%df.yuv -mvfile testdata\%s_mvfile.txt -gmvx testdata\%s_GMVX -gmvy testdata\%s_GMVY" %(frames,width,height,block,searchrange,rounding,testname,width,height,frames,testname,width,height,frames,testname,width,height,frames,testname,testname,testname)
+	command = "Encoder\Debug\Encoder.exe -frames %d -width %d -height %d -block %d -range %d -round %d -curfile testdata\%s_LumaPadded_%dx%d@%df.yuv -recfile testdata\%s_Reconstructed_%dx%d@%df.yuv -resfile testdata\%s_Residual_%dx%d@%df.yuv -motionfile testdata\%s_Motion_%dx%d@%df.yuv -mvfile testdata\%s_mvfile.txt -gmvx testdata\%s_GMVX -gmvy testdata\%s_GMVY" %(frames,width,height,block,searchrange,rounding,testname,width,height,frames,testname,width,height,frames,testname,width,height,frames,testname,width,height,frames,testname,testname,testname)
 	print ("\nEncoder:\n" + command)
 	os.system(command)
 

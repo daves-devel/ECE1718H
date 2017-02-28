@@ -76,7 +76,7 @@ int main(int argCnt, char **args)
 		exit(-1);
 	}
 	if (decfile == NULL) {
-		printf("Cannot open output file <%s>\n", decfile_name);
+		printf("Cannot open decoded file <%s>\n", decfile_name);
 		exit(-1);
 	}
 	if (SADfile == NULL) {
@@ -97,7 +97,7 @@ int main(int argCnt, char **args)
 		for (int pixel = 0; pixel < FRAME_SIZE; pixel++) {
 			SAD += abs(REF_FRAME[pixel] - DEC_FRAME[pixel]);
 		}
-		fprintf(SADfile,"%d,%d\n", frame+1, SAD); //This syntax should be readable in Excel
+		fprintf(SADfile,"%d\t%d\n", frame+1, SAD); //This syntax should be readable in Excel
 	}
 
 	delete REF_FRAME;
