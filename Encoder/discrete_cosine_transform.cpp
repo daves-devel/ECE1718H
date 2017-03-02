@@ -1,8 +1,13 @@
+#define _USE_MATH_DEFINES
+#include <cmath> 
+#include <stdio.h>
+#include <math.h>
+#include <stdlib.h>
 #include <discrete_cosine_transform.h>
 
 float **calloc_mat(int dimX, int dimY) {
-	float **m = calloc(dimX, sizeof(float*));
-	float *p = calloc(dimX*dimY, sizeof(float));
+	float **m = (float **)calloc(dimX, sizeof(float*));
+	float *p = (float *)calloc(dimX*dimY, sizeof(float));
 	int i;
 	for (i = 0; i <dimX; i++) {
 		m[i] = &p[i*dimY];
@@ -65,55 +70,4 @@ void idct(float **Matrix, float **DCTMatrix, int N, int M) {
 			Matrix[u][v] *= 2. / ((float)N)*2. / ((float)M);
 		}
 	}
-}
-
-
-
-int main() {
-
-	float
-		testBlockA[8][8] = { { 255, 255, 255, 255, 255, 255, 255, 255 },
-		{ 255, 255, 255, 255, 255, 255, 255, 255 },
-		{ 255, 255, 255, 255, 255, 255, 255, 255 },
-		{ 255, 255, 255, 255, 255, 255, 255, 255 },
-		{ 255, 255, 255, 255, 255, 255, 255, 255 },
-		{ 255, 255, 255, 255, 255, 255, 255, 255 },
-		{ 255, 255, 255, 255, 255, 255, 255, 255 },
-		{ 255, 255, 255, 255, 255, 255, 255, 255 } },
-
-		testBlockB[8][8] = { { 255, 0, 255, 0, 255, 0, 255, 0 },
-		{ 0, 255, 0, 255, 0, 255, 0, 255 },
-		{ 255, 0, 255, 0, 255, 0, 255, 0 },
-		{ 0, 255, 0, 255, 0, 255, 0, 255 },
-		{ 255, 0, 255, 0, 255, 0, 255, 0 },
-		{ 0, 255, 0, 255, 0, 255, 0, 255 },
-		{ 255, 0, 255, 0, 255, 0, 255, 0 },
-		{ 0, 255, 0, 255, 0, 255, 0, 255 } };
-
-	FILE * fp = fopen("mydata.csv", "w");
-	int dimX = 8, dimY = 8;
-	int i, j;
-
-	float **testBlock = calloc_mat(dimX, dimY);
-	float **testDCT = calloc_mat(dimX, dimY);
-	float **testiDCT = calloc_mat(dimX, dimY);
-
-	for (i = 0; i<dimX; i++) {
-		for (j = 0; j<dimY; j++) {
-			testBlock[i][j] = testBlockB[i][j];
-		}
-	}
-
-	dct(testDCT, testBlock, dimX, dimY);
-	write_mat(fp, testDCT, dimX, dimY);
-
-	idct(testiDCT, testDCT, dimX, dimY);
-	write_mat(fp, testiDCT, dimX, dimY);
-
-	fclose(fp);
-	free_mat(testBlock);
-	free_mat(testDCT);
-	free_mat(testiDCT);
-
-	return 0;
 }
