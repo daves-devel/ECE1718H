@@ -242,3 +242,5 @@ ModelManifest.xml
 .fake/
 /resource
 /Decoder
+/testdata
+/testdata_old
