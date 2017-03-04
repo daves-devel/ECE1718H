@@ -1,7 +1,10 @@
-// Author:		Irfan Khan (khanirf1) 999207665
-// Date:		February 6th, 2016
-// Description: Given a Y only File, this will Encode the Video.
-//It will produce a Motion vector file and a Residual Video
+// Authors:		Juan Fuentes
+//				Irfan Khan (khanirf1) 999207665
+//				David Chakkuthara
+// Date:		March 4th, 2016
+// Description: Given a Y (LUMA) only File, it will be encoded 
+//				An encoded MDiff File
+//				An encoded QTC Coeff. File
 
 #include <common.h>
 #include <residual.h>
@@ -9,6 +12,7 @@
 #include <quantization.h>
 #include <InterFramePrediction.h>
 #include <IntraFramePrediction.h>
+//#include <discrete_cosine_transform.h>
 
 int main(int argCnt, char **args)
 {
@@ -144,8 +148,6 @@ int main(int argCnt, char **args)
 	FILE* matchfile = fopen(matchfile_name, "wb");
 	FILE* gmvXfile = fopen(gmvx_name, "wb");
 	FILE* gmvYfile = fopen(gmvy_name, "wb");
-	//FILE* debug_inter_frame = fopen("C:\\Users\\JuanFuentes\\Desktop\\test\\inter_frame_enc.txt", "w");DEBUG
-
 
 	if (curfile == NULL) {
 		printf("Cannot open input file <%s>\n", curfile_name);
@@ -186,16 +188,14 @@ int main(int argCnt, char **args)
 		QTC_FRAME[row]   = new unsigned char[width];
 	}
 	
-	// This 1D Buffer will Contain the GMV for each block
-	// in raster row order
-	// TODO, determine if we want a 2D VECTOR Array
-	struct GMV* GMV_VECTOR = new struct GMV[(width/block)*(height/block)];
+	// This 1D Buffer will Contain MDIFF data for each block in raster row order
+	// TODO Convert to 2D array
+	struct MDIFF* MDIFF_VECTOR = new struct MDIFF[(width/block)*(height/block)];
 
 	// Encode Each Frame
 	for (int frame = 0; frame < frames; frame++) {
 		// MV FILE GENERATION (BEGINNING of FRAME)
 		// =========================================
-		//fprintf(debug_inter_frame, "Frame %d\n",  frame);DEBUG
 		fprintf(mvfile, "Frame %d Block_size %d \n", frame + 1, block);
 
 		if ((frame%i_period) == 0) { 
@@ -221,10 +221,10 @@ int main(int argCnt, char **args)
 
 				if (FrameType == IFRAME) {
 
-					GMV_VECTOR[((row*width / block) / block) + (col / block)] = IntraFramePrediction(row, col, width, height, block, CUR_FRAME);
+					MDIFF_VECTOR[((row*width / block) / block) + (col / block)] = IntraFramePrediction(row, col, width, height, block, CUR_FRAME);
 				
-					int MODE = GMV_VECTOR[((row*width / block) / block) + (col / block)].X;
-					int RUN  = GMV_VECTOR[((row*width / block) / block) + (col / block)].Y;
+					int MODE = MDIFF_VECTOR[((row*width / block) / block) + (col / block)].X;
+					int RUN  = MDIFF_VECTOR[((row*width / block) / block) + (col / block)].Y;
 
 					// Fill the Match Frame with the best matching block
 					if (MODE == HORIZONTAL) {
@@ -247,10 +247,10 @@ int main(int argCnt, char **args)
 				
 				if (FrameType == PFRAME) {
 					
-					GMV_VECTOR[((row*width / block) / block) + (col / block)] = InterFramePrediction(row, col, width, height, block, range, CUR_FRAME, REC_FRAME);
+					MDIFF_VECTOR[((row*width / block) / block) + (col / block)] = InterFramePrediction(row, col, width, height, block, range, CUR_FRAME, REC_FRAME);
 
-					int GMV_X = GMV_VECTOR[((row*width / block) / block) + (col / block)].X;
-					int GMV_Y = GMV_VECTOR[((row*width / block) / block) + (col / block)].Y;
+					int GMV_X = MDIFF_VECTOR[((row*width / block) / block) + (col / block)].X;
+					int GMV_Y = MDIFF_VECTOR[((row*width / block) / block) + (col / block)].Y;
 
 					// Fill the Match Frame with the best matching block
 					for (int i = 0; i < block; i++) {
@@ -260,8 +260,8 @@ int main(int argCnt, char **args)
 					}
 				}
 
-				int DATA_1 = GMV_VECTOR[((row*width / block) / block) + (col / block)].X;
-				int DATA_2 = GMV_VECTOR[((row*width / block) / block) + (col / block)].Y;
+				int DATA_1 = MDIFF_VECTOR[((row*width / block) / block) + (col / block)].X;
+				int DATA_2 = MDIFF_VECTOR[((row*width / block) / block) + (col / block)].Y;
 
 				// MV FILE GENERATION (VECTOR DUMP)
 				// =======================================

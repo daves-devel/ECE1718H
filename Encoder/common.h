@@ -8,7 +8,8 @@
 #include <stdint.h>
 #include <algorithm>
 #include <string.h>
-#include "math.h"
+#include <math.h>
+#define _USE_MATH_DEFINES
 
 enum FRAME {
 	IFRAME = 0,
@@ -20,9 +21,11 @@ enum INTRAMODE {
 	VERTICAL = 1
 };
 
-struct GMV {
-	int X;
-	int Y;
+struct MDIFF {
+	int X; // For Inter GMV
+	int Y; // For Inter GMV
+	int MODE; // Intra Mode
+	int RUN; // Intra Offset
 	unsigned int SAD;
 	unsigned int NORM;
 };
