@@ -4,7 +4,7 @@ bool ValidQP(unsigned int QP,unsigned int block) {
 
 	unsigned int minQP = 0;
 	unsigned int logI = (unsigned int) log2 ((double)block);
-	unsigned int maxQP = logI + 7.0;
+	unsigned int maxQP = logI + 7;
 
 	if ((QP >= minQP) && (QP <= maxQP)) {
 		return true;
@@ -16,7 +16,6 @@ bool ValidQP(unsigned int QP,unsigned int block) {
 	}
 
 }
-
 
 void GenerateQ_Matrix(unsigned char ** Q_Matrix, unsigned int QP, unsigned int block) {
 
@@ -36,12 +35,46 @@ void GenerateQ_Matrix(unsigned char ** Q_Matrix, unsigned int QP, unsigned int b
 	}
 }
 
-void GenerateQTC_Matrix(signed char** TC_Matrix, unsigned char ** Q_Matrix, unsigned char ** QTC_Matrix, unsigned int block) {
+int Quantize(signed char** TC_Frame, unsigned char ** QTC_Frame, unsigned int QP, unsigned int block, unsigned int width, unsigned int height) {
+
+	if (!ValidQP(QP, block)) {
+		return 1;
+	}
+
+	unsigned char** Q_Matrix = new unsigned char*[height];
+	for (unsigned int row = 0; row < height; row++) {
+		Q_Matrix[row] = new unsigned char[width];
+	}
+
+	GenerateQ_Matrix(Q_Matrix, QP,block);
+	
+	for (unsigned int row = 0; row < block; row++) {
+		for (unsigned int col = 0; col < block; col++) {
+
+			QTC_Frame[row][col] = round(TC_Frame[row][col] / Q_Matrix[row % block][col % block]);
+
+		}
+	}
+
+}
+
+int Rescale(unsigned char** QTC_Frame, signed char ** TC_Frame, unsigned int QP, unsigned int block, unsigned int width, unsigned int height) {
+
+	if (!ValidQP(QP, block)) {
+		return 1;
+	}
+
+	unsigned char** Q_Matrix = new unsigned char*[height];
+	for (unsigned int row = 0; row < height; row++) {
+		Q_Matrix[row] = new unsigned char[width];
+	}
+
+	GenerateQ_Matrix(Q_Matrix, QP, block);
 
 	for (unsigned int row = 0; row < block; row++) {
 		for (unsigned int col = 0; col < block; col++) {
 
-			QTC_Matrix[row][col] = round(TC_Matrix[row][col] / Q_Matrix[row][col]);
+			TC_Frame[row][col] = QTC_Frame[row][col] * Q_Matrix[row % block][col % block];
 
 		}
 	}

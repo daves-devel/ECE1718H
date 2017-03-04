@@ -1,4 +1,4 @@
-#include <residual.h>      // std::ifstream
+#include <residual.h>      
 void residual(int8_t * residual_mem, uint8_t* frame_mem, int block_size, int frame_width, int frame_height, uint8_t rounding_n, unsigned char** MOTION_FRAME){
 	for(int y=0; y<frame_height; y=y+block_size){
 		for(int x=0; x<frame_width; x=x+block_size){

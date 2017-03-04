@@ -3,27 +3,12 @@
 // Description: Given a Y only File, this will Encode the Video.
 //It will produce a Motion vector file and a Residual Video
 
+#include <common.h>
 #include <residual.h>
 #include <reconstructed.h>
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <stdio.h>   
-#include <stdlib.h> 
-#include <algorithm>
-#include <string.h>
-#include "math.h"
-
-
-struct GMV {
-	int X;
-	int Y;
-	unsigned int SAD;
-	unsigned int NORM;
-};
-
-struct GMV MotionEstimate(int row, int col, int width, int height, 
-						 int block, int range, unsigned char* CUR_FRAME, unsigned char* REC_FRAME);
+#include <quantization.h>
+#include <InterFramePrediction.h>
+#include <IntraFramePrediction.h>
 
 int main(int argCnt, char **args)
 {
@@ -32,7 +17,7 @@ int main(int argCnt, char **args)
 	char mvfile_name[500];
 	char resfile_name[500];
 	char recfile_name[500];
-	char motionfile_name[500];
+	char matchfile_name[500];
 	char gmvx_name[500];
 	char gmvy_name[500];
 	
@@ -44,6 +29,9 @@ int main(int argCnt, char **args)
 	int padRight	= 0;
 	int padBottom	= 0;
 	int round		= 0;
+	int i_period	= -1;
+	int FrameType	= -1;
+	int QP			= -1;
 
 	args++;
 	int tmpArgCnt = 1;
@@ -88,9 +76,9 @@ int main(int argCnt, char **args)
 			args++;
 			tmpArgCnt += 2;
 		}
-		else if (!strcmp((*args) + 1, "motionfile")) {
+		else if (!strcmp((*args) + 1, "matchfile")) {
 			args++;
-			sscanf(*args, "%s", motionfile_name);
+			sscanf(*args, "%s", matchfile_name);
 			args++;
 			tmpArgCnt += 2;
 		}
@@ -118,6 +106,12 @@ int main(int argCnt, char **args)
 			args++;
 			tmpArgCnt += 2;
 		}
+		else if (!strcmp((*args) + 1, "i_period")) {
+			args++;
+			i_period = atoi(*args);
+			args++;
+			tmpArgCnt += 2;
+		}
 		else if (!strcmp((*args) + 1, "gmvx")) {
 			args++;
 			sscanf(*args, "%s", gmvx_name);
@@ -127,6 +121,12 @@ int main(int argCnt, char **args)
 		else if (!strcmp((*args) + 1, "gmvy")) {
 			args++;
 			sscanf(*args, "%s", gmvy_name);
+			args++;
+			tmpArgCnt += 2;
+		}
+		else if (!strcmp((*args) + 1, "qp")) {
+			args++;
+			QP = atoi(*args);
 			args++;
 			tmpArgCnt += 2;
 		}
@@ -141,7 +141,7 @@ int main(int argCnt, char **args)
 	FILE* mvfile = fopen(mvfile_name, "w");
 	FILE* resfile = fopen(resfile_name, "wb");
 	FILE* recfile = fopen(recfile_name, "w+b");
-	FILE* motionfile = fopen(motionfile_name, "wb");
+	FILE* matchfile = fopen(matchfile_name, "wb");
 	FILE* gmvXfile = fopen(gmvx_name, "wb");
 	FILE* gmvYfile = fopen(gmvy_name, "wb");
 	//FILE* debug_inter_frame = fopen("C:\\Users\\JuanFuentes\\Desktop\\test\\inter_frame_enc.txt", "w");DEBUG
@@ -171,13 +171,18 @@ int main(int argCnt, char **args)
 	unsigned char* CUR_FRAME		= new unsigned char[FRAME_SIZE];
 	unsigned char* REC_FRAME		= new unsigned char[FRAME_SIZE];
 	unsigned char* REC_FRAME_OUT	= new unsigned char[FRAME_SIZE];
-	unsigned char* RES_FRAME	    = new unsigned char[FRAME_SIZE];
+	  signed char* RES_FRAME	    = new   signed char[FRAME_SIZE];
 
 	// This 2D Buffer Will containe the best blocks for 
 	// estimation in their corresponding block locations
-	unsigned char** MOTION_FRAME = new unsigned char*[height];
+	unsigned char** MATCH_FRAME	= new unsigned char*[height];
+	  signed char** TC_FRAME	= new   signed char*[height];
+	unsigned char** QTC_FRAME	= new unsigned char*[height];
+
 	for (unsigned int row = 0; row < height; row++) {
-		MOTION_FRAME[row] = new unsigned char[width];
+		MATCH_FRAME[row] = new unsigned char[width];
+		TC_FRAME[row]	 = new   signed char[width];
+		QTC_FRAME[row]   = new unsigned char[width];
 	}
 	
 	// This 1D Buffer will Contain the GMV for each block
@@ -190,11 +195,15 @@ int main(int argCnt, char **args)
 		// =========================================
 		//fprintf(debug_inter_frame, "Frame %d\n",  frame);DEBUG
 		fprintf(mvfile, "Frame %d Block_size %d \n", frame + 1, block);
-		if (frame == 0) {
-			for (int i = 0; i < FRAME_SIZE; i++)
-				REC_FRAME[i] = 128; // Prefill with GREY
+
+		if ((frame%i_period) == 0) { 
+			FrameType = IFRAME;
 		}
 		else {
+			FrameType = PFRAME;
+		}
+
+		if (FrameType == PFRAME){
 			// Go to the beginning of the previous reconstructed frame and copy it to buffer
 			fseek(recfile, (frame - 1)*FRAME_SIZE, SEEK_SET);
 			fread(REC_FRAME, sizeof(unsigned char), FRAME_SIZE, recfile);
@@ -205,58 +214,114 @@ int main(int argCnt, char **args)
 		fread(CUR_FRAME, sizeof(unsigned char), FRAME_SIZE, curfile);
 		for (int row = 0; row < height; row += block) {
 			for (int col = 0; col < width; col += block) {
-				// IDEALLY THREAD EVERYTHING IN THIS FOR LOOP
-				// Motion estimate for block x = row/block, y = col/block					
-				// Store the result GMV in its spot in 1D array 
-				GMV_VECTOR[((row*width/block) / block) + (col / block)] = MotionEstimate(row, col, width, height, block, range, CUR_FRAME, REC_FRAME);
 
-				int GMV_X = GMV_VECTOR[((row*width/block) / block) + (col / block)].X;
-				int GMV_Y = GMV_VECTOR[((row*width/block) / block) + (col / block)].Y;
+				// IDEALLY THREAD EVERYTHING IN THIS FOR LOOP
+
+				if (FrameType == IFRAME) {
+
+					GMV_VECTOR[((row*width / block) / block) + (col / block)] = IntraFramePrediction(row, col, width, height, block, CUR_FRAME);
+				
+					int MODE = GMV_VECTOR[((row*width / block) / block) + (col / block)].X;
+					int RUN  = GMV_VECTOR[((row*width / block) / block) + (col / block)].Y;
+
+					// Fill the Match Frame with the best matching block
+					if (MODE == HORIZONTAL) {
+						for (int i = 0; i < block; i++) {
+							for (int j = 0; j < block; j++) {
+								// TODO / Need an Intra mode algoritm
+								MATCH_FRAME[row + i][col + j] = REC_FRAME[(row + MODE) * width + (col + MODE + j)];
+							}
+						}
+					}
+					if (MODE == VERTICAL){
+						for (int i = 0; i < block; i++) {
+							for (int j = 0; j < block; j++) {
+								// TODO / Need an Intra mode algoritm
+								MATCH_FRAME[row + i][col + j] = REC_FRAME[(row + MODE) * width + (col + MODE + j)];
+							}
+						}
+					}
+				}
+				
+				if (FrameType == PFRAME) {
+					
+					GMV_VECTOR[((row*width / block) / block) + (col / block)] = InterFramePrediction(row, col, width, height, block, range, CUR_FRAME, REC_FRAME);
+
+					int GMV_X = GMV_VECTOR[((row*width / block) / block) + (col / block)].X;
+					int GMV_Y = GMV_VECTOR[((row*width / block) / block) + (col / block)].Y;
+
+					// Fill the Match Frame with the best matching block
+					for (int i = 0; i < block; i++) {
+						for (int j = 0; j < block; j++) {
+							MATCH_FRAME[row + i][col + j] = REC_FRAME[(row + GMV_Y + i) * width + (col + GMV_X + j)];
+						}
+					}
+				}
+
+				int DATA_1 = GMV_VECTOR[((row*width / block) / block) + (col / block)].X;
+				int DATA_2 = GMV_VECTOR[((row*width / block) / block) + (col / block)].Y;
 
 				// MV FILE GENERATION (VECTOR DUMP)
 				// =======================================
-				fwrite(&GMV_X, sizeof(int), 1, gmvXfile);
-				fwrite(&GMV_Y, sizeof(int), 1, gmvYfile);
-				fprintf(mvfile, "B(%d,%d)_V(%d,%d)\n", row / block, col / block, GMV_X, GMV_Y);
-
-				// Fill the Motion Frame with the best matching block
-				for (int i = 0; i < block; i++) {
-					for (int j = 0; j < block; j++) {
-						MOTION_FRAME[row + i][col + j] = REC_FRAME[(row + GMV_Y + i) * width + (col + GMV_X + j)];
-						unsigned int temp = REC_FRAME[(row + GMV_Y + i) * width + (col + GMV_X + j)];
-					}
+				fwrite(&DATA_1, sizeof(int), 1, gmvXfile);
+				fwrite(&DATA_2, sizeof(int), 1, gmvYfile);
+				if (FrameType == IFRAME) {
+					fprintf(mvfile, "B(%d,%d)_M(%d,%d)\n", row / block, col / block, DATA_1, DATA_2);
 				}
+				if (FrameType == PFRAME) {
+					fprintf(mvfile, "B(%d,%d)_V(%d,%d)\n", row / block, col / block, DATA_1, DATA_2);
+				}
+				
 			}
 		}
 
 		
 		for (unsigned int row = 0; row < height; row++) {
-			fwrite(MOTION_FRAME[row], sizeof(unsigned char), width, motionfile);
+			fwrite(MATCH_FRAME[row], sizeof(unsigned char), width, matchfile);
 		}
-		fclose(motionfile);
-		motionfile = fopen(motionfile_name, "a+b");
-		//fwrite(MOTION_FRAME, sizeof(unsigned char), width, motionfile);
+
 		// RESIDUAL FILE GENERATION
 		// =========================================================================
-		residual(RES_FRAME, CUR_FRAME, block, width, height, round, MOTION_FRAME);
+		residual(RES_FRAME, CUR_FRAME, block, width, height, round, MATCH_FRAME);
 		fwrite(RES_FRAME, sizeof(unsigned char), FRAME_SIZE, resfile);
 
-		// RECONSTRUCTED FILE GENERATION
-		// ==============================
-		recon(RES_FRAME, REC_FRAME, block, width, height, MOTION_FRAME);
-		fclose(recfile);
-		recfile = fopen(recfile_name, "a+b");
-		fwrite(REC_FRAME, sizeof(unsigned char), FRAME_SIZE, recfile);
+		// TRANFORM FRAME
+		// =========================================================================
+		// TODO
+		// DCT(TC_FRAME, RES_FRAME, width, height);
 
-		// MV FILE GENERATION (END of FRAME)
-		// =======================================
-		fprintf(mvfile, "End of frame %d\n\n", frame+1);
+		// QUANTIZE FRAME
+		// =========================================================================
+		Quantize(TC_FRAME, QTC_FRAME, QP, block, width, height);
+
+		// ENTROPY ENCODE FRAME
+		// =========================================================================
+		// TODO
+		
+		// DUMP ENCODED DATA
+		// =========================================================================
+		// TODO
+
+		// ENTROPY DECODE FRAME
+		// =========================================================================
+		// TODO
+
+		// RESCALING
+		// =========================================================================
+		Rescale(QTC_FRAME, TC_FRAME, QP, block, width, height);
+
+		// INV DCT
+		// =========================================================================
+		// IDCT (TC_FRAME,REC_FRAME,width,height);
+
+		// Should Have REC_FRAME for next iteration of the loop now. REC is only used in P frames though
+
 	}
 
 	for (unsigned int row = 0; row < height; row++) {
-		delete MOTION_FRAME[row];
+		delete MATCH_FRAME[row];
 	}
-	delete MOTION_FRAME;
+	delete MATCH_FRAME;
 	delete CUR_FRAME;
 	delete REC_FRAME;
 	fclose(curfile);
@@ -265,89 +330,9 @@ int main(int argCnt, char **args)
 	fclose(gmvYfile);
 	fclose(resfile);
 	fclose(recfile);
-	fclose(motionfile);
+	fclose(matchfile);
 	return 0;
 
 }
 
-struct GMV MotionEstimate(int row, // Pixel Row in Current Frame
-	int col, // Pixel Col in Current Frame
-	int width,
-	int height,
-	int block,
-	int range,
-	unsigned char* CUR_FRAME,
-	unsigned char* REC_FRAME) {
 
-	struct GMV BEST_GMV;
-	bool firstGMV = true;
-
-	for (int GMV_X = 0 - range; GMV_X <= range; GMV_X++) {
-		for (int GMV_Y = 0 - range; GMV_Y <= range; GMV_Y++) {
-			if (((GMV_X + col) < 0) || ((GMV_X + col + block) > width)) {
-				continue; //Block outisde search space so don't compute
-			}
-			if (((GMV_Y + row) < 0) || ((GMV_Y + row + block) > height)) {
-				continue; //Block outisde search space so don't compute
-			}
-
-			int X = GMV_X;
-			int Y = GMV_Y;
-			unsigned int SAD = 0;
-			unsigned int NORM = abs(X) + abs(Y);
-
-			//Calculate SAD
-			for (int i = 0; i < block; i++) {
-				for (int j = 0; j < block; j++) {
-					SAD += abs(CUR_FRAME[(row + i)*width + col + j] - REC_FRAME[(GMV_Y + row + i)*width + GMV_X + col + j]);
-				}
-			}
-
-			// Pick Best Global Motion Vector 
-			if (firstGMV) {
-				firstGMV = false;
-				BEST_GMV.X = X;
-				BEST_GMV.Y = Y;
-				BEST_GMV.SAD = SAD;
-				BEST_GMV.NORM = NORM;
-				continue;
-			}
-
-			if (BEST_GMV.SAD > SAD) {
-				BEST_GMV.X = X;
-				BEST_GMV.Y = Y;
-				BEST_GMV.SAD = SAD;
-				BEST_GMV.NORM = NORM;
-			}
-			else if (BEST_GMV.SAD == SAD) {
-				if (BEST_GMV.NORM > NORM) {
-					BEST_GMV.X = X;
-					BEST_GMV.Y = Y;
-					BEST_GMV.SAD = SAD;
-					BEST_GMV.NORM = NORM;
-				}
-				else if (BEST_GMV.NORM == NORM) {
-					if (abs(BEST_GMV.Y) > abs(Y)) {
-						BEST_GMV.X = X;
-						BEST_GMV.Y = Y;
-						BEST_GMV.SAD = SAD;
-						BEST_GMV.NORM = NORM;
-					}
-					else if (abs(BEST_GMV.Y) == abs(Y)) {
-						if (abs(BEST_GMV.X) > abs(X)) {
-							BEST_GMV.X = X;
-							BEST_GMV.Y = Y;
-							BEST_GMV.SAD = SAD;
-							BEST_GMV.NORM = NORM;
-						}
-						else if (abs(BEST_GMV.X) == abs(X)) {
-							// Either Do Nothing
-							// Or we could Overwrite
-						}
-					}
-				}
-			}
-		}
-	}
-	return BEST_GMV;
-}
