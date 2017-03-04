@@ -1,3 +1,5 @@
+#ifndef __COMMON_H__
+#define __COMMON_H__
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -17,9 +19,11 @@ enum INTRAMODE {
 	HORIZONTAL = 0,
 	VERTICAL = 1
 };
+
 struct GMV {
 	int X;
 	int Y;
 	unsigned int SAD;
 	unsigned int NORM;
 };
+#endif

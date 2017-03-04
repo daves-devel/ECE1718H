@@ -168,13 +168,14 @@ int main(int argCnt, char **args)
 	}
 
 	unsigned int  FRAME_SIZE		= width*height;
+
+	//TODO Convert these 1D Frames to 2D Frames
 	unsigned char* CUR_FRAME		= new unsigned char[FRAME_SIZE];
 	unsigned char* REC_FRAME		= new unsigned char[FRAME_SIZE];
 	unsigned char* REC_FRAME_OUT	= new unsigned char[FRAME_SIZE];
 	  signed char* RES_FRAME	    = new   signed char[FRAME_SIZE];
 
-	// This 2D Buffer Will containe the best blocks for 
-	// estimation in their corresponding block locations
+
 	unsigned char** MATCH_FRAME	= new unsigned char*[height];
 	  signed char** TC_FRAME	= new   signed char*[height];
 	unsigned char** QTC_FRAME	= new unsigned char*[height];
@@ -187,6 +188,7 @@ int main(int argCnt, char **args)
 	
 	// This 1D Buffer will Contain the GMV for each block
 	// in raster row order
+	// TODO, determine if we want a 2D VECTOR Array
 	struct GMV* GMV_VECTOR = new struct GMV[(width/block)*(height/block)];
 
 	// Encode Each Frame

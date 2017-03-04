@@ -47,13 +47,13 @@
     <ClInclude Include="..\quantization.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\common.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\InterFramePrediction.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\IntraFramePrediction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
