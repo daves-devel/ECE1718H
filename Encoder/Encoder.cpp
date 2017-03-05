@@ -10,6 +10,7 @@
 #include <residual.h>
 #include <reconstructed.h>
 #include <quantization.h>
+#include <entropy.h>
 #include <InterFramePrediction.h>
 #include <IntraFramePrediction.h>
 //#include <discrete_cosine_transform.h>
@@ -17,25 +18,25 @@
 int main(int argCnt, char **args)
 {
 
-	char curfile_name[500]		= "";
-	char mvfile_name[500]		= "";
-	char resfile_name[500]		= "";
-	char recfile_name[500]		= "";
-	char matchfile_name[500]	= "";
-	char gmvx_name[500]			= "";
-	char gmvy_name[500]			= "";
-	
-	int width		= -1;
-	int height		= -1;
-	int frames		= -1;
-	int range		= -1;
-	int block		= -1;
-	int padRight	= -1;
-	int padBottom	= -1;
-	int round		= -1;
-	int i_period	= -1;
-	int FrameType	= -1;
-	int QP			= -1;
+	char curfile_name[500] = "";
+	char mvfile_name[500] = "";
+	char resfile_name[500] = "";
+	char recfile_name[500] = "";
+	char matchfile_name[500] = "";
+	char gmvx_name[500] = "";
+	char gmvy_name[500] = "";
+
+	int width = -1;
+	int height = -1;
+	int frames = -1;
+	int range = -1;
+	int block = -1;
+	int padRight = -1;
+	int padBottom = -1;
+	int round = -1;
+	int i_period = -1;
+	int FrameType = -1;
+	int QP = -1;
 
 	args++;
 	int tmpArgCnt = 1;
@@ -169,30 +170,48 @@ int main(int argCnt, char **args)
 		printf("Invalid Block Dimension <%d>", block);
 	}
 
-	unsigned int  FRAME_SIZE		= width*height;
+	unsigned int  FRAME_SIZE = width*height;
 
 	//TODO Convert these 1D Frames to 2D Frames
-	unsigned char* CUR_FRAME		= new unsigned char[FRAME_SIZE];
-	unsigned char* REC_FRAME		= new unsigned char[FRAME_SIZE];
-	  signed char* RES_FRAME	    = new   signed char[FRAME_SIZE];
+	unsigned char* CUR_FRAME = new unsigned char[FRAME_SIZE];
+	unsigned char* REC_FRAME = new unsigned char[FRAME_SIZE];
+	signed char* RES_FRAME = new   signed char[FRAME_SIZE];
 
 
-	unsigned char** MATCH_FRAME	= new unsigned char*[height];
-	  signed char** TC_FRAME	= new   signed char*[height];
-	unsigned char** QTC_FRAME	= new unsigned char*[height];
+	unsigned char** MATCH_FRAME = new unsigned char*[height];
+	signed char** TC_FRAME = new   signed char*[height];
+	unsigned char** QTC_FRAME = new unsigned char*[height];
 	unsigned char** CUR_FRAME_2D = new unsigned char*[height];
 
 	for (unsigned int row = 0; row < height; row++) {
 		MATCH_FRAME[row] = new unsigned char[width];
-		TC_FRAME[row]	 = new   signed char[width];
-		QTC_FRAME[row]   = new unsigned char[width];
+		TC_FRAME[row] = new   signed char[width];
+		QTC_FRAME[row] = new unsigned char[width];
 		CUR_FRAME_2D[row] = new unsigned char[width];
 	}
-	
+
 	// This 1D Buffer will Contain MDIFF data for each block in raster row order
 	// TODO Convert to 2D array
-	struct MDIFF* MDIFF_VECTOR = new struct MDIFF[(width/block)*(height/block)];
+	struct MDIFF* MDIFF_VECTOR = new struct MDIFF[(width / block)*(height / block)];
 
+	//TEST JUAN
+/*	int size = 8;
+	int index = 0;
+	uint8_t * out = new uint8_t[size *size];
+	uint8_t ** in = new uint8_t*[size];
+	for (int i = 0; i < size; i++)
+		in[i] = new uint8_t[size];
+	for (int i = 0; i < size; i++){
+		for (int j = 0; j < size; j++) {
+			in[i][j] = index;
+			index++;
+		}
+	}
+	entropy(in, out, size);
+	FILE* test = fopen("test.txt", "w");
+	fprint_coeef(in, out, size, test);
+	fclose(test);
+	*/
 	// Encode Each Frame
 	// =========================================
 	for (int frame = 0; frame < frames; frame++) {

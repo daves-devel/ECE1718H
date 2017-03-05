@@ -69,7 +69,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>$(VC_IncludePath);C:\Users\JuanFuentes\Source\Repos\ECE1718H\Encoder;$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -125,6 +125,7 @@
   <ItemGroup>
     <ClInclude Include="..\common.h" />
     <ClInclude Include="..\discrete_cosine_transform.h" />
+    <ClInclude Include="..\entropy.h" />
     <ClInclude Include="..\InterFramePrediction.h" />
     <ClInclude Include="..\IntraFramePrediction.h" />
     <ClInclude Include="..\quantization.h" />

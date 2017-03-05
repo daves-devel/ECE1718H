@@ -44,5 +44,8 @@
     <ClInclude Include="..\discrete_cosine_transform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\entropy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
