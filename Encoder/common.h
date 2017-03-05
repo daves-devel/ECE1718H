@@ -1,5 +1,6 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
+#define _USE_MATH_DEFINES
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -9,7 +10,8 @@
 #include <algorithm>
 #include <string.h>
 #include <math.h>
-#define _USE_MATH_DEFINES
+#include <cmath>
+
 
 enum FRAME {
 	IFRAME = 0,

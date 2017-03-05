@@ -1,6 +1,6 @@
 // Authors:		Juan Fuentes
 //				Irfan Khan (khanirf1) 999207665
-//				David Chakkuthara
+//				David Chakkuthara 995435266
 // Date:		March 4th, 2016
 // Description: Given a Y (LUMA) only File, it will be encoded 
 //				Outputs an encoded MDiff File
@@ -12,7 +12,7 @@
 #include <quantization.h>
 #include <InterFramePrediction.h>
 #include <IntraFramePrediction.h>
-//#include <discrete_cosine_transform.h>
+#include <discrete_cosine_transform.h>
 
 int main(int argCnt, char **args)
 {
