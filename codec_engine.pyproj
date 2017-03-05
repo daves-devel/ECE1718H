@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{10d79229-e5a8-4a4b-b1ce-488a9e1a557f}</ProjectGuid>
+    <ProjectHome />
+    <StartupFile>codec_engine.py</StartupFile>
+    <SearchPath />
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <InterpreterId />
+    <InterpreterVersion />
+    <InterpreterArguments>-infile resource\foreman_cif -width 352 -height 288 -frames 100 -range 1 -round 2</InterpreterArguments>
+    <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
+    <CommandLineArguments>-infile resource\foreman_cif -width 352 -height 288 -frames 100 -range 1 -round 2</CommandLineArguments>
+    <InterpreterPath>C:\Users\JuanFuentes\AppData\Local\Programs\Python\Python36\python.exe</InterpreterPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <PropertyGroup>
+    <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
+    <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="codec_engine.py" />
+    <Compile Include="testcases.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Decoder\inter_frame_dec.txt" />
+    <Content Include="Decoder\ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Decoder" />
+  </ItemGroup>
+  <Import Project="$(PtvsTargetsFile)" Condition="Exists($(PtvsTargetsFile))" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="!Exists($(PtvsTargetsFile))" />
+</Project>
