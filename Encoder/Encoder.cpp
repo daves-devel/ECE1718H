@@ -3,8 +3,8 @@
 //				David Chakkuthara
 // Date:		March 4th, 2016
 // Description: Given a Y (LUMA) only File, it will be encoded 
-//				An encoded MDiff File
-//				An encoded QTC Coeff. File
+//				Outputs an encoded MDiff File
+//				Outputs an encoded QTC Coeff. File
 
 #include <common.h>
 #include <residual.h>
@@ -17,22 +17,22 @@
 int main(int argCnt, char **args)
 {
 
-	char curfile_name[500];
-	char mvfile_name[500];
-	char resfile_name[500];
-	char recfile_name[500];
-	char matchfile_name[500];
-	char gmvx_name[500];
-	char gmvy_name[500];
+	char curfile_name[500]		= "";
+	char mvfile_name[500]		= "";
+	char resfile_name[500]		= "";
+	char recfile_name[500]		= "";
+	char matchfile_name[500]	= "";
+	char gmvx_name[500]			= "";
+	char gmvy_name[500]			= "";
 	
-	int width		= 0;
-	int height		= 0;
-	int frames		= 0;
-	int range		= 0;
-	int block		= 0;
-	int padRight	= 0;
-	int padBottom	= 0;
-	int round		= 0;
+	int width		= -1;
+	int height		= -1;
+	int frames		= -1;
+	int range		= -1;
+	int block		= -1;
+	int padRight	= -1;
+	int padBottom	= -1;
+	int round		= -1;
 	int i_period	= -1;
 	int FrameType	= -1;
 	int QP			= -1;
@@ -174,18 +174,19 @@ int main(int argCnt, char **args)
 	//TODO Convert these 1D Frames to 2D Frames
 	unsigned char* CUR_FRAME		= new unsigned char[FRAME_SIZE];
 	unsigned char* REC_FRAME		= new unsigned char[FRAME_SIZE];
-	unsigned char* REC_FRAME_OUT	= new unsigned char[FRAME_SIZE];
 	  signed char* RES_FRAME	    = new   signed char[FRAME_SIZE];
 
 
 	unsigned char** MATCH_FRAME	= new unsigned char*[height];
 	  signed char** TC_FRAME	= new   signed char*[height];
 	unsigned char** QTC_FRAME	= new unsigned char*[height];
+	unsigned char** CUR_FRAME_2D = new unsigned char*[height];
 
 	for (unsigned int row = 0; row < height; row++) {
 		MATCH_FRAME[row] = new unsigned char[width];
 		TC_FRAME[row]	 = new   signed char[width];
 		QTC_FRAME[row]   = new unsigned char[width];
+		CUR_FRAME_2D[row] = new unsigned char[width];
 	}
 	
 	// This 1D Buffer will Contain MDIFF data for each block in raster row order
@@ -193,9 +194,10 @@ int main(int argCnt, char **args)
 	struct MDIFF* MDIFF_VECTOR = new struct MDIFF[(width/block)*(height/block)];
 
 	// Encode Each Frame
+	// =========================================
 	for (int frame = 0; frame < frames; frame++) {
-		// MV FILE GENERATION (BEGINNING of FRAME)
-		// =========================================
+		
+		// Print MDIFF File
 		fprintf(mvfile, "Frame %d Block_size %d \n", frame + 1, block);
 
 		if ((frame%i_period) == 0) { 
@@ -221,25 +223,39 @@ int main(int argCnt, char **args)
 
 				if (FrameType == IFRAME) {
 
-					MDIFF_VECTOR[((row*width / block) / block) + (col / block)] = IntraFramePrediction(row, col, width, height, block, CUR_FRAME);
+					// TODO Remove this when we do 2D Arrays
+					for (unsigned int copy_row = 0; copy_row < width; copy_row++) {
+						for (unsigned int copy_col = 0; copy_col < height; copy_col++) {
+							CUR_FRAME_2D[copy_row][copy_col] = CUR_FRAME[copy_row*width + copy_col];
+						}
+					}
+
+					MDIFF_VECTOR[((row*width / block) / block) + (col / block)] = IntraFramePrediction(row, col, block, CUR_FRAME_2D); // TODO Change when all arrays are 2D
 				
-					int MODE = MDIFF_VECTOR[((row*width / block) / block) + (col / block)].X;
-					int RUN  = MDIFF_VECTOR[((row*width / block) / block) + (col / block)].Y;
+					int MODE = MDIFF_VECTOR[((row*width / block) / block) + (col / block)].MODE;
 
 					// Fill the Match Frame with the best matching block
 					if (MODE == HORIZONTAL) {
 						for (int i = 0; i < block; i++) {
 							for (int j = 0; j < block; j++) {
-								// TODO / Need an Intra mode algoritm
-								MATCH_FRAME[row + i][col + j] = REC_FRAME[(row + MODE) * width + (col + MODE + j)];
+								if (col == 0) {
+									MATCH_FRAME[row + i][col + j] = 128;
+								}
+								else {
+									MATCH_FRAME[row + i][col + j] = CUR_FRAME[(row + i) * width + (col - 1)];
+								}
 							}
 						}
 					}
 					if (MODE == VERTICAL){
 						for (int i = 0; i < block; i++) {
 							for (int j = 0; j < block; j++) {
-								// TODO / Need an Intra mode algoritm
-								MATCH_FRAME[row + i][col + j] = REC_FRAME[(row + MODE) * width + (col + MODE + j)];
+								if (col == 0) {
+									MATCH_FRAME[row + i][col + j] = 128;
+								}
+								else {
+									MATCH_FRAME[row + i][col + j] = CUR_FRAME[(row - 1) * width + (col + j)];
+								}
 							}
 						}
 					}

@@ -25,7 +25,6 @@ struct MDIFF {
 	int X; // For Inter GMV
 	int Y; // For Inter GMV
 	int MODE; // Intra Mode
-	int RUN; // Intra Offset
 	unsigned int SAD;
 	unsigned int NORM;
 };
