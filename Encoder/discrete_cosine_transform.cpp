@@ -27,7 +27,7 @@ void write_mat(FILE *fp, float **m, int N, int M) {
 	for (i = 0; i< N; i++) {
 		fprintf(fp, "%f", m[i][0]);
 		for (j = 1; j < M; j++) {
-			fprintf(fp, "\t%f", m[i][j]);
+			fprintf(fp, ",%f", m[i][j]);
 		}
 		fprintf(fp, "\n");
 	}
@@ -37,37 +37,36 @@ void write_mat(FILE *fp, float **m, int N, int M) {
 void dct(float **DCTMatrix, float **Matrix, int N, int M) {
 
 	int i, j, u, v;
+	float alpha_u, alpha_v;
 	for (u = 0; u < N; ++u) {
 		for (v = 0; v < M; ++v) {
 			DCTMatrix[u][v] = 0;
+			alpha_u = (u == 0) ? (1. / sqrt((float)N)):(sqrt(2. / N));
+			alpha_v = (v == 0) ? (1. / sqrt((float)M)):(sqrt(2. / M));
 			for (i = 0; i < N; i++) {
 				for (j = 0; j < M; j++) {
-					DCTMatrix[u][v] += Matrix[i][j] * cos(M_PI / ((float)N)*(i + 1. / 2.)*u)*cos(M_PI / ((float)M)*(j + 1. / 2.)*v);
+					DCTMatrix[u][v] += Matrix[i][j] * cos(M_PI / ((float)N)*((2.*i + 1.) / 2.)*u)*cos(M_PI / ((float)M)*((2.*j + 1.) / 2.)*v);
 				}
 			}
+			DCTMatrix[u][v] = alpha_u * alpha_v * DCTMatrix[u][v];
 		}
 	}
 }
 
 void idct(float **Matrix, float **DCTMatrix, int N, int M) {
 	int i, j, u, v;
-
-	for (u = 0; u < N; ++u) {
-		for (v = 0; v < M; ++v) {
-			Matrix[u][v] = 1 / 4.*DCTMatrix[0][0];
-			for (i = 1; i < N; i++) {
-				Matrix[u][v] += 1 / 2.*DCTMatrix[i][0];
-			}
-			for (j = 1; j < M; j++) {
-				Matrix[u][v] += 1 / 2.*DCTMatrix[0][j];
-			}
-
-			for (i = 1; i < N; i++) {
-				for (j = 1; j < M; j++) {
-					Matrix[u][v] += DCTMatrix[i][j] * cos(M_PI / ((float)N)*(u + 1. / 2.)*i)*cos(M_PI / ((float)M)*(v + 1. / 2.)*j);
+	float alpha_u, alpha_v;
+	
+	for (i = 0; i < N; ++i) {
+		for (j = 0; j < M; ++j) {
+			Matrix[i][j] = 0;
+			for (u = 0; u < N; ++u) {
+				for (v = 0; v < M; ++v) {
+					alpha_u = (u == 0) ? (1. / sqrt((float)N)) : (sqrt(2. / N));
+					alpha_v = (v == 0) ? (1. / sqrt((float)M)) : (sqrt(2. / M));
+					Matrix[i][j] += alpha_u * alpha_v * DCTMatrix[u][v] * cos(M_PI / ((float)N)*((2.*i + 1.) / 2.)*u)*cos(M_PI / ((float)M)*((2.*j + 1.) / 2.)*v);
 				}
 			}
-			Matrix[u][v] *= 2. / ((float)N)*2. / ((float)M);
 		}
 	}
 }
