@@ -195,21 +195,39 @@ int main(int argCnt, char **args)
 	struct MDIFF* MDIFF_VECTOR = new struct MDIFF[(width / block)*(height / block)];
 
 	//TEST JUAN
-/*	int size = 8;
+/*	int size = 4;
 	int index = 0;
-	uint8_t * out = new uint8_t[size *size];
-	uint8_t ** in = new uint8_t*[size];
+	int8_t * out = new int8_t[size *size];
+	int8_t * RLE = new int8_t[size*size + size*size];
+	int8_t ** in = new int8_t*[size];
 	for (int i = 0; i < size; i++)
-		in[i] = new uint8_t[size];
+		in[i] = new int8_t[size];
 	for (int i = 0; i < size; i++){
 		for (int j = 0; j < size; j++) {
 			in[i][j] = index;
 			index++;
 		}
 	}
-	entropy(in, out, size);
+	in[0][0] = -31;
+	in[0][1] = 9;
+	in[0][2] = 8;
+	in[0][3] = 4;
+	in[1][0] = -4;
+	in[1][1] = 1;
+	in[1][2] = 4;
+	in[1][3] = 0;
+	in[2][0] = -3;
+	in[2][1] = 2;
+	in[2][2] = 4;
+	in[2][3] = 0;
+	in[3][0] = 4;
+	in[3][1] = 0;
+	in[3][2] = -4;
+	in[3][3] = 2;
+
+	int total_counter=entropy(in, out, size, RLE);
 	FILE* test = fopen("test.txt", "w");
-	fprint_coeef(in, out, size, test);
+	fprint_coeef(in, out, size, test, RLE, total_counter);
 	fclose(test);
 	*/
 	// Encode Each Frame
