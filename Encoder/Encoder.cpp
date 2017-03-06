@@ -179,14 +179,14 @@ int main(int argCnt, char **args)
 
 
 	unsigned char** MATCH_FRAME = new unsigned char*[height];
-	signed char** TC_FRAME = new   signed char*[height];
-	unsigned char** QTC_FRAME = new unsigned char*[height];
+	signed char** TC_FRAME = new signed char*[height];
+	signed char** QTC_FRAME = new signed char*[height];
 	unsigned char** CUR_FRAME_2D = new unsigned char*[height];
 
 	for (unsigned int row = 0; row < height; row++) {
 		MATCH_FRAME[row] = new unsigned char[width];
-		TC_FRAME[row] = new   signed char[width];
-		QTC_FRAME[row] = new unsigned char[width];
+		TC_FRAME[row] = new signed char[width];
+		QTC_FRAME[row] = new signed char[width];
 		CUR_FRAME_2D[row] = new unsigned char[width];
 	}
 

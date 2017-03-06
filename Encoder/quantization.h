@@ -2,8 +2,8 @@
 
 bool ValidQP(unsigned int QP, unsigned int block);
 void GenerateQ_Matrix(unsigned char ** Q_Matrix, unsigned int QP, unsigned int block);
-int Quantize(signed char** TC_Frame, unsigned char ** QTC_Frame, unsigned int QP, unsigned int block, unsigned int width, unsigned int height);
-int Rescale(unsigned char** QTC_Frame, signed char ** TC_Frame, unsigned int QP, unsigned int block, unsigned int width, unsigned int height);
+int Quantize(signed char** TC_Frame, signed char ** QTC_Frame, unsigned int QP, unsigned int block, unsigned int width, unsigned int height);
+int Rescale(signed char** QTC_Frame, signed char ** TC_Frame, unsigned int QP, unsigned int block, unsigned int width, unsigned int height);
 
 bool ValidQP(unsigned int QP, unsigned int block) {
 
@@ -40,7 +40,7 @@ void GenerateQ_Matrix(unsigned char ** Q_Matrix, unsigned int QP, unsigned int b
 	}
 }
 
-int Quantize(signed char** TC_Frame, unsigned char ** QTC_Frame, unsigned int QP, unsigned int block, unsigned int width, unsigned int height) {
+int Quantize(signed char** TC_Frame, signed char ** QTC_Frame, unsigned int QP, unsigned int block, unsigned int width, unsigned int height) {
 
 	if (!ValidQP(QP, block)) {
 		return 1;
@@ -63,7 +63,7 @@ int Quantize(signed char** TC_Frame, unsigned char ** QTC_Frame, unsigned int QP
 
 }
 
-int Rescale(unsigned char** QTC_Frame, signed char ** TC_Frame, unsigned int QP, unsigned int block, unsigned int width, unsigned int height) {
+int Rescale(signed char** QTC_Frame, signed char ** TC_Frame, unsigned int QP, unsigned int block, unsigned int width, unsigned int height) {
 
 	if (!ValidQP(QP, block)) {
 		return 1;
