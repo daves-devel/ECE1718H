@@ -3,6 +3,10 @@ int entropy(int8_t ** QTC_FRAME, int8_t * COEFF_REORDER, int block, int8_t * RLE
 void raster_to_diag(int8_t ** QTC_FRAME, int8_t * COEFF_REORDER, int block);
 int rle_encode(int8_t *COEFF_REORDER, int8_t *RLE, int block);
 void fprint_coeef(int8_t ** in, int8_t * out, int block, FILE* file, int8_t *RLE, int total_counter);
+uint32_t encode_signed_golomb_value(int8_t input, uint8_t *count);
+void convert_signed_golomb_value(int8_t *RLE, int total_counter);
+int16_t decode_signed_golomb_value(uint32_t input, uint8_t *count);
+
 
 int rle_encode(int8_t *COEFF_REORDER, int8_t *RLE, int block){
 	int index = 0;
@@ -45,10 +49,21 @@ int rle_encode(int8_t *COEFF_REORDER, int8_t *RLE, int block){
 	}
 	return total_counter;
 }
+
+void convert_signed_golomb_value(int8_t *RLE, int total_counter) {
+	for (int i = 0; i <= total_counter; i++) {
+		uint8_t count = 0;
+		uint32_t encoded_value = encode_signed_golomb_value(RLE[i], &count);
+		int32_t result = decode_signed_golomb_value(encoded_value, &count);
+
+	}
+}
+
 int entropy(int8_t ** QTC_FRAME, int8_t * COEFF_REORDER, int block, int8_t * RLE) {
 	int total_counter;
 	raster_to_diag(QTC_FRAME, COEFF_REORDER, block);
 	total_counter = rle_encode(COEFF_REORDER, RLE, block);
+	convert_signed_golomb_value(RLE, total_counter);
 	return total_counter;
 }
 
@@ -92,4 +107,49 @@ void raster_to_diag(int8_t ** QTC_FRAME, int8_t * COEFF_REORDER,int block) {
 			}
 		}
 	}
+}
+
+uint32_t encode_signed_golomb_value(int8_t input, uint8_t *count) {
+	uint8_t index = input;
+	uint32_t result = EVX_SEXP_GOLOMB_CODES[index];
+
+	if (count) {
+		*count = EVX_SEXP_GOLOMB_SIZE_LUT[index];
+	}
+	return result;
+}
+
+int16_t decode_signed_golomb_value(uint32_t input, uint8_t *count) {
+	int16_t result = 0;
+	uint8_t zero_count = 0;
+	uint8_t bit_count = 0;
+	int16_t sign = 0;
+
+	while (!(input & 0x1)) {
+		zero_count++;
+		input >>= 1;
+	}
+
+	bit_count = zero_count + 1;
+	for (uint8_t i = 0; i < bit_count; i++) {
+		result <<= 1;
+		result |= input & 0x1;
+		input >>= 1;
+	}
+
+	/*Remove the lowest bit as our sign bit.*/
+	sign = 1 - 2 * (result & 0x1);
+	result = sign * ((result >> 1) & 0x7FFF);
+
+	/*Defend against overflow on min int16.*/
+	bit_count += zero_count;
+	if (bit_count > 0x20) {
+		result |= 0x8000;
+	}
+
+	if (count) {
+		*count = bit_count + zero_count;
+	}
+
+	return result;
 }
