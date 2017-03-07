@@ -66,7 +66,7 @@ void write_mat2(FILE *fp, signed char **m, int N, int M) {
 void dct(int **DCTMatrix, signed char **Matrix, int N, int M) {
 
 	int i, j, u, v;
-	float alpha_u, alpha_v, temp_float;
+	float alpha_u, alpha_v, temp_float, rounding_num;
 	for (u = 0; u < N; ++u) {
 		for (v = 0; v < M; ++v) {
 			temp_float = 0.0;
@@ -77,14 +77,17 @@ void dct(int **DCTMatrix, signed char **Matrix, int N, int M) {
 					temp_float += ((float)Matrix[i][j]) * cos(M_PI / ((float)N)*((2.*i + 1.) / 2.)*u)*cos(M_PI / ((float)M)*((2.*j + 1.) / 2.)*v);
 				}
 			}
-			DCTMatrix[u][v] = alpha_u * alpha_v * temp_float;
+			temp_float = alpha_u * alpha_v * temp_float;
+			rounding_num = (temp_float > 0) ? (0.5):(-0.5);
+			DCTMatrix[u][v] = temp_float + rounding_num;
+			
 		}
 	}
 }
 
 void idct(signed char **Matrix, int **DCTMatrix, int N, int M) {
 	int i, j, u, v;
-	float alpha_u, alpha_v, temp_float;
+	float alpha_u, alpha_v, temp_float, rounding_num;
 	
 	for (i = 0; i < N; ++i) {
 		for (j = 0; j < M; ++j) {
@@ -96,7 +99,8 @@ void idct(signed char **Matrix, int **DCTMatrix, int N, int M) {
 					temp_float += alpha_u * alpha_v * ((float)DCTMatrix[u][v]) * cos(M_PI / ((float)N)*((2.*i + 1.) / 2.)*u)*cos(M_PI / ((float)M)*((2.*j + 1.) / 2.)*v);
 				}
 			}
-			Matrix[i][j] = temp_float;
+			rounding_num = (temp_float > 0.0) ? (0.5) : (-0.5);
+			Matrix[i][j] = temp_float + rounding_num;
 		}
 	}
 }
