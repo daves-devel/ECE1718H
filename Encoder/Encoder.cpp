@@ -173,7 +173,7 @@ int main(int argCnt, char **args)
 	unsigned int  FRAME_SIZE = width*height;
 
 	//TODO Convert these 1D Frames to 2D Frames
-	unsigned char* CUR_FRAME = new unsigned char[FRAME_SIZE];
+	signed char* CUR_FRAME = new signed char[FRAME_SIZE];
 	unsigned char* REC_FRAME = new unsigned char[FRAME_SIZE];
 	signed char* RES_FRAME = new   signed char[FRAME_SIZE];
 
@@ -183,15 +183,15 @@ int main(int argCnt, char **args)
 	unsigned char** MATCH_FRAME = new unsigned char*[height];
 	signed int** TC_FRAME = new signed int*[height];
 	signed int** QTC_FRAME = new signed int*[height];
-	unsigned char** CUR_FRAME_2D = new unsigned char*[height];
-	unsigned char** REC_FRAME_2D = new unsigned char*[height];
+	signed char** CUR_FRAME_2D = new signed char*[height];
+	signed char** REC_FRAME_2D = new signed char*[height];
 
 	for (unsigned int row = 0; row < height; row++) {
 		MATCH_FRAME[row] = new unsigned char[width];
 		TC_FRAME[row] = new signed int[width];
 		QTC_FRAME[row] = new signed int[width];
-		CUR_FRAME_2D[row] = new unsigned char[width];
-		REC_FRAME_2D[row] = new unsigned char[width];
+		CUR_FRAME_2D[row] = new signed char[width];
+		REC_FRAME_2D[row] = new signed char[width];
 	}
 
 	// This 1D Buffer will Contain MDIFF data for each block in raster row order
@@ -345,9 +345,17 @@ int main(int argCnt, char **args)
 		fwrite(RES_FRAME, sizeof(unsigned char), FRAME_SIZE, resfile);
 		ENCODING TEST END*/
 
+		fseek(curfile, frame*FRAME_SIZE, SEEK_SET);
+		fread(CUR_FRAME, sizeof(signed char), FRAME_SIZE, curfile);
+		for (int row = 0; row < height; row += block) {
+			for (int col = 0; col < width; col += block) {
+				CUR_FRAME_2D[row][col] = CUR_FRAME[row*width + col];
+			}
+		}
+
 		// TRANFORM FRAME
 		// =========================================================================
-		// TODO
+		dct(TC_FRAME, CUR_FRAME_2D, height, width);
 
 		// QUANTIZE FRAME
 		// =========================================================================
@@ -382,12 +390,11 @@ int main(int argCnt, char **args)
 
 		// INV DCT
 		// =========================================================================
-		// TODO
+		idct(REC_FRAME_2D, TC_FRAME,width, height);
 
 		for (unsigned int row = 0; row < height; row++) {
 			fwrite(REC_FRAME_2D[row], sizeof(unsigned char), width, recfile);
 		}
-
 
 		// Should Have REC_FRAME for next iteration of the loop now. REC is only used in P frames though
 
