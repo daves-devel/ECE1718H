@@ -5,9 +5,9 @@
 #include <stdlib.h>
 #include <discrete_cosine_transform.h>
 
-float **calloc_mat(int dimX, int dimY) {
-	float **m = (float **)calloc(dimX, sizeof(float*));
-	float *p = (float *)calloc(dimX*dimY, sizeof(float));
+int **calloc_mat(int dimX, int dimY) {
+	int **m = (int **)calloc(dimX, sizeof(int*));
+	int *p = (int *)calloc(dimX*dimY, sizeof(int));
 	int i;
 	for (i = 0; i <dimX; i++) {
 		m[i] = &p[i*dimY];
@@ -16,57 +16,58 @@ float **calloc_mat(int dimX, int dimY) {
 	return m;
 }
 
-void free_mat(float **m) {
+void free_mat(int **m) {
 	free(m[0]);
 	free(m);
 }
 
-void write_mat(FILE *fp, float **m, int N, int M) {
+void write_mat(FILE *fp, int **m, int N, int M) {
 
 	int i, j;
 	for (i = 0; i< N; i++) {
-		fprintf(fp, "%f", m[i][0]);
+		fprintf(fp, "%d", m[i][0]);
 		for (j = 1; j < M; j++) {
-			fprintf(fp, ",%f", m[i][j]);
+			fprintf(fp, ",%d", m[i][j]);
 		}
 		fprintf(fp, "\n");
 	}
 	fprintf(fp, "\n");
 }
 
-void dct(float **DCTMatrix, float **Matrix, int N, int M) {
+void dct(int **DCTMatrix, int **Matrix, int N, int M) {
 
 	int i, j, u, v;
-	float alpha_u, alpha_v;
+	float alpha_u, alpha_v, temp_float;
 	for (u = 0; u < N; ++u) {
 		for (v = 0; v < M; ++v) {
-			DCTMatrix[u][v] = 0;
-			alpha_u = (u == 0) ? (1. / sqrt((float)N)):(sqrt(2. / N));
-			alpha_v = (v == 0) ? (1. / sqrt((float)M)):(sqrt(2. / M));
+			temp_float = 0.0;
+			alpha_u = (u == 0) ? (1. / sqrt((float)N)):(sqrt(2. / (float)N));
+			alpha_v = (v == 0) ? (1. / sqrt((float)M)):(sqrt(2. / (float)M));
 			for (i = 0; i < N; i++) {
 				for (j = 0; j < M; j++) {
-					DCTMatrix[u][v] += Matrix[i][j] * cos(M_PI / ((float)N)*((2.*i + 1.) / 2.)*u)*cos(M_PI / ((float)M)*((2.*j + 1.) / 2.)*v);
+					temp_float += ((float)Matrix[i][j]) * cos(M_PI / ((float)N)*((2.*i + 1.) / 2.)*u)*cos(M_PI / ((float)M)*((2.*j + 1.) / 2.)*v);
 				}
 			}
-			DCTMatrix[u][v] = alpha_u * alpha_v * DCTMatrix[u][v];
+			DCTMatrix[u][v] = alpha_u * alpha_v * temp_float;
 		}
 	}
 }
 
-void idct(float **Matrix, float **DCTMatrix, int N, int M) {
+void idct(int **Matrix, int **DCTMatrix, int N, int M) {
 	int i, j, u, v;
-	float alpha_u, alpha_v;
+	float alpha_u, alpha_v, temp_float;
 	
 	for (i = 0; i < N; ++i) {
 		for (j = 0; j < M; ++j) {
-			Matrix[i][j] = 0;
+			temp_float = 0;
 			for (u = 0; u < N; ++u) {
 				for (v = 0; v < M; ++v) {
-					alpha_u = (u == 0) ? (1. / sqrt((float)N)) : (sqrt(2. / N));
-					alpha_v = (v == 0) ? (1. / sqrt((float)M)) : (sqrt(2. / M));
-					Matrix[i][j] += alpha_u * alpha_v * DCTMatrix[u][v] * cos(M_PI / ((float)N)*((2.*i + 1.) / 2.)*u)*cos(M_PI / ((float)M)*((2.*j + 1.) / 2.)*v);
+					alpha_u = (u == 0) ? (1. / sqrt((float)N)) : (sqrt(2. / (float)N));
+					alpha_v = (v == 0) ? (1. / sqrt((float)M)) : (sqrt(2. / (float)M));
+					temp_float += alpha_u * alpha_v * ((float)DCTMatrix[u][v]) * cos(M_PI / ((float)N)*((2.*i + 1.) / 2.)*u)*cos(M_PI / ((float)M)*((2.*j + 1.) / 2.)*v);
 				}
 			}
+			Matrix[i][j] = temp_float;
 		}
 	}
 }
