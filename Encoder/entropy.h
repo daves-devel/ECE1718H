@@ -1,5 +1,5 @@
 #include <common.h>
-int entropy(int8_t ** QTC_FRAME, int8_t * COEFF_REORDER, int block, int8_t * RLE);
+int entropy(int8_t ** QTC_FRAME, int block, int8_t * RLE);
 void raster_to_diag(int8_t ** QTC_FRAME, int8_t * COEFF_REORDER, int block);
 int rle_encode(int8_t *COEFF_REORDER, int8_t *RLE, int block);
 void fprint_coeef(int8_t ** in, int8_t * out, int block, FILE* file, int8_t *RLE, int total_counter);
@@ -55,12 +55,12 @@ void convert_signed_golomb_value(int8_t *RLE, int total_counter) {
 		uint8_t count = 0;
 		uint32_t encoded_value = encode_signed_golomb_value(RLE[i], &count);
 		int32_t result = decode_signed_golomb_value(encoded_value, &count);
-
 	}
 }
 
-int entropy(int8_t ** QTC_FRAME, int8_t * COEFF_REORDER, int block, int8_t * RLE) {
+int entropy(int8_t ** QTC_FRAME, int block, int8_t * RLE) {
 	int total_counter;
+	signed char* COEFF_REORDER = new int8_t[block*block];
 	raster_to_diag(QTC_FRAME, COEFF_REORDER, block);
 	total_counter = rle_encode(COEFF_REORDER, RLE, block);
 	convert_signed_golomb_value(RLE, total_counter);
