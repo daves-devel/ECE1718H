@@ -355,7 +355,7 @@ int main(int argCnt, char **args)
 
 		// TRANFORM FRAME
 		// =========================================================================
-		dct(TC_FRAME, CUR_FRAME_2D, height, width);
+		dct_frame_wrapper(TC_FRAME, CUR_FRAME_2D, width, height, block);
 
 		// QUANTIZE FRAME
 		// =========================================================================
@@ -390,7 +390,7 @@ int main(int argCnt, char **args)
 
 		// INV DCT
 		// =========================================================================
-		idct(REC_FRAME_2D, TC_FRAME,width, height);
+		idct_frame_wrapper(REC_FRAME_2D, TC_FRAME,width, height, block);
 
 		for (unsigned int row = 0; row < height; row++) {
 			fwrite(REC_FRAME_2D[row], sizeof(unsigned char), width, recfile);

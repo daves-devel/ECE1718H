@@ -6,11 +6,63 @@ void idct_frame_wrapper(signed char **Matrix_FRAME, int **DCTMatrix_frame, int w
 void idct(signed char **Matrix, int **DCTMatrix, int block_size);
 
 void dct_frame_wrapper(int **DCTMatrix_frame, signed char **Matrix_FRAME, int width, int height, int block_size) {
+	//create block matrices 
+	int** TC_BLOCK = new int*[block_size];
+	signed char** CUR_BLOCK = new signed char*[block_size];
 
+	for (unsigned int row = 0; row < block_size; row++) {
+		TC_BLOCK[row] = new signed int[block_size];
+		CUR_BLOCK[row] = new signed char[block_size];
+	}
+
+	//Iterate block by block over the frame
+	for (int row = 0; row < height; row += block_size) {
+		for (int col = 0; col < width; col += block_size) {
+			for (int i = 0; i < block_size; i++) {
+				for (int j = 0; j < block_size; j++) {
+					CUR_BLOCK[i][j] = Matrix_FRAME[row + i][col +j];
+				}
+			}
+			//call DCT on block matrix
+			dct(TC_BLOCK, CUR_BLOCK, block_size);
+			//place 
+			for (int i = 0; i < block_size; i++) {
+				for (int j = 0; j < block_size; j++) {
+					DCTMatrix_frame[row + i][col + j] = TC_BLOCK[i][j];
+				}
+			}
+		}
+	}
 }
 
 void idct_frame_wrapper(signed char **Matrix_FRAME, int **DCTMatrix_frame, int width, int height, int block_size) {
+	//create block matrices 
+	int** TC_BLOCK = new int*[block_size];
+	signed char** CUR_BLOCK = new signed char*[block_size];
 
+	for (unsigned int row = 0; row < block_size; row++) {
+		TC_BLOCK[row] = new signed int[block_size];
+		CUR_BLOCK[row] = new signed char[block_size];
+	}
+
+	//Iterate block by block over the frame
+	for (int row = 0; row < height; row += block_size) {
+		for (int col = 0; col < width; col += block_size) {
+			for (int i = 0; i < block_size; i++) {
+				for (int j = 0; j < block_size; j++) {
+					TC_BLOCK[i][j] = DCTMatrix_frame[row + i][col + j];
+				}
+			}
+			//call DCT on block matrix
+			idct(CUR_BLOCK, TC_BLOCK, block_size);
+			//place 
+			for (int i = 0; i < block_size; i++) {
+				for (int j = 0; j < block_size; j++) {
+					Matrix_FRAME[row + i][col + j] = CUR_BLOCK[i][j];
+				}
+			}
+		}
+	}
 }
 
 
@@ -42,7 +94,7 @@ void idct(signed char **Matrix, int **DCTMatrix, int block_size) {
 
 	for (i = 0; i < block_size; ++i) {
 		for (j = 0; j < block_size; ++j) {
-			temp_float = 0;
+			temp_float = 0.0;
 			for (u = 0; u < block_size; ++u) {
 				for (v = 0; v < block_size; ++v) {
 					alpha_u = (u == 0) ? (1. / sqrt((float)block_size)) : (sqrt(2. / (float)block_size));
