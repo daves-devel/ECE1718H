@@ -1,14 +1,14 @@
 #include <common.h>
-int entropy(int8_t ** QTC_FRAME, int block, int8_t * RLE);
-void raster_to_diag(int8_t ** QTC_FRAME, int8_t * COEFF_REORDER, int block);
-int rle_encode(int8_t *COEFF_REORDER, int8_t *RLE, int block);
-void fprint_coeef(int8_t ** in, int8_t * out, int block, FILE* file, int8_t *RLE, int total_counter);
-uint32_t encode_signed_golomb_value(int8_t input, uint8_t *count);
-void convert_signed_golomb_value(int8_t *RLE, int total_counter);
+int entropy(int ** QTC_FRAME, int block, int * RLE);
+void raster_to_diag(int ** QTC_FRAME, int * COEFF_REORDER, int block);
+int rle_encode(int *COEFF_REORDER, int *RLE, int block);
+void fprint_coeef(int ** in, int * out, int block, FILE* file, int *RLE, int total_counter);
+uint32_t encode_signed_golomb_value(int input, uint8_t *count);
+void convert_signed_golomb_value(int *RLE, int total_counter);
 int16_t decode_signed_golomb_value(uint32_t input, uint8_t *count);
 
 
-int rle_encode(int8_t *COEFF_REORDER, int8_t *RLE, int block){
+int rle_encode(int *COEFF_REORDER, int *RLE, int block){
 	int index = 0;
 	int zero_flag = 0;
 	int change_flag = 1;
@@ -50,7 +50,7 @@ int rle_encode(int8_t *COEFF_REORDER, int8_t *RLE, int block){
 	return total_counter;
 }
 
-void convert_signed_golomb_value(int8_t *RLE, int total_counter) {
+void convert_signed_golomb_value(int *RLE, int total_counter) {
 	for (int i = 0; i <= total_counter; i++) {
 		uint8_t count = 0;
 		uint32_t encoded_value = encode_signed_golomb_value(RLE[i], &count);
@@ -58,16 +58,16 @@ void convert_signed_golomb_value(int8_t *RLE, int total_counter) {
 	}
 }
 
-int entropy(int8_t ** QTC_FRAME, int block, int8_t * RLE) {
+int entropy(int ** QTC_FRAME, int block, int * RLE) {
 	int total_counter;
-	signed char* COEFF_REORDER = new int8_t[block*block];
+	int * COEFF_REORDER = new int [block*block];
 	raster_to_diag(QTC_FRAME, COEFF_REORDER, block);
 	total_counter = rle_encode(COEFF_REORDER, RLE, block);
 	convert_signed_golomb_value(RLE, total_counter);
 	return total_counter;
 }
 
-void fprint_coeef(int8_t ** in, int8_t * out, int block, FILE* file, int8_t *RLE, int total_counter) {
+void fprint_coeef(int ** in, int * out, int block, FILE* file, int *RLE, int total_counter) {
 	for (int i = 0; i < block; i++) {
 		for (int j = 0; j < block; j++) {
 			fprintf(file, "%02d ", in[i][j]);
@@ -84,7 +84,7 @@ void fprint_coeef(int8_t ** in, int8_t * out, int block, FILE* file, int8_t *RLE
 
 }
 
-void raster_to_diag(int8_t ** QTC_FRAME, int8_t * COEFF_REORDER,int block) {
+void raster_to_diag(int ** QTC_FRAME, int * COEFF_REORDER,int block) {
 	int x = 0;
 	int index = 0;
 	for (int diag = 0; diag < (block * 2) - 1; diag++) {
@@ -109,7 +109,7 @@ void raster_to_diag(int8_t ** QTC_FRAME, int8_t * COEFF_REORDER,int block) {
 	}
 }
 
-uint32_t encode_signed_golomb_value(int8_t input, uint8_t *count) {
+uint32_t encode_signed_golomb_value(int input, uint8_t *count) {
 	uint8_t index = input;
 	uint32_t result = EVX_SEXP_GOLOMB_CODES[index];
 
