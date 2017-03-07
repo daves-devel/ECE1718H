@@ -184,12 +184,14 @@ int main(int argCnt, char **args)
 	signed char** TC_FRAME = new signed char*[height];
 	signed char** QTC_FRAME = new signed char*[height];
 	unsigned char** CUR_FRAME_2D = new unsigned char*[height];
+	unsigned char** REC_FRAME_2D = new unsigned char*[height];
 
 	for (unsigned int row = 0; row < height; row++) {
 		MATCH_FRAME[row] = new unsigned char[width];
 		TC_FRAME[row] = new signed char[width];
 		QTC_FRAME[row] = new signed char[width];
 		CUR_FRAME_2D[row] = new unsigned char[width];
+		REC_FRAME_2D[row] = new unsigned char[width];
 	}
 
 	// This 1D Buffer will Contain MDIFF data for each block in raster row order
@@ -372,7 +374,7 @@ int main(int argCnt, char **args)
 		// TODO
 
 		for (unsigned int row = 0; row < height; row++) {
-			fwrite(MATCH_FRAME[row], sizeof(unsigned char), width, recfile);
+			fwrite(REC_FRAME_2D[row], sizeof(unsigned char), width, recfile);
 		}
 
 
