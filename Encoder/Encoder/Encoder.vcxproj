@@ -69,7 +69,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(VC_IncludePath);C:\Users\JuanFuentes\Source\Repos\ECE1718H\Encoder;$(WindowsSDK_IncludePath);C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Encoder</IncludePath>
+    <IncludePath>$(VC_IncludePath);C:\Users\JuanFuentes\Source\Repos\ECE1718H\Encoder;$(WindowsSDK_IncludePath);C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Encoder;C:\Users\ikhan1\Source\Repo_1\ECE1718H\Encoder</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);;C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Encoder</IncludePath>

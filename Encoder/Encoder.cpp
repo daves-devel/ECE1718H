@@ -177,6 +177,8 @@ int main(int argCnt, char **args)
 	unsigned char* REC_FRAME = new unsigned char[FRAME_SIZE];
 	signed char* RES_FRAME = new   signed char[FRAME_SIZE];
 
+	signed char* COEFF_REORDER = new signed char[FRAME_SIZE];
+	signed char* RLE = new signed char[FRAME_SIZE];
 
 	unsigned char** MATCH_FRAME = new unsigned char*[height];
 	signed char** TC_FRAME = new signed char*[height];
@@ -233,7 +235,7 @@ int main(int argCnt, char **args)
 	// Encode Each Frame
 	// =========================================
 	for (int frame = 0; frame < frames; frame++) {
-		
+		/*ENCODING TEST BEGIn
 		// Print MDIFF File
 		fprintf(mvfile, "Frame %d Block_size %d \n", frame + 1, block);
 
@@ -339,11 +341,11 @@ int main(int argCnt, char **args)
 		// =========================================================================
 		residual(RES_FRAME, CUR_FRAME, block, width, height, round, MATCH_FRAME);
 		fwrite(RES_FRAME, sizeof(unsigned char), FRAME_SIZE, resfile);
+		ENCODING TEST END*/
 
 		// TRANFORM FRAME
 		// =========================================================================
 		// TODO
-		// DCT(TC_FRAME, RES_FRAME, width, height);
 
 		// QUANTIZE FRAME
 		// =========================================================================
@@ -352,7 +354,7 @@ int main(int argCnt, char **args)
 		// ENTROPY ENCODE FRAME
 		// =========================================================================
 		// TODO
-		
+
 		// DUMP ENCODED DATA
 		// =========================================================================
 		// TODO
@@ -367,15 +369,18 @@ int main(int argCnt, char **args)
 
 		// INV DCT
 		// =========================================================================
-		// IDCT (TC_FRAME,REC_FRAME,width,height);
+		// TODO
+
+		for (unsigned int row = 0; row < height; row++) {
+			fwrite(MATCH_FRAME[row], sizeof(unsigned char), width, recfile);
+		}
+
 
 		// Should Have REC_FRAME for next iteration of the loop now. REC is only used in P frames though
 
 	}
 
-	for (unsigned int row = 0; row < height; row++) {
-		delete MATCH_FRAME[row];
-	}
+
 	delete MATCH_FRAME;
 	delete CUR_FRAME;
 	delete REC_FRAME;

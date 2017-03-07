@@ -22,7 +22,7 @@ void generate_residual(int8_t * residual_mem, uint8_t* frame_mem, int x, int y, 
 	for (int i = 0; i< block_size; i++) {
 		for (int j = 0; j< block_size; j++) {
 			residual_mem[(i*frame_width) + j + start_position] = frame_mem[(i*frame_width) + j + start_position] - MOTION_FRAME[y + i][x + j];
-			residual_mem[(i*frame_width) + j + start_position] = rounding(residual_mem[i*frame_width + j + start_position], rounding_n);
+			//residual_mem[(i*frame_width) + j + start_position] = rounding(residual_mem[i*frame_width + j + start_position], rounding_n);
 		}
 	}
 }
