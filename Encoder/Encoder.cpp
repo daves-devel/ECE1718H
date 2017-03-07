@@ -181,15 +181,15 @@ int main(int argCnt, char **args)
 	signed char* RLE = new signed char[FRAME_SIZE];
 
 	unsigned char** MATCH_FRAME = new unsigned char*[height];
-	signed char** TC_FRAME = new signed char*[height];
-	signed char** QTC_FRAME = new signed char*[height];
+	signed int** TC_FRAME = new signed int*[height];
+	signed int** QTC_FRAME = new signed int*[height];
 	unsigned char** CUR_FRAME_2D = new unsigned char*[height];
 	unsigned char** REC_FRAME_2D = new unsigned char*[height];
 
 	for (unsigned int row = 0; row < height; row++) {
 		MATCH_FRAME[row] = new unsigned char[width];
-		TC_FRAME[row] = new signed char[width];
-		QTC_FRAME[row] = new signed char[width];
+		TC_FRAME[row] = new signed int[width];
+		QTC_FRAME[row] = new signed int[width];
 		CUR_FRAME_2D[row] = new unsigned char[width];
 		REC_FRAME_2D[row] = new unsigned char[width];
 	}

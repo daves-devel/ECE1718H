@@ -1,9 +1,9 @@
 #include <common.h>
 
 bool ValidQP(unsigned int QP, unsigned int block);
-void GenerateQ_Matrix(unsigned char ** Q_Matrix, unsigned int QP, unsigned int block);
-int Quantize(signed char** TC_Frame, signed char ** QTC_Frame, unsigned int QP, unsigned int block, unsigned int width, unsigned int height);
-int Rescale(signed char** QTC_Frame, signed char ** TC_Frame, unsigned int QP, unsigned int block, unsigned int width, unsigned int height);
+void GenerateQ_Matrix(unsigned int ** Q_Matrix, unsigned int QP, unsigned int block);
+int Quantize(signed int** TC_Frame, signed int ** QTC_Frame, unsigned int QP, unsigned int block, unsigned int width, unsigned int height);
+int Rescale(signed int** QTC_Frame, signed int ** TC_Frame, unsigned int QP, unsigned int block, unsigned int width, unsigned int height);
 
 bool ValidQP(unsigned int QP, unsigned int block) {
 
@@ -22,7 +22,7 @@ bool ValidQP(unsigned int QP, unsigned int block) {
 
 }
 
-void GenerateQ_Matrix(unsigned char ** Q_Matrix, unsigned int QP, unsigned int block) {
+void GenerateQ_Matrix(unsigned int ** Q_Matrix, unsigned int QP, unsigned int block) {
 
 	for (unsigned int row = 0; row < block; row++) {
 		for (unsigned int col = 0; col < block; col++) {
@@ -40,15 +40,15 @@ void GenerateQ_Matrix(unsigned char ** Q_Matrix, unsigned int QP, unsigned int b
 	}
 }
 
-int Quantize(signed char** TC_Frame, signed char ** QTC_Frame, unsigned int QP, unsigned int block, unsigned int width, unsigned int height) {
+int Quantize(signed int** TC_Frame, signed int ** QTC_Frame, unsigned int QP, unsigned int block, unsigned int width, unsigned int height) {
 
 	if (!ValidQP(QP, block)) {
 		return 1;
 	}
 
-	unsigned char** Q_Matrix = new unsigned char*[height];
+	unsigned int** Q_Matrix = new unsigned int*[height];
 	for (unsigned int row = 0; row < height; row++) {
-		Q_Matrix[row] = new unsigned char[width];
+		Q_Matrix[row] = new unsigned int[width];
 	}
 
 	GenerateQ_Matrix(Q_Matrix, QP, block);
@@ -63,15 +63,15 @@ int Quantize(signed char** TC_Frame, signed char ** QTC_Frame, unsigned int QP, 
 
 }
 
-int Rescale(signed char** QTC_Frame, signed char ** TC_Frame, unsigned int QP, unsigned int block, unsigned int width, unsigned int height) {
+int Rescale(signed int** QTC_Frame, signed int ** TC_Frame, unsigned int QP, unsigned int block, unsigned int width, unsigned int height) {
 
 	if (!ValidQP(QP, block)) {
 		return 1;
 	}
 
-	unsigned char** Q_Matrix = new unsigned char*[height];
+	unsigned int** Q_Matrix = new unsigned int*[height];
 	for (unsigned int row = 0; row < height; row++) {
-		Q_Matrix[row] = new unsigned char[width];
+		Q_Matrix[row] = new unsigned int[width];
 	}
 
 	GenerateQ_Matrix(Q_Matrix, QP, block);
