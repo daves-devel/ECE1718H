@@ -1,9 +1,9 @@
 #include <common.h>
 
-void dct(int **DCTMatrix, int **Matrix, int N, int M);
-void idct(int **Matrix, int **DCTMatrix, int N, int M);
+void dct(int **DCTMatrix, signed char **Matrix, int N, int M);
+void idct(signed char **Matrix, int **DCTMatrix, int N, int M);
 
-void dct(int **DCTMatrix, int **Matrix, int N, int M) {
+void dct(int **DCTMatrix, signed char **Matrix, int N, int M) {
 
 	int i, j, u, v;
 	float alpha_u, alpha_v, temp_float;
@@ -22,7 +22,7 @@ void dct(int **DCTMatrix, int **Matrix, int N, int M) {
 	}
 }
 
-void idct(int **Matrix, int **DCTMatrix, int N, int M) {
+void idct(signed char **Matrix, int **DCTMatrix, int N, int M) {
 	int i, j, u, v;
 	float alpha_u, alpha_v, temp_float;
 

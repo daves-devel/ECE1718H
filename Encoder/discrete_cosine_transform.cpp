@@ -16,7 +16,23 @@ int **calloc_mat(int dimX, int dimY) {
 	return m;
 }
 
+signed char **calloc_mat2(int dimX, int dimY) {
+	signed char  **m = (signed char **)calloc(dimX, sizeof(signed char*));
+	signed char *p = (signed char *)calloc(dimX*dimY, sizeof(signed char));
+	int i;
+	for (i = 0; i <dimX; i++) {
+		m[i] = &p[i*dimY];
+
+	}
+	return m;
+}
+
 void free_mat(int **m) {
+	free(m[0]);
+	free(m);
+}
+
+void free_mat2(signed char **m) {
 	free(m[0]);
 	free(m);
 }
@@ -34,7 +50,20 @@ void write_mat(FILE *fp, int **m, int N, int M) {
 	fprintf(fp, "\n");
 }
 
-void dct(int **DCTMatrix, int **Matrix, int N, int M) {
+void write_mat2(FILE *fp, signed char **m, int N, int M) {
+
+	int i, j;
+	for (i = 0; i< N; i++) {
+		fprintf(fp, "%d", m[i][0]);
+		for (j = 1; j < M; j++) {
+			fprintf(fp, ",%d", m[i][j]);
+		}
+		fprintf(fp, "\n");
+	}
+	fprintf(fp, "\n");
+}
+
+void dct(int **DCTMatrix, signed char **Matrix, int N, int M) {
 
 	int i, j, u, v;
 	float alpha_u, alpha_v, temp_float;
@@ -53,7 +82,7 @@ void dct(int **DCTMatrix, int **Matrix, int N, int M) {
 	}
 }
 
-void idct(int **Matrix, int **DCTMatrix, int N, int M) {
+void idct(signed char **Matrix, int **DCTMatrix, int N, int M) {
 	int i, j, u, v;
 	float alpha_u, alpha_v, temp_float;
 	
