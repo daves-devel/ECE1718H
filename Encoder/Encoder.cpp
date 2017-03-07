@@ -355,8 +355,19 @@ int main(int argCnt, char **args)
 
 		// ENTROPY ENCODE FRAME
 		// =========================================================================
-		// TODO
+	/*	int8_t ** QTC_BLOCK = new int8_t*[block];
+		for (int i = 0; i < block; i++)
+			QTC_BLOCK[i] = new int8_t[block];
 
+		for (int row = 0; row < height; row += block) {
+			for (int col = 0; col < width; col += block) {
+				for (int j = 0; j < block; j++)
+					for (int i = 0; i < block; i++)
+						QTC_BLOCK[j][i] = QTC_FRAME[row + j][col + i];
+				entropy(QTC_BLOCK, block, RLE);
+			}
+		}
+		delete QTC_BLOCK;*/
 		// DUMP ENCODED DATA
 		// =========================================================================
 		// TODO
