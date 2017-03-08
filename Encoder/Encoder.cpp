@@ -14,6 +14,7 @@
 #include <InterFramePrediction.h>
 #include <IntraFramePrediction.h>
 #include <discrete_cosine_transform.h>
+#include <reverse_entropy.h>
 
 int main(int argCnt, char **args)
 {
@@ -25,7 +26,6 @@ int main(int argCnt, char **args)
 	char matchfile_name[500] = "";
 	char gmvx_name[500] = "";
 	char gmvy_name[500] = "";
-
 	int width = -1;
 	int height = -1;
 	int frames = -1;
@@ -178,7 +178,6 @@ int main(int argCnt, char **args)
 	signed char* RES_FRAME = new   signed char[FRAME_SIZE];
 
 	signed char* COEFF_REORDER = new signed char[FRAME_SIZE];
-	signed char* RLE = new signed char[FRAME_SIZE];
 
 	unsigned char** MATCH_FRAME = new unsigned char*[height];
 	signed int** TC_FRAME = new signed int*[height];
@@ -197,46 +196,11 @@ int main(int argCnt, char **args)
 	// This 1D Buffer will Contain MDIFF data for each block in raster row order
 	// TODO Convert to 2D array
 	struct MDIFF* MDIFF_VECTOR = new struct MDIFF[(width / block)*(height / block)];
-
-	//TEST JUAN
-/*	int size = 4;
-	int index = 0;
-	int8_t * out = new int8_t[size *size];
-	int8_t * RLE = new int8_t[size*size + size*size];
-	int8_t ** in = new int8_t*[size];
-	for (int i = 0; i < size; i++)
-		in[i] = new int8_t[size];
-	for (int i = 0; i < size; i++){
-		for (int j = 0; j < size; j++) {
-			in[i][j] = index;
-			index++;
-		}
-	}
-	in[0][0] = -31;
-	in[0][1] = 9;
-	in[0][2] = 8;
-	in[0][3] = 4;
-	in[1][0] = -4;
-	in[1][1] = 1;
-	in[1][2] = 4;
-	in[1][3] = 0;
-	in[2][0] = -3;
-	in[2][1] = 2;
-	in[2][2] = 4;
-	in[2][3] = 0;
-	in[3][0] = 4;
-	in[3][1] = 0;
-	in[3][2] = -4;
-	in[3][3] = 2;
-
-	int total_counter=entropy(in, out, size, RLE);
-	FILE* test = fopen("test.txt", "w");
-	fprint_coeef(in, out, size, test, RLE, total_counter);
-	fclose(test);
-	*/
+	bitcount_file = fopen("bitcount.txt", "w");
 	// Encode Each Frame
 	// =========================================
 	for (int frame = 0; frame < frames; frame++) {
+
 		/*ENCODING TEST BEGIn
 		// Print MDIFF File
 		fprintf(mvfile, "Frame %d Block_size %d \n", frame + 1, block);
@@ -355,27 +319,24 @@ int main(int argCnt, char **args)
 
 		// TRANFORM FRAME
 		// =========================================================================
-		dct_frame_wrapper(TC_FRAME, CUR_FRAME_2D, width, height, block);
+		//dct_frame_wrapper(TC_FRAME, CUR_FRAME_2D, width, height, block);
 
 		// QUANTIZE FRAME
 		// =========================================================================
-		Quantize(TC_FRAME, QTC_FRAME, QP, block, width, height);
+		//Quantize(TC_FRAME, QTC_FRAME, QP, block, width, height);
 
 		// ENTROPY ENCODE FRAME
 		// =========================================================================
-	/*	int8_t ** QTC_BLOCK = new int8_t*[block];
-		for (int i = 0; i < block; i++)
-			QTC_BLOCK[i] = new int8_t[block];
+		/*for (int i = 0; i < height; i++) Juan TEST
+			for (int j = 0; j < width; j++)
+				QTC_FRAME[i][j] = rand() % 100;
 
-		for (int row = 0; row < height; row += block) {
-			for (int col = 0; col < width; col += block) {
-				for (int j = 0; j < block; j++)
-					for (int i = 0; i < block; i++)
-						QTC_BLOCK[j][i] = QTC_FRAME[row + j][col + i];
-				entropy(QTC_BLOCK, block, RLE);
-			}
-		}
-		delete QTC_BLOCK;*/
+		 entropy_wrapper(QTC_FRAME,  block,  height,  width, frame);
+		 char golomb_name[500] = "";
+		 snprintf(golomb_name, sizeof(golomb_name), "GOLOMB_CODING_%d", frame);
+		 FILE * golomb_file = fopen(golomb_name, "rb");
+		 reverse_entropy(block, golomb_file, height, width, frame);*/
+
 		// DUMP ENCODED DATA
 		// =========================================================================
 		// TODO
@@ -386,7 +347,7 @@ int main(int argCnt, char **args)
 
 		// RESCALING
 		// =========================================================================
-		Rescale(QTC_FRAME, TC_FRAME, QP, block, width, height);
+		/*Rescale(QTC_FRAME, TC_FRAME, QP, block, width, height);
 
 		// INV DCT
 		// =========================================================================
@@ -394,7 +355,7 @@ int main(int argCnt, char **args)
 
 		for (unsigned int row = 0; row < height; row++) {
 			fwrite(REC_FRAME_2D[row], sizeof(unsigned char), width, recfile);
-		}
+		}*/
 
 		// Should Have REC_FRAME for next iteration of the loop now. REC is only used in P frames though
 
