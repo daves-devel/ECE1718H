@@ -143,25 +143,25 @@ int main(int argCnt, char **args)
 	}
 
 	FILE* curfile = fopen(curfile_name, "rb");
-	FILE* mvfile = fopen(mvfile_name, "w");
-	FILE* resfile = fopen(resfile_name, "wb");
+	//FILE* mvfile = fopen(mvfile_name, "w");
+	//FILE* resfile = fopen(resfile_name, "wb");
 	FILE* recfile = fopen(recfile_name, "w+b");
-	FILE* matchfile = fopen(matchfile_name, "wb");
-	FILE* gmvXfile = fopen(gmvx_name, "wb");
-	FILE* gmvYfile = fopen(gmvy_name, "wb");
+	//FILE* matchfile = fopen(matchfile_name, "wb");
+	//FILE* gmvXfile = fopen(gmvx_name, "wb");
+	//FILE* gmvYfile = fopen(gmvy_name, "wb");
 
 	if (curfile == NULL) {
 		printf("Cannot open input file <%s>\n", curfile_name);
 		exit(-1);
 	}
-	if (mvfile == NULL) {
+	/*if (mvfile == NULL) {
 		printf("Cannot open output file <%s>\n", mvfile_name);
 		exit(-1);
 	}
 	if (resfile == NULL) {
 		printf("Cannot open output file <%s>\n", resfile_name);
 		exit(-1);
-	}
+	}*/
 	if (recfile == NULL) {
 		printf("Cannot open output file <%s>\n", recfile_name);
 		exit(-1);
@@ -347,8 +347,8 @@ int main(int argCnt, char **args)
 
 		fseek(curfile, frame*FRAME_SIZE, SEEK_SET);
 		fread(CUR_FRAME, sizeof(signed char), FRAME_SIZE, curfile);
-		for (int row = 0; row < height; row += block) {
-			for (int col = 0; col < width; col += block) {
+		for (int row = 0; row < height; row ++) {
+			for (int col = 0; col < width; col ++) {
 				CUR_FRAME_2D[row][col] = CUR_FRAME[row*width + col];
 			}
 		}
@@ -359,7 +359,7 @@ int main(int argCnt, char **args)
 
 		// QUANTIZE FRAME
 		// =========================================================================
-		Quantize(TC_FRAME, QTC_FRAME, QP, block, width, height);
+		//Quantize(TC_FRAME, QTC_FRAME, QP, block, width, height);
 
 		// ENTROPY ENCODE FRAME
 		// =========================================================================
@@ -386,7 +386,7 @@ int main(int argCnt, char **args)
 
 		// RESCALING
 		// =========================================================================
-		Rescale(QTC_FRAME, TC_FRAME, QP, block, width, height);
+		//Rescale(QTC_FRAME, TC_FRAME, QP, block, width, height);
 
 		// INV DCT
 		// =========================================================================
@@ -405,12 +405,12 @@ int main(int argCnt, char **args)
 	delete CUR_FRAME;
 	delete REC_FRAME;
 	fclose(curfile);
-	fclose(mvfile);
-	fclose(gmvXfile);
-	fclose(gmvYfile);
-	fclose(resfile);
+	//fclose(mvfile);
+	//fclose(gmvXfile);
+	//fclose(gmvYfile);
+	//fclose(resfile);
 	fclose(recfile);
-	fclose(matchfile);
+	//fclose(matchfile);
 	return 0;
 
 }

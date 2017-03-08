@@ -10,7 +10,7 @@ void dct_frame_wrapper(int **DCTMatrix_frame, signed char **Matrix_FRAME, int wi
 	int** TC_BLOCK = new int*[block_size];
 	signed char** CUR_BLOCK = new signed char*[block_size];
 
-	for (unsigned int row = 0; row < block_size; row++) {
+	for (int row = 0; row < block_size; row++) {
 		TC_BLOCK[row] = new signed int[block_size];
 		CUR_BLOCK[row] = new signed char[block_size];
 	}
@@ -40,7 +40,7 @@ void idct_frame_wrapper(signed char **Matrix_FRAME, int **DCTMatrix_frame, int w
 	int** TC_BLOCK = new int*[block_size];
 	signed char** CUR_BLOCK = new signed char*[block_size];
 
-	for (unsigned int row = 0; row < block_size; row++) {
+	for (int row = 0; row < block_size; row++) {
 		TC_BLOCK[row] = new signed int[block_size];
 		CUR_BLOCK[row] = new signed char[block_size];
 	}
