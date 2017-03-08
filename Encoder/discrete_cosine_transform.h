@@ -4,6 +4,20 @@ void dct_frame_wrapper(int **DCTMatrix_frame, signed char **Matrix_FRAME, int wi
 void dct(int **DCTMatrix, signed char **Matrix, int block_size);
 void idct_frame_wrapper(signed char **Matrix_FRAME, int **DCTMatrix_frame, int width, int height, int block_size);
 void idct(signed char **Matrix, int **DCTMatrix, int block_size);
+void write_mat(FILE *fp, signed char **m, int N, int M);
+
+void write_mat(FILE *fp, signed char **m, int N, int M) {
+
+	int i, j;
+	for (i = 0; i< N; i++) {
+		fprintf(fp, "%d", m[i][0]);
+		for (j = 1; j < M; j++) {
+			fprintf(fp, ",%d", m[i][j]);
+		}
+		fprintf(fp, "\n");
+	}
+	fprintf(fp, "\n");
+}
 
 void DCTBlock(int32_t** TC_FRAME, int8_t** RES_FRAME, int row, int col, int block_size);
 void IDCTBlock(int8_t **RES_FRAME, int32_t ** TC_FRAME, int row, int col, int block_size);
@@ -85,7 +99,7 @@ void dct(int **DCTMatrix, signed char **Matrix, int block_size) {
 			}
 			temp_float = alpha_u * alpha_v * temp_float;
 			rounding_num = (temp_float > 0) ? (0.5) : (-0.5);
-			DCTMatrix[u][v] = temp_float + rounding_num;
+			DCTMatrix[u][v] = temp_float; //+ rounding_num;
 
 		}
 	}
@@ -106,7 +120,7 @@ void idct(signed char **Matrix, int **DCTMatrix, int block_size) {
 				}
 			}
 			rounding_num = (temp_float > 0.0) ? (0.5) : (-0.5);
-			Matrix[i][j] = temp_float + rounding_num;
+			Matrix[i][j] = temp_float; //+rounding_num;
 		}
 	}
 }
