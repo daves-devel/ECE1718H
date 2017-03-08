@@ -319,7 +319,7 @@ int main(int argCnt, char **args)
 
 		// TRANFORM FRAME
 		// =========================================================================
-		//dct_frame_wrapper(TC_FRAME, CUR_FRAME_2D, width, height, block);
+		dct_frame_wrapper(TC_FRAME, CUR_FRAME_2D, width, height, block);
 
 		// QUANTIZE FRAME
 		// =========================================================================
@@ -354,7 +354,7 @@ int main(int argCnt, char **args)
 		idct_frame_wrapper(REC_FRAME_2D, TC_FRAME,width, height, block);
 
 		for (unsigned int row = 0; row < height; row++) {
-			fwrite(REC_FRAME_2D[row], sizeof(unsigned char), width, recfile);
+			fwrite(REC_FRAME_2D[row], sizeof(signed char), width, recfile);
 		}
 
 		// Should Have REC_FRAME for next iteration of the loop now. REC is only used in P frames though
