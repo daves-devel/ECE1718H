@@ -1,30 +1,30 @@
 #include <common.h>
 
-struct MDIFF IntraFramePrediction(unsigned int row, unsigned int col, unsigned int block, unsigned char** CUR_FRAME);
+struct MDIFF IntraFramePrediction(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint8_t** REF_FRAME,uint32_t row, uint32_t col, uint32_t block);
 
-struct MDIFF IntraFramePrediction(unsigned int row, unsigned int col, unsigned int block, unsigned char** CUR_FRAME) {
+struct MDIFF IntraFramePrediction(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint8_t** REF_FRAME,uint32_t row, uint32_t col, uint32_t block) {
 	
-	unsigned char* HorizontalModeArray	= new unsigned char[block];
-	unsigned char* VerticalModeArray	= new unsigned char[block];
+	uint8_t* HorizontalModeArray	= new uint8_t[block];
+	uint8_t* VerticalModeArray	= new uint8_t[block];
 
 	// Mode 0 Horizontal 
 	// ==================================================
 
 	if (col == 0) {
-		for (unsigned int i = 0; i < block; i++) {
+		for (uint32_t i = 0; i < block; i++) {
 			HorizontalModeArray[i] = 128;
 		}
 	}
 	else {
-		for (unsigned int i = 0; i < block; i++) {
-			HorizontalModeArray[i] = CUR_FRAME[row + i][col - 1];
+		for (uint32_t i = 0; i < block; i++) {
+			HorizontalModeArray[i] = REC_FRAME[row + i][col - 1];
 		}
 	}
 
-	unsigned int HORIZONTAL_SAD = 0;
+	uint32_t HORIZONTAL_SAD = 0;
 
-	for (unsigned int block_row = 0; block_row < block; block_row++) {
-		for (unsigned int block_col = 0; block_col < block; block_col++) {
+	for (uint32_t block_row = 0; block_row < block; block_row++) {
+		for (uint32_t block_col = 0; block_col < block; block_col++) {
 			HORIZONTAL_SAD += CUR_FRAME[row + block_row][col + block_col] - HorizontalModeArray[block_row];
 		}
 	}
@@ -33,20 +33,20 @@ struct MDIFF IntraFramePrediction(unsigned int row, unsigned int col, unsigned i
 	// ==================================================
 
 	if (row == 0) {
-		for (unsigned int i = 0; i < block; i++) {
+		for (uint32_t i = 0; i < block; i++) {
 			VerticalModeArray[i] = 128;
 		}
 	}
 	else {
-		for (unsigned int i = 0; i < block; i++) {
-			VerticalModeArray[i] = CUR_FRAME[row-1][col + i];
+		for (uint32_t i = 0; i < block; i++) {
+			VerticalModeArray[i] = REC_FRAME[row-1][col + i];
 		}
 	}
 
-	unsigned int VERTICAL_SAD = 0;
+	uint32_t VERTICAL_SAD = 0;
 
-	for (unsigned int block_row = 0; block_row < block; block_row++) {
-		for (unsigned int block_col = 0; block_col < block; block_col++) {
+	for (uint32_t block_row = 0; block_row < block; block_row++) {
+		for (uint32_t block_col = 0; block_col < block; block_col++) {
 			VERTICAL_SAD += CUR_FRAME[row + block_row][col + block_col] - VerticalModeArray[block_col ];
 		}
 	}
@@ -62,5 +62,20 @@ struct MDIFF IntraFramePrediction(unsigned int row, unsigned int col, unsigned i
 		INTRA_MODE.MODE = VERTICAL;
 	}
 
+	// Fill the Reference Frame Block
+	// ==================================================
+	for (int i = 0; i < block; i++) {
+		for (int j = 0; j < block; j++) {
+			if (INTRA_MODE.MODE == HORIZONTAL) {
+				(col == 0) ? REF_FRAME[row + i][col + j] = 128 : REF_FRAME[row + i][col + j] = REC_FRAME[row + i][col - 1];
+			}
+			if (INTRA_MODE.MODE == VERTICAL) {
+				(row == 0) ? REF_FRAME[row + i][col + j] = 128 : REF_FRAME[row + i][col + j] = REC_FRAME[row - 1][col + j];
+			}
+		}
+	}
+
 	return INTRA_MODE;
+
+
 }
