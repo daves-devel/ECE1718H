@@ -244,3 +244,6 @@ ModelManifest.xml
 /Decoder
 /testdata
 /testdata_old
+/Encoder/Encoder/mydata.csv
+/Encoder/Encoder/original.csv
+/Encoder/Encoder/recon.csv

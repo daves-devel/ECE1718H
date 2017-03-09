@@ -1,15 +1,8 @@
 #include <common.h>
 
-struct MDIFF InterFramePrediction(int row, int col, int width, int height, int block, int range, unsigned char* CUR_FRAME, unsigned char* REC_FRAME);
+struct MDIFF InterFramePrediction(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint8_t** REF_FRAME, int row, int col, int width, int height, int block, int range);
 
-struct MDIFF InterFramePrediction(int row, // Pixel Row in Current Frame
-	int col, // Pixel Col in Current Frame
-	int width,
-	int height,
-	int block,
-	int range,
-	unsigned char* CUR_FRAME,
-	unsigned char* REC_FRAME) {
+struct MDIFF InterFramePrediction(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint8_t** REF_FRAME, int row, int col, int width, int height, int block, int range) {
 
 	struct MDIFF BEST_GMV;
 	bool firstGMV = true;
@@ -31,7 +24,7 @@ struct MDIFF InterFramePrediction(int row, // Pixel Row in Current Frame
 			//Calculate SAD
 			for (int i = 0; i < block; i++) {
 				for (int j = 0; j < block; j++) {
-					SAD += abs(CUR_FRAME[(row + i)*width + col + j] - REC_FRAME[(GMV_Y + row + i)*width + GMV_X + col + j]);
+					SAD += abs(CUR_FRAME[row + i][ + col + j] - REC_FRAME[GMV_Y + row + i][ + GMV_X + col + j]);
 				}
 			}
 
@@ -79,6 +72,13 @@ struct MDIFF InterFramePrediction(int row, // Pixel Row in Current Frame
 					}
 				}
 			}
+		}
+	}
+
+	// Copy Best Matching Block to Reference Frame
+	for (int i = 0; i < block; i++) {
+		for (int j = 0; j < block; j++) {
+			REF_FRAME[row + i][col + j] = REC_FRAME[row + BEST_GMV.Y + i][col + BEST_GMV.X + j];
 		}
 	}
 	return BEST_GMV;

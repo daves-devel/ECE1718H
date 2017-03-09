@@ -14,7 +14,6 @@
 #include <InterFramePrediction.h>
 #include <IntraFramePrediction.h>
 #include <discrete_cosine_transform.h>
-#include <reverse_entropy.h>
 
 int main(int argCnt, char **args)
 {
@@ -26,6 +25,7 @@ int main(int argCnt, char **args)
 	char matchfile_name[500] = "";
 	char gmvx_name[500] = "";
 	char gmvy_name[500] = "";
+
 	int width = -1;
 	int height = -1;
 	int frames = -1;
@@ -170,40 +170,37 @@ int main(int argCnt, char **args)
 		printf("Invalid Block Dimension <%d>", block);
 	}
 
+	// TODO Make these 2D buffers, and add the Encoder functions to the frame flow
 	unsigned int  FRAME_SIZE = width*height;
-
-	//TODO Convert these 1D Frames to 2D Frames
-	signed char* CUR_FRAME = new signed char[FRAME_SIZE];
-	unsigned char* REC_FRAME = new unsigned char[FRAME_SIZE];
-	signed char* RES_FRAME = new   signed char[FRAME_SIZE];
-
 	signed char* COEFF_REORDER = new signed char[FRAME_SIZE];
+	signed char* RLE = new signed char[FRAME_SIZE];
 
-	unsigned char** MATCH_FRAME = new unsigned char*[height];
-	signed int** TC_FRAME = new signed int*[height];
-	signed int** QTC_FRAME = new signed int*[height];
-	signed char** CUR_FRAME_2D = new signed char*[height];
-	signed char** REC_FRAME_2D = new signed char*[height];
+	// Allocate Memory
+	uint8_t** CUR_FRAME_2D = new uint8_t*[height];
+	uint8_t** REC_FRAME_2D = new uint8_t*[height];
+	uint8_t** REF_FRAME_2D = new uint8_t*[height];
+	 int8_t** RES_FRAME_2D = new  int8_t*[height];
+	int32_t**  TC_FRAME_2D = new int32_t*[height];
+	int32_t** QTC_FRAME_2D = new int32_t*[height];
 
 	for (unsigned int row = 0; row < height; row++) {
-		MATCH_FRAME[row] = new unsigned char[width];
-		TC_FRAME[row] = new signed int[width];
-		QTC_FRAME[row] = new signed int[width];
-		CUR_FRAME_2D[row] = new signed char[width];
-		REC_FRAME_2D[row] = new signed char[width];
+		CUR_FRAME_2D[row] = new uint8_t[width];
+		REC_FRAME_2D[row] = new uint8_t[width];
+		REF_FRAME_2D[row] = new uint8_t[width];
+		RES_FRAME_2D[row] = new  int8_t[width];
+		 TC_FRAME_2D[row] = new int32_t[width];
+		QTC_FRAME_2D[row] = new int32_t[width];
 	}
 
-	// This 1D Buffer will Contain MDIFF data for each block in raster row order
-	// TODO Convert to 2D array
-	struct MDIFF* MDIFF_VECTOR = new struct MDIFF[(width / block)*(height / block)];
-	bitcount_file = fopen("bitcount.txt", "w");
+	// This 2D Buffer will Contain MDIFF data for each block 
+	struct MDIFF** MDIFF_VECTOR = new struct MDIFF* [(height / block)];
+	for (unsigned int row = 0; row < (height / block); row++) {
+		MDIFF_VECTOR[row] = new struct MDIFF[width / block];
+	}
+
 	// Encode Each Frame
 	// =========================================
 	for (int frame = 0; frame < frames; frame++) {
-
-		/*ENCODING TEST BEGIn
-		// Print MDIFF File
-		fprintf(mvfile, "Frame %d Block_size %d \n", frame + 1, block);
 
 		if ((frame%i_period) == 0) { 
 			FrameType = IFRAME;
@@ -215,156 +212,92 @@ int main(int argCnt, char **args)
 		if (FrameType == PFRAME){
 			// Go to the beginning of the previous reconstructed frame and copy it to buffer
 			fseek(recfile, (frame - 1)*FRAME_SIZE, SEEK_SET);
-			fread(REC_FRAME, sizeof(unsigned char), FRAME_SIZE, recfile);
+			for (unsigned int row = 0; row++; row < height) {
+				fread(REC_FRAME_2D[row], sizeof(uint8_t), width, recfile);
+			}
 		}
 
 		// Go to the beginning of the current frame and copy it to buffer
 		fseek(curfile, frame*FRAME_SIZE, SEEK_SET);
-		fread(CUR_FRAME, sizeof(unsigned char), FRAME_SIZE, curfile);
+		for (unsigned int row = 0; row++; row < height) {
+			fread(CUR_FRAME_2D[row], sizeof(uint8_t), width, curfile);
+		}
+
+		// Apply Encode Operations on Each Block
 		for (int row = 0; row < height; row += block) {
 			for (int col = 0; col < width; col += block) {
 
-				// IDEALLY THREAD EVERYTHING IN THIS FOR LOOP
+				// IDEALLY THREAD EVERYTHING IN THIS FOR LOOP FOR PFRAMES
 
+				// PREDICTOR DATA GENERATION
 				if (FrameType == IFRAME) {
-
-					// TODO Remove this when we do 2D Arrays
-					for (unsigned int copy_row = 0; copy_row < width; copy_row++) {
-						for (unsigned int copy_col = 0; copy_col < height; copy_col++) {
-							CUR_FRAME_2D[copy_row][copy_col] = CUR_FRAME[copy_row*width + copy_col];
-						}
-					}
-
-					MDIFF_VECTOR[((row*width / block) / block) + (col / block)] = IntraFramePrediction(row, col, block, CUR_FRAME_2D); // TODO Change when all arrays are 2D
-				
-					int MODE = MDIFF_VECTOR[((row*width / block) / block) + (col / block)].MODE;
-
-					// Fill the Match Frame with the best matching block
-					if (MODE == HORIZONTAL) {
-						for (int i = 0; i < block; i++) {
-							for (int j = 0; j < block; j++) {
-								if (col == 0) {
-									MATCH_FRAME[row + i][col + j] = 128;
-								}
-								else {
-									MATCH_FRAME[row + i][col + j] = CUR_FRAME[(row + i) * width + (col - 1)];
-								}
-							}
-						}
-					}
-					if (MODE == VERTICAL){
-						for (int i = 0; i < block; i++) {
-							for (int j = 0; j < block; j++) {
-								if (col == 0) {
-									MATCH_FRAME[row + i][col + j] = 128;
-								}
-								else {
-									MATCH_FRAME[row + i][col + j] = CUR_FRAME[(row - 1) * width + (col + j)];
-								}
-							}
-						}
-					}
+					MDIFF_VECTOR[row/block][col/block] = IntraFramePrediction (CUR_FRAME_2D,REC_FRAME_2D,REF_FRAME_2D,row,col,block);
 				}
 				
 				if (FrameType == PFRAME) {
-					
-					MDIFF_VECTOR[((row*width / block) / block) + (col / block)] = InterFramePrediction(row, col, width, height, block, range, CUR_FRAME, REC_FRAME);
-
-					int GMV_X = MDIFF_VECTOR[((row*width / block) / block) + (col / block)].X;
-					int GMV_Y = MDIFF_VECTOR[((row*width / block) / block) + (col / block)].Y;
-
-					// Fill the Match Frame with the best matching block
-					for (int i = 0; i < block; i++) {
-						for (int j = 0; j < block; j++) {
-							MATCH_FRAME[row + i][col + j] = REC_FRAME[(row + GMV_Y + i) * width + (col + GMV_X + j)];
-						}
-					}
+					MDIFF_VECTOR[row/block][col/block] = InterFramePrediction (CUR_FRAME_2D, REC_FRAME_2D, REF_FRAME_2D,row, col, width, height, block, range);
 				}
 
-				int DATA_1 = MDIFF_VECTOR[((row*width / block) / block) + (col / block)].X;
-				int DATA_2 = MDIFF_VECTOR[((row*width / block) / block) + (col / block)].Y;
+				// RESIDUAL 
+				GenerateResidualBlock (RES_FRAME_2D, CUR_FRAME_2D, REF_FRAME_2D, row, col, block);
 
-				// MV FILE GENERATION (VECTOR DUMP)
-				// =======================================
-				fwrite(&DATA_1, sizeof(int), 1, gmvXfile);
-				fwrite(&DATA_2, sizeof(int), 1, gmvYfile);
-				if (FrameType == IFRAME) {
-					fprintf(mvfile, "B(%d,%d)_M(%d,%d)\n", row / block, col / block, DATA_1, DATA_2);
-				}
-				if (FrameType == PFRAME) {
-					fprintf(mvfile, "B(%d,%d)_V(%d,%d)\n", row / block, col / block, DATA_1, DATA_2);
-				}
+				// DCT 
+				DCTBlock (TC_FRAME_2D, RES_FRAME_2D, row, col, block);
+
+				// QUANTIZE
+				QuantizeBlock (QTC_FRAME_2D, TC_FRAME_2D, row, col, width, height, QP, block);
+
+				// SCALE
+				ScaleBlock (TC_FRAME_2D, QTC_FRAME_2D, row, col, width, height, QP, block);
+
+				// IDCT
+				IDCTBlock (RES_FRAME_2D, TC_FRAME_2D, row, col, block);
+
+				// RECONSTRUCT 
+				ReconstructBlock(REC_FRAME_2D, RES_FRAME_2D, REF_FRAME_2D, row, col, block);
 				
 			}
 		}
 
-		
-		for (unsigned int row = 0; row < height; row++) {
-			fwrite(MATCH_FRAME[row], sizeof(unsigned char), width, matchfile);
-		}
+		// =====================================================================================================
+		// TODOOOOOO
+		// Differential and Entropy Encode steps can be done on a whole frame here
+		// OR they can be done on a block level in the previous nested for loop after the Quantization Step.
+		// =====================================================================================================
 
-		// RESIDUAL FILE GENERATION
-		// =========================================================================
-		residual(RES_FRAME, CUR_FRAME, block, width, height, round, MATCH_FRAME);
-		fwrite(RES_FRAME, sizeof(unsigned char), FRAME_SIZE, resfile);
-		ENCODING TEST END*/
-
-		fseek(curfile, frame*FRAME_SIZE, SEEK_SET);
-		fread(CUR_FRAME, sizeof(signed char), FRAME_SIZE, curfile);
-		for (int row = 0; row < height; row ++) {
-			for (int col = 0; col < width; col ++) {
-				CUR_FRAME_2D[row][col] = CUR_FRAME[row*width + col];
-			}
-		}
-
-		// TRANFORM FRAME
-		// =========================================================================
-		//dct_frame_wrapper(TC_FRAME, CUR_FRAME_2D, width, height, block);
-
-		// QUANTIZE FRAME
-		// =========================================================================
-		//Quantize(TC_FRAME, QTC_FRAME, QP, block, width, height);
-
-		// ENTROPY ENCODE FRAME
-		// =========================================================================
-		/*for (int i = 0; i < height; i++) Juan TEST
-			for (int j = 0; j < width; j++)
-				QTC_FRAME[i][j] = rand() % 100;
-
-		 entropy_wrapper(QTC_FRAME,  block,  height,  width, frame);
-		 char golomb_name[500] = "";
-		 snprintf(golomb_name, sizeof(golomb_name), "GOLOMB_CODING_%d", frame);
-		 FILE * golomb_file = fopen(golomb_name, "rb");
-		 reverse_entropy(block, golomb_file, height, width, frame);*/
-
-		// DUMP ENCODED DATA
-		// =========================================================================
-		// TODO
-
-		// ENTROPY DECODE FRAME
-		// =========================================================================
-		// TODO
-
-		// RESCALING
-		// =========================================================================
-		//Rescale(QTC_FRAME, TC_FRAME, QP, block, width, height);
-
-		// INV DCT
-		// =========================================================================
-		idct_frame_wrapper(REC_FRAME_2D, TC_FRAME,width, height, block);
-
-		for (unsigned int row = 0; row < height; row++) {
-			fwrite(REC_FRAME_2D[row], sizeof(unsigned char), width, recfile);
-		}
-
-		// Should Have REC_FRAME for next iteration of the loop now. REC is only used in P frames though
+		// =====================================================================================================
+		// TODOOOOO
+		// Any File Dumps can be added on any 2D array here for verification purpose
+		// =====================================================================================================
 
 	}
 
 
-	delete MATCH_FRAME;
-	delete CUR_FRAME;
-	delete REC_FRAME;
+	// Deallocate Memory
+	for (unsigned int row = 0; row < height; row++) {
+		delete CUR_FRAME_2D[row];
+		delete REC_FRAME_2D[row]; 
+		delete REF_FRAME_2D[row];
+		delete RES_FRAME_2D[row]; 
+		delete  TC_FRAME_2D[row];
+		delete QTC_FRAME_2D[row];
+	}
+
+	delete CUR_FRAME_2D; 
+	delete REC_FRAME_2D; 
+	delete REF_FRAME_2D; 
+	delete RES_FRAME_2D; 
+	delete  TC_FRAME_2D;
+	delete QTC_FRAME_2D; 
+
+	
+	for (unsigned int row = 0; row < (height / block); row++) {
+		delete MDIFF_VECTOR[row];
+	}
+
+	delete MDIFF_VECTOR;
+
+	// Close Files
 	fclose(curfile);
 	//fclose(mvfile);
 	//fclose(gmvXfile);
@@ -376,4 +309,71 @@ int main(int argCnt, char **args)
 
 }
 
+/*
+int GMV_X = MDIFF_VECTOR[((row*width / block) / block) + (col / block)].X;
+int GMV_Y = MDIFF_VECTOR[((row*width / block) / block) + (col / block)].Y;
 
+// Fill the Match Frame with the best matching block
+for (int i = 0; i < block; i++) {
+for (int j = 0; j < block; j++) {
+MATCH_FRAME[row + i][col + j] = REC_FRAME[(row + GMV_Y + i) * width + (col + GMV_X + j)];
+}
+}
+
+int DATA_1 = MDIFF_VECTOR[((row*width / block) / block) + (col / block)].X;
+int DATA_2 = MDIFF_VECTOR[((row*width / block) / block) + (col / block)].Y;
+
+// MV FILE GENERATION (VECTOR DUMP)
+// =======================================
+fwrite(&DATA_1, sizeof(int), 1, gmvXfile);
+fwrite(&DATA_2, sizeof(int), 1, gmvYfile);
+if (FrameType == IFRAME) {
+fprintf(mvfile, "B(%d,%d)_M(%d,%d)\n", row / block, col / block, DATA_1, DATA_2);
+}
+if (FrameType == PFRAME) {
+fprintf(mvfile, "B(%d,%d)_V(%d,%d)\n", row / block, col / block, DATA_1, DATA_2);
+}
+*/
+
+
+
+
+
+
+
+//TEST JUAN
+/*	int size = 4;
+int index = 0;
+int8_t * out = new int8_t[size *size];
+int8_t * RLE = new int8_t[size*size + size*size];
+int8_t ** in = new int8_t*[size];
+for (int i = 0; i < size; i++)
+in[i] = new int8_t[size];
+for (int i = 0; i < size; i++){
+for (int j = 0; j < size; j++) {
+in[i][j] = index;
+index++;
+}
+}
+in[0][0] = -31;
+in[0][1] = 9;
+in[0][2] = 8;
+in[0][3] = 4;
+in[1][0] = -4;
+in[1][1] = 1;
+in[1][2] = 4;
+in[1][3] = 0;
+in[2][0] = -3;
+in[2][1] = 2;
+in[2][2] = 4;
+in[2][3] = 0;
+in[3][0] = 4;
+in[3][1] = 0;
+in[3][2] = -4;
+in[3][3] = 2;
+
+int total_counter=entropy(in, out, size, RLE);
+FILE* test = fopen("test.txt", "w");
+fprint_coeef(in, out, size, test, RLE, total_counter);
+fclose(test);
+*/

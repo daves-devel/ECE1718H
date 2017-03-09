@@ -1,15 +1,15 @@
 #include <common.h>
 
-bool ValidQP(unsigned int QP, unsigned int block);
-void GenerateQ_Matrix(unsigned int ** Q_Matrix, unsigned int QP, unsigned int block);
-int Quantize(signed int** TC_Frame, signed int ** QTC_Frame, unsigned int QP, unsigned int block, unsigned int width, unsigned int height);
-int Rescale(signed int** QTC_Frame, signed int ** TC_Frame, unsigned int QP, unsigned int block, unsigned int width, unsigned int height);
+bool ValidQP(uint32_t  QP, uint32_t  block);
+void GenerateQ_Matrix(uint32_t  ** Q_Matrix, uint32_t  QP, uint32_t  block);
+int QuantizeBlock(int32_t  ** QTC_FRAME, int32_t ** TC_FRAME, uint32_t row, uint32_t col, uint32_t  width, uint32_t  height, uint32_t  QP, uint32_t  block);
+int ScaleBlock(int32_t  ** TC_FRAME, int32_t ** QTC_FRAME, uint32_t row, uint32_t col, uint32_t  width, uint32_t  height, uint32_t  QP, uint32_t  block);
 
-bool ValidQP(unsigned int QP, unsigned int block) {
+bool ValidQP(uint32_t  QP, uint32_t  block) {
 
-	unsigned int minQP = 0;
-	unsigned int logI = (unsigned int)log2((double)block);
-	unsigned int maxQP = logI + 7;
+	uint32_t  minQP = 0;
+	uint32_t  logI = (uint32_t )log2((double)block);
+	uint32_t  maxQP = logI + 7;
 
 	if ((QP >= minQP) && (QP <= maxQP)) {
 		return true;
@@ -22,64 +22,64 @@ bool ValidQP(unsigned int QP, unsigned int block) {
 
 }
 
-void GenerateQ_Matrix(unsigned int ** Q_Matrix, unsigned int QP, unsigned int block) {
+void GenerateQ_Matrix(uint32_t  ** Q_Matrix, uint32_t  QP, uint32_t  block) {
 
-	for (unsigned int row = 0; row < block; row++) {
-		for (unsigned int col = 0; col < block; col++) {
+	for (uint32_t  i = 0; i < block; i++) {
+		for (uint32_t  j = 0; j < block; j++) {
 
-			if (row + col < (block - 1)) {
-				Q_Matrix[row][col] = 1 << QP;
+			if (i + j < (block - 1)) {
+				Q_Matrix[i][j] = 1 << QP;
 			}
-			else if (row + col == (block - 1)) {
-				Q_Matrix[row][col] = 1 << (QP + 1);
+			else if (i + j == (block - 1)) {
+				Q_Matrix[i][j] = 1 << (QP + 1);
 			}
 			else {
-				Q_Matrix[row][col] = 1 << (QP + 2);
+				Q_Matrix[i][j] = 1 << (QP + 2);
 			}
 		}
 	}
 }
 
-int Quantize(signed int** TC_Frame, signed int ** QTC_Frame, unsigned int QP, unsigned int block, unsigned int width, unsigned int height) {
+int QuantizeBlock(int32_t  ** QTC_FRAME, int32_t ** TC_FRAME, uint32_t row, uint32_t col, uint32_t  width, uint32_t  height, uint32_t  QP, uint32_t  block) {
 
 	if (!ValidQP(QP, block)) {
 		return 1;
 	}
 
-	unsigned int** Q_Matrix = new unsigned int*[height];
-	for (unsigned int row = 0; row < height; row++) {
-		Q_Matrix[row] = new unsigned int[width];
+	uint32_t ** Q_Matrix = new uint32_t *[height];
+	for (uint32_t  i = 0; i < height; i++) {
+		Q_Matrix[i] = new uint32_t [width];
 	}
 
 	GenerateQ_Matrix(Q_Matrix, QP, block);
 
-	for (unsigned int row = 0; row < block; row++) {
-		for (unsigned int col = 0; col < block; col++) {
+	for (uint32_t  i = 0; i < block; i++) {
+		for (uint32_t  j = 0; j < block; j++) {
 
-			QTC_Frame[row][col] = round(TC_Frame[row][col] / Q_Matrix[row % block][col % block]);
+			QTC_FRAME[row + i][col + j] = round(TC_FRAME[row + i][col + j] / Q_Matrix[i][j]);
 
 		}
 	}
 
 }
 
-int Rescale(signed int** QTC_Frame, signed int ** TC_Frame, unsigned int QP, unsigned int block, unsigned int width, unsigned int height) {
+int ScaleBlock(int32_t  ** TC_FRAME, int32_t ** QTC_FRAME, uint32_t row, uint32_t col,uint32_t  width, uint32_t  height, uint32_t  QP, uint32_t  block) {
 
 	if (!ValidQP(QP, block)) {
 		return 1;
 	}
 
-	unsigned int** Q_Matrix = new unsigned int*[height];
-	for (unsigned int row = 0; row < height; row++) {
-		Q_Matrix[row] = new unsigned int[width];
+	uint32_t ** Q_Matrix = new uint32_t *[height];
+	for (uint32_t  i = 0; i < height; i++) {
+		Q_Matrix[i] = new uint32_t [width];
 	}
 
 	GenerateQ_Matrix(Q_Matrix, QP, block);
 
-	for (unsigned int row = 0; row < block; row++) {
-		for (unsigned int col = 0; col < block; col++) {
+	for (uint32_t  i = 0; i < block; i++) {
+		for (uint32_t  j = 0; j < block; j++) {
 
-			TC_Frame[row][col] = QTC_Frame[row][col] * Q_Matrix[row % block][col % block];
+			TC_FRAME[row + i][col + j] = QTC_FRAME[row + i][col + j] * Q_Matrix[i][j];
 
 		}
 	}
