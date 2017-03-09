@@ -50,5 +50,11 @@
     <ClInclude Include="..\reverse_entropy.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\DiffEnc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DiffDec.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

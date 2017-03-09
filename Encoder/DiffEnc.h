@@ -1,5 +1,6 @@
 #include <common.h>
-
+void diff_enc(MDIFF** MDIFF_VECTOR, MDIFF** MDIFF_VECTOR_DIFF, int FrameType, int row, int col);
+void diff_enc_wrapper(MDIFF** MDIFF_VECTOR, MDIFF** MDIFF_VECTOR_DIFF, int FrameType, int height, int width, int block, int frame);
 
 void diff_enc(MDIFF** MDIFF_VECTOR, MDIFF** MDIFF_VECTOR_DIFF, int FrameType, int row, int col) {
 	if (FrameType == IFRAME) {
@@ -27,9 +28,9 @@ void diff_enc_wrapper(MDIFF** MDIFF_VECTOR, MDIFF** MDIFF_VECTOR_DIFF, int Frame
 	FILE* file_vector_org;
 	FILE* file_vector_aft;
 	char buf[0x100];
-	snprintf(buf, sizeof(buf), "MDIFF_ORG_%d.txt", frame);
+	snprintf(buf, sizeof(buf), "MDIFF_ORG_ENC%d.txt", frame);
 	file_vector_org = fopen(buf, "w");
-	snprintf(buf, sizeof(buf), "MDIFF_AFT_%d.txt", frame);
+	snprintf(buf, sizeof(buf), "MDIFF_AFT_ENC%d.txt", frame);
 	file_vector_aft = fopen(buf, "w");
 #endif
 	for (int row = 0; row < height; row=row+block) {
@@ -44,8 +45,4 @@ void diff_enc_wrapper(MDIFF** MDIFF_VECTOR, MDIFF** MDIFF_VECTOR_DIFF, int Frame
 
 		}
 	}
-}
-
-void fprintf_dif_enc(FILE* file, MDIFF** MDIFF_VECTOR_DIFF, MDIFF** MDIFF_VECTOR, int row, int col, int frame_type) {
-	
 }
