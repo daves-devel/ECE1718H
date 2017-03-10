@@ -13,6 +13,7 @@ int main(int argCnt, char **args)
 	char reffile_name[500];
 	char decfile_name[500];
 	char SADfile_name[500];
+	char PSNRfile_name[500];
 
 	int width = 0;
 	int height = 0;
@@ -49,6 +50,12 @@ int main(int argCnt, char **args)
 			args++;
 			tmpArgCnt += 2;
 		}
+		else if (!strcmp((*args) + 1, "PSNR")) {
+			args++;
+			sscanf(*args, "%s", PSNRfile_name);
+			args++;
+			tmpArgCnt += 2;
+		}
 		else if (!strcmp((*args) + 1, "decfile")) {
 			args++;
 			sscanf(*args, "%s", decfile_name);
@@ -70,6 +77,7 @@ int main(int argCnt, char **args)
 	FILE* reffile = fopen(reffile_name, "rb");
 	FILE* decfile = fopen(decfile_name, "rb");
 	FILE* SADfile = fopen(SADfile_name, "w");
+	FILE* PSNRfile = fopen(PSNRfile_name, "w");
 
 	if (reffile == NULL) {
 		printf("Cannot open input file <%s>\n", reffile_name);
@@ -91,13 +99,32 @@ int main(int argCnt, char **args)
 	for (int frame = 0; frame < frames; frame++) {
 
 		unsigned int SAD = 0;
+		float MSE_SUM = 0.0;
+		float MSE = 0.0;
+		float PSNR = 0.0;
+		float MAX_I = 0.0;
+
 		fread(REF_FRAME, sizeof(unsigned char), FRAME_SIZE, reffile);
 		fread(DEC_FRAME, sizeof(unsigned char), FRAME_SIZE, decfile);
 
 		for (int pixel = 0; pixel < FRAME_SIZE; pixel++) {
+
+			// SAD MATH
 			SAD += abs(REF_FRAME[pixel] - DEC_FRAME[pixel]);
+
+			// PSNR MATH
+			MSE_SUM += pow(((float)REF_FRAME[pixel] - (float)DEC_FRAME[pixel]),2);
+			if ((float)REF_FRAME[pixel] > MAX_I) {
+				MAX_I = (float)REF_FRAME[pixel];
+			}
 		}
-		fprintf(SADfile,"%d\t%d\n", frame+1, SAD); //This syntax should be readable in Excel
+
+		// PSNR FINAL TOUCHES
+		MSE = MSE_SUM/ width/ height;
+		PSNR = 20*log10(MAX_I) - 10 * log10(MSE);
+
+		fprintf(SADfile,"%d,%d\n", frame+1, SAD); 
+		fprintf(PSNRfile, "%d,%f", frame + 1, PSNR); 
 	}
 
 	delete REF_FRAME;
@@ -106,6 +133,7 @@ int main(int argCnt, char **args)
 	fclose(reffile);
 	fclose(decfile);
 	fclose(SADfile);
+	fclose(PSNRfile);
 
 	return 0;
 
