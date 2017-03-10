@@ -26,7 +26,7 @@ struct MDIFF InterFramePrediction(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint
 			//Calculate SAD
 			for (int i = 0; i < block; i++) {
 				for (int j = 0; j < block; j++) {
-					NEW_GMV.SAD += abs(CUR_FRAME[row + i][+col + j] - REC_FRAME[GMV_Y + row + i][+GMV_X + col + j]);
+					NEW_GMV.SAD += abs(CUR_FRAME[row + i][+col + j] - REC_FRAME[GMV_Y + row + i][GMV_X + col + j]);
 				}
 			}
 
