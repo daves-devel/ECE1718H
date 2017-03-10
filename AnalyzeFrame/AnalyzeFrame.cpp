@@ -113,7 +113,7 @@ int main(int argCnt, char **args)
 			SAD += abs(REF_FRAME[pixel] - DEC_FRAME[pixel]);
 
 			// PSNR MATH
-			MSE_SUM += (float)REF_FRAME[pixel] - (float)DEC_FRAME[pixel];
+			MSE_SUM += pow(((float)REF_FRAME[pixel] - (float)DEC_FRAME[pixel]),2);
 			if ((float)REF_FRAME[pixel] > MAX_I) {
 				MAX_I = (float)REF_FRAME[pixel];
 			}
