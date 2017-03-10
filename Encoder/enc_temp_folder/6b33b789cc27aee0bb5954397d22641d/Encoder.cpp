@@ -188,7 +188,7 @@ int main(int argCnt, char **args)
 	block		= 2;
 	round		= 1;
 	i_period	= 1;
-	QP			= 0;
+	QP			= 8;
 	/*
 	----------------------
 	IRFAN TEST CODE END
