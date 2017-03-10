@@ -12,6 +12,8 @@
 #include <math.h>
 #include <cmath>
 
+FILE* coeff_bitcount_file;
+FILE* mdiff_bitcount_file;
 
 enum FRAME {
 	IFRAME = 0,

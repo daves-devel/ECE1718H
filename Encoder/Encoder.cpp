@@ -26,6 +26,8 @@ int main(int argCnt, char **args)
 	char matchfile_name[500] = "";
 	char gmvx_name[500] = "";
 	char gmvy_name[500] = "";
+	char coeff_bitcount_name[500] = "";
+	char mdiff_bitcount_name[500] = "";
 
 	int width = -1;
 	int height = -1;
@@ -53,6 +55,18 @@ int main(int argCnt, char **args)
 		else if (!strcmp((*args) + 1, "height")) {
 			args++;
 			height = atoi(*args);
+			args++;
+			tmpArgCnt += 2;
+		}
+		else if (!strcmp((*args) + 1, "coeff_bitcount_name")) {
+			args++;
+			sscanf(*args, "%s", coeff_bitcount_name);
+			args++;
+			tmpArgCnt += 2;
+		}
+		else if (!strcmp((*args) + 1, "mdiff_bitcount_name")) {
+			args++;
+			sscanf(*args, "%s", mdiff_bitcount_name);
 			args++;
 			tmpArgCnt += 2;
 		}
@@ -142,6 +156,8 @@ int main(int argCnt, char **args)
 	}
 
 	FILE* curfile = fopen(curfile_name, "rb");
+	coeff_bitcount_file = fopen(coeff_bitcount_name, "w");
+	mdiff_bitcount_file = fopen(mdiff_bitcount_name, "w");
 	//FILE* mvfile = fopen(mvfile_name, "w");
 	//FILE* resfile = fopen(resfile_name, "wb");
 	FILE* recfile = fopen(recfile_name, "w+b");
@@ -332,15 +348,10 @@ int main(int argCnt, char **args)
 
 	delete MDIFF_VECTOR;
 
-
 	// Close Files
-	//fclose(curfile);
-	//fclose(mvfile);
-	//fclose(gmvXfile);
-	//fclose(gmvYfile);
-	//fclose(resfile);
 	fclose(recfile);
-	//fclose(matchfile);
+	fclose(mdiff_bitcount_file);
+	fclose(coeff_bitcount_file);
 	return 0;
 
 }
