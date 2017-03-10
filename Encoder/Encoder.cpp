@@ -14,6 +14,7 @@
 #include <InterFramePrediction.h>
 #include <IntraFramePrediction.h>
 #include <discrete_cosine_transform.h>
+#include <DiffEnc.h>
 
 int main(int argCnt, char **args)
 {
@@ -218,9 +219,12 @@ int main(int argCnt, char **args)
 
 	
 	// This 2D Buffer will Contain MDIFF data for each block 
-	struct MDIFF** MDIFF_VECTOR = new struct MDIFF* [(height / block)];
-	for (unsigned int row = 0; row < (height / block); row++) {
-		MDIFF_VECTOR[row] = new struct MDIFF[width / block];
+	struct MDIFF** MDIFF_VECTOR = new struct MDIFF*[(height / block)];
+	struct MDIFF** MDIFF_VECTOR_DIFF = new struct MDIFF*[(height / block)];
+
+	for (int row = 0; row < height; row = row + block) {
+		MDIFF_VECTOR[row / block] = new struct MDIFF[width / block];
+		MDIFF_VECTOR_DIFF[row / block] = new struct MDIFF[width / block];
 	}
 
 	/* 
@@ -316,6 +320,10 @@ int main(int argCnt, char **args)
 		// Differential and Entropy Encode steps can be done on a whole frame here
 		// OR they can be done on a block level in the previous nested for loop after the Quantization Step.
 		// =====================================================================================================
+
+		entropy_wrapper(QTC_FRAME_2D, block, height, width, frame);
+		diff_enc_wrapper(MDIFF_VECTOR, MDIFF_VECTOR_DIFF, 0, height, width, block, frame);
+		encode_mdiff_wrapper(MDIFF_VECTOR_DIFF, height, width, block, frame, 0);
 
 		// =====================================================================================================
 		// TODOOOOO
