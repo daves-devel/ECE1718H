@@ -234,7 +234,7 @@ int main(int argCnt, char **args)
 		// Go to the beginning of the current frame and copy it to buffer
 
 		fseek(curfile, frame*FRAME_SIZE, SEEK_SET);
-		for (unsigned int row = 0; row++; row < height) {
+		for (unsigned int row = 0; row < height; row++) {
 			fread(CUR_FRAME_2D[row], sizeof(uint8_t), width, curfile);
 		}
 
@@ -274,6 +274,13 @@ int main(int argCnt, char **args)
 			}
 		}
 
+
+
+		
+		// =====================================================================================================
+		// TODOOOOOO
+		// Differential and Entropy Encode steps can be done on a whole frame here
+		// OR they can be done on a block level in the previous nested for loop after the Quantization Step.
 		// =====================================================================================================
 
 		entropy_wrapper(QTC_FRAME_2D, block, height, width, frame);
@@ -285,7 +292,16 @@ int main(int argCnt, char **args)
 		// Any File Dumps can be added on any 2D array here for verification purpose
 		// =====================================================================================================
 
+		uint8_t *REC_FRAME = new uint8_t[FRAME_SIZE];
+		for (int row = 0; row < height; row++)
+			for (int col = 0; col < width; col++)
+				REC_FRAME[col + width*row] = REC_FRAME_2D[row][col];
+
+		fwrite(REC_FRAME, sizeof(uint8_t), FRAME_SIZE, recfile);
+
 	}
+
+	
 
 	// Deallocate Memory
 	for (unsigned int row = 0; row < height; row++) {
@@ -316,13 +332,14 @@ int main(int argCnt, char **args)
 
 	delete MDIFF_VECTOR;
 
+
 	// Close Files
 	//fclose(curfile);
 	//fclose(mvfile);
 	//fclose(gmvXfile);
 	//fclose(gmvYfile);
 	//fclose(resfile);
-	//fclose(recfile);
+	fclose(recfile);
 	//fclose(matchfile);
 	return 0;
 
