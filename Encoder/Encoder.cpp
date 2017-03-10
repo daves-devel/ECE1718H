@@ -274,13 +274,6 @@ int main(int argCnt, char **args)
 			}
 		}
 
-
-
-		
-		// =====================================================================================================
-		// TODOOOOOO
-		// Differential and Entropy Encode steps can be done on a whole frame here
-		// OR they can be done on a block level in the previous nested for loop after the Quantization Step.
 		// =====================================================================================================
 
 		entropy_wrapper(QTC_FRAME_2D, block, height, width, frame);
@@ -293,8 +286,6 @@ int main(int argCnt, char **args)
 		// =====================================================================================================
 
 	}
-
-	
 
 	// Deallocate Memory
 	for (unsigned int row = 0; row < height; row++) {
