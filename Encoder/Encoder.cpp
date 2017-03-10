@@ -176,24 +176,7 @@ int main(int argCnt, char **args)
 	unsigned int  FRAME_SIZE = width*height;
 	signed char* COEFF_REORDER = new signed char[FRAME_SIZE];
 	signed char* RLE = new signed char[FRAME_SIZE];
-	/*
-	----------------------
-	IRFAN TEST CODE START
-	----------------------
-	*/
-	width		= 8;
-	height		= 8;
-	frames		= 1;
-	range		= 1;
-	block		= 2;
-	round		= 1;
-	i_period	= 1;
-	QP			= 0;
-	/*
-	----------------------
-	IRFAN TEST CODE END
-	----------------------
-	*/
+
 	// Allocate Memory
 	uint8_t** CUR_FRAME_2D		= new uint8_t*[height];
 	uint8_t** REC_FRAME_2D		= new uint8_t*[height];
@@ -227,26 +210,7 @@ int main(int argCnt, char **args)
 		MDIFF_VECTOR_DIFF[row / block] = new struct MDIFF[width / block];
 	}
 
-	/* 
-	----------------------
-	IRFAN TEST CODE START
-	----------------------
-	*/
-	char temp = 0;
-	for (int row = 0; row < 8; row++) {
-		for (int col = 0; col < 8; col++) {
-			CUR_FRAME_2D[row][col] = temp;
-			temp++;
-			temp = (temp % 32);
-		}
-		
-	}
 
-	/*
-	----------------------
-	IRFAN TEST CODE END
-	----------------------
-	*/
 
 	// Encode Each Frame
 	// =========================================
@@ -269,12 +233,10 @@ int main(int argCnt, char **args)
 
 		// Go to the beginning of the current frame and copy it to buffer
 
-		/* IRFAN TEST COMMENT OUT
 		fseek(curfile, frame*FRAME_SIZE, SEEK_SET);
 		for (unsigned int row = 0; row++; row < height) {
 			fread(CUR_FRAME_2D[row], sizeof(uint8_t), width, curfile);
 		}
-		*/
 
 		// Apply Encode Operations on Each Block
 		for (int row = 0; row < height; row += block) {
@@ -332,110 +294,7 @@ int main(int argCnt, char **args)
 
 	}
 
-	/*
-	----------------------
-	IRFAN TEST CODE START
-	----------------------
-	*/
-
-	FILE *fp = fopen("INTRA.csv", "w");
-	fprintf(fp, "CUR FRAME\n");
-	for (int i = 0; i< height; i++) {
-		fprintf(fp, "%d", CUR_FRAME_2D[i][0]);
-		for (int j = 1; j < width; j++) {
-			fprintf(fp, ",%d", CUR_FRAME_2D[i][j]);
-		}
-		fprintf(fp, "\n");
-	}
-	fprintf(fp, "\n");
-	fprintf(fp, "REF FRAME\n");
-	for (int i = 0; i< height; i++) {
-		fprintf(fp, "%d", REF_FRAME_2D[i][0]);
-		for (int j = 1; j < width; j++) {
-			fprintf(fp, ",%d", REF_FRAME_2D[i][j]);
-		}
-		fprintf(fp, "\n");
-	}
-
-	fprintf(fp, "\n");
-	fprintf(fp, "ENC RES FRAME\n");
-	for (int i = 0; i< height; i++) {
-		fprintf(fp, "%d", ENC_RES_FRAME_2D[i][0]);
-		for (int j = 1; j < width; j++) {
-			fprintf(fp, ",%d", ENC_RES_FRAME_2D[i][j]);
-		}
-		fprintf(fp, "\n");
-	}
-
-	fprintf(fp, "\n");
-	fprintf(fp, "ENC TC FRAME\n");
-	for (int i = 0; i< height; i++) {
-		fprintf(fp, "%d", ENC_TC_FRAME_2D[i][0]);
-		for (int j = 1; j < width; j++) {
-			fprintf(fp, ",%d", ENC_TC_FRAME_2D[i][j]);
-		}
-		fprintf(fp, "\n");
-	}
-
-	fprintf(fp, "\n");
-	fprintf(fp, "QP FRAME\n");
-	for (int i = 0; i< height; i++) {
-		fprintf(fp, "%d", QP_FRAME_2D[i][0]);
-		for (int j = 1; j < width; j++) {
-			fprintf(fp, ",%d", QP_FRAME_2D[i][j]);
-		}
-		fprintf(fp, "\n");
-	}
-
-
-	fprintf(fp, "\n");
-	fprintf(fp, "QUANTIZED FRAME\n");
-	for (int i = 0; i< height; i++) {
-		fprintf(fp, "%d", QTC_FRAME_2D[i][0]);
-		for (int j = 1; j < width; j++) {
-			fprintf(fp, ",%d", QTC_FRAME_2D[i][j]);
-		}
-		fprintf(fp, "\n");
-	}
-
-	fprintf(fp, "\n");
-	fprintf(fp, "DEC TC FRAME\n");
-	for (int i = 0; i< height; i++) {
-		fprintf(fp, "%d", DEC_TC_FRAME_2D[i][0]);
-		for (int j = 1; j < width; j++) {
-			fprintf(fp, ",%d", DEC_TC_FRAME_2D[i][j]);
-		}
-		fprintf(fp, "\n");
-	}
-
-	fprintf(fp, "\n");
-	fprintf(fp, "DEC RES FRAME\n");
-	for (int i = 0; i< height; i++) {
-		fprintf(fp, "%d", DEC_RES_FRAME_2D[i][0]);
-		for (int j = 1; j < width; j++) {
-			fprintf(fp, ",%d", DEC_RES_FRAME_2D[i][j]);
-		}
-		fprintf(fp, "\n");
-	}
-
-	fprintf(fp, "\n");
-	fprintf(fp, "REC FRAME\n");
-	for (int i = 0; i< height; i++) {
-		fprintf(fp, "%d", REC_FRAME_2D[i][0]);
-		for (int j = 1; j < width; j++) {
-			fprintf(fp, ",%d", REC_FRAME_2D[i][j]);
-		}
-		fprintf(fp, "\n");
-	}
-	fprintf(fp, "\n");
-	fclose(fp);
-
-
-	/*
-	----------------------
-	IRFAN TEST CODE END
-	----------------------
-	*/
+	
 
 	// Deallocate Memory
 	for (unsigned int row = 0; row < height; row++) {
@@ -477,6 +336,151 @@ int main(int argCnt, char **args)
 	return 0;
 
 }
+
+/*
+----------------------
+IRFAN TEST CODE START
+----------------------
+
+width		= 8;
+height		= 8;
+frames		= 1;
+range		= 1;
+block		= 2;
+round		= 1;
+i_period	= 1;
+QP			= 0;
+
+----------------------
+IRFAN TEST CODE END
+----------------------
+*/
+
+/*
+----------------------
+IRFAN TEST CODE START
+----------------------
+
+char temp = 0;
+for (int row = 0; row < 8; row++) {
+for (int col = 0; col < 8; col++) {
+CUR_FRAME_2D[row][col] = temp;
+temp++;
+temp = (temp % 32);
+}
+
+}
+
+
+----------------------
+IRFAN TEST CODE END
+----------------------
+*/
+
+/*
+----------------------
+IRFAN TEST CODE START
+----------------------
+
+
+FILE *fp = fopen("INTRA.csv", "w");
+fprintf(fp, "CUR FRAME\n");
+for (int i = 0; i< height; i++) {
+fprintf(fp, "%d", CUR_FRAME_2D[i][0]);
+for (int j = 1; j < width; j++) {
+fprintf(fp, ",%d", CUR_FRAME_2D[i][j]);
+}
+fprintf(fp, "\n");
+}
+fprintf(fp, "\n");
+fprintf(fp, "REF FRAME\n");
+for (int i = 0; i< height; i++) {
+fprintf(fp, "%d", REF_FRAME_2D[i][0]);
+for (int j = 1; j < width; j++) {
+fprintf(fp, ",%d", REF_FRAME_2D[i][j]);
+}
+fprintf(fp, "\n");
+}
+
+fprintf(fp, "\n");
+fprintf(fp, "ENC RES FRAME\n");
+for (int i = 0; i< height; i++) {
+fprintf(fp, "%d", ENC_RES_FRAME_2D[i][0]);
+for (int j = 1; j < width; j++) {
+fprintf(fp, ",%d", ENC_RES_FRAME_2D[i][j]);
+}
+fprintf(fp, "\n");
+}
+
+fprintf(fp, "\n");
+fprintf(fp, "ENC TC FRAME\n");
+for (int i = 0; i< height; i++) {
+fprintf(fp, "%d", ENC_TC_FRAME_2D[i][0]);
+for (int j = 1; j < width; j++) {
+fprintf(fp, ",%d", ENC_TC_FRAME_2D[i][j]);
+}
+fprintf(fp, "\n");
+}
+
+fprintf(fp, "\n");
+fprintf(fp, "QP FRAME\n");
+for (int i = 0; i< height; i++) {
+fprintf(fp, "%d", QP_FRAME_2D[i][0]);
+for (int j = 1; j < width; j++) {
+fprintf(fp, ",%d", QP_FRAME_2D[i][j]);
+}
+fprintf(fp, "\n");
+}
+
+
+fprintf(fp, "\n");
+fprintf(fp, "QUANTIZED FRAME\n");
+for (int i = 0; i< height; i++) {
+fprintf(fp, "%d", QTC_FRAME_2D[i][0]);
+for (int j = 1; j < width; j++) {
+fprintf(fp, ",%d", QTC_FRAME_2D[i][j]);
+}
+fprintf(fp, "\n");
+}
+
+fprintf(fp, "\n");
+fprintf(fp, "DEC TC FRAME\n");
+for (int i = 0; i< height; i++) {
+fprintf(fp, "%d", DEC_TC_FRAME_2D[i][0]);
+for (int j = 1; j < width; j++) {
+fprintf(fp, ",%d", DEC_TC_FRAME_2D[i][j]);
+}
+fprintf(fp, "\n");
+}
+
+fprintf(fp, "\n");
+fprintf(fp, "DEC RES FRAME\n");
+for (int i = 0; i< height; i++) {
+fprintf(fp, "%d", DEC_RES_FRAME_2D[i][0]);
+for (int j = 1; j < width; j++) {
+fprintf(fp, ",%d", DEC_RES_FRAME_2D[i][j]);
+}
+fprintf(fp, "\n");
+}
+
+fprintf(fp, "\n");
+fprintf(fp, "REC FRAME\n");
+for (int i = 0; i< height; i++) {
+fprintf(fp, "%d", REC_FRAME_2D[i][0]);
+for (int j = 1; j < width; j++) {
+fprintf(fp, ",%d", REC_FRAME_2D[i][j]);
+}
+fprintf(fp, "\n");
+}
+fprintf(fp, "\n");
+fclose(fp);
+
+
+
+----------------------
+IRFAN TEST CODE END
+----------------------
+*/
 
 /*
 int GMV_X = MDIFF_VECTOR[((row*width / block) / block) + (col / block)].X;
