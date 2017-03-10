@@ -106,4 +106,6 @@ const uint8_t EVX_LOG2_BYTE_LUT[] = {
 
 //Entropy
 FILE * bitcount_file;
+
+
 #endif

@@ -28,10 +28,10 @@ void generate_residual(int8_t * residual_mem, uint8_t* frame_mem, int x, int y, 
 	}
 }
 
-void GenerateResidualBlock(int8_t ** RESIDUAL_FRAME, uint8_t** CUR_FRAME, uint8_t** REF_FRAME,int row, int col, int block) {
+void GenerateResidualBlock(int8_t ** RES_FRAME, uint8_t** CUR_FRAME, uint8_t** REF_FRAME,int row, int col, int block) {
 	for (int i = 0; i< block; i++) {
 		for (int j = 0; j< block; j++) {
-			RESIDUAL_FRAME[row + i][col + j] = CUR_FRAME[row + i][col + j] - REF_FRAME[row + i][col + j];
+			RES_FRAME[row + i][col + j] = CUR_FRAME[row + i][col + j] - REF_FRAME[row + i][col + j];
 		}
 	}
 }

@@ -6,6 +6,9 @@ void idct_frame_wrapper(signed char **Matrix_FRAME, int **DCTMatrix_frame, int w
 void idct(signed char **Matrix, int **DCTMatrix, int block_size);
 void write_mat(FILE *fp, signed char **m, int N, int M);
 
+void DCTBlock(int32_t** TC_FRAME, int8_t** RES_FRAME, int row, int col, int block_size);
+void IDCTBlock(int8_t **RES_FRAME, int32_t ** TC_FRAME, int row, int col, int block_size);
+
 void write_mat(FILE *fp, signed char **m, int N, int M) {
 
 	int i, j;
@@ -18,9 +21,6 @@ void write_mat(FILE *fp, signed char **m, int N, int M) {
 	}
 	fprintf(fp, "\n");
 }
-
-void DCTBlock(int32_t** TC_FRAME, int8_t** RES_FRAME, int row, int col, int block_size);
-void IDCTBlock(int8_t **RES_FRAME, int32_t ** TC_FRAME, int row, int col, int block_size);
 
 void dct_frame_wrapper(int **DCTMatrix_frame, signed char **Matrix_FRAME, int width, int height, int block_size) {
 	//create block matrices 
@@ -139,9 +139,7 @@ void DCTBlock(int32_t** TC_FRAME, int8_t** RES_FRAME,int row, int col, int block
 					temp_float += ((float)RES_FRAME[row + i][col + j]) * cos(M_PI / ((float)block_size)*((2.*i + 1.) / 2.)*u)*cos(M_PI / ((float)block_size)*((2.*j + 1.) / 2.)*v);
 				}
 			}
-			temp_float = alpha_u * alpha_v * temp_float;
-			rounding_num = (temp_float > 0) ? (0.5) : (-0.5);
-			TC_FRAME[row + u][col + v] = temp_float + rounding_num;
+			TC_FRAME[row + u][col + v] = alpha_u * alpha_v * temp_float;
 
 		}
 	}
@@ -158,11 +156,10 @@ void IDCTBlock(int8_t **RES_FRAME, int32_t ** TC_FRAME,int row, int col, int blo
 				for (v = 0; v < block_size; ++v) {
 					alpha_u = (u == 0) ? (1. / sqrt((float)block_size)) : (sqrt(2. / (float)block_size));
 					alpha_v = (v == 0) ? (1. / sqrt((float)block_size)) : (sqrt(2. / (float)block_size));
-					temp_float += alpha_u * alpha_v * ((float)TC_FRAME[row + u][col + v]) * cos(M_PI / ((float)block_size)*((2.*i + 1.) / 2.)*u)*cos(M_PI / ((float)block_size)*((2.*j + 1.) / 2.)*v);
+					temp_float += ((float)TC_FRAME[row + u][col + v]) * cos(M_PI / ((float)block_size)*((2.*i + 1.) / 2.)*u)*cos(M_PI / ((float)block_size)*((2.*j + 1.) / 2.)*v);
 				}
 			}
-			rounding_num = (temp_float > 0.0) ? (0.5) : (-0.5);
-			RES_FRAME[row + i][col + j] = temp_float + rounding_num;
+			RES_FRAME[row + i][col + j] = alpha_u * alpha_v * temp_float;
 		}
 	}
 }

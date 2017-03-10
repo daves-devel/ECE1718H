@@ -2,8 +2,8 @@
 
 bool ValidQP(uint32_t  QP, uint32_t  block);
 void GenerateQ_Matrix(uint32_t  ** Q_Matrix, uint32_t  QP, uint32_t  block);
-int QuantizeBlock(int32_t  ** QTC_FRAME, int32_t ** TC_FRAME, uint32_t row, uint32_t col, uint32_t  width, uint32_t  height, uint32_t  QP, uint32_t  block);
-int ScaleBlock(int32_t  ** TC_FRAME, int32_t ** QTC_FRAME, uint32_t row, uint32_t col, uint32_t  width, uint32_t  height, uint32_t  QP, uint32_t  block);
+int QuantizeBlock(int32_t  ** QTC_FRAME, int32_t ** TC_FRAME, uint8_t** QP_FRAME,uint32_t row, uint32_t col, uint32_t  width, uint32_t  height, uint32_t  QP, uint32_t  block);
+int ScaleBlock(int32_t  ** TC_FRAME, int32_t ** QTC_FRAME, uint8_t** QP_FRAME, uint32_t row, uint32_t col, uint32_t  width, uint32_t  height, uint32_t  QP, uint32_t  block);
 
 bool ValidQP(uint32_t  QP, uint32_t  block) {
 
@@ -40,46 +40,47 @@ void GenerateQ_Matrix(uint32_t  ** Q_Matrix, uint32_t  QP, uint32_t  block) {
 	}
 }
 
-int QuantizeBlock(int32_t  ** QTC_FRAME, int32_t ** TC_FRAME, uint32_t row, uint32_t col, uint32_t  width, uint32_t  height, uint32_t  QP, uint32_t  block) {
+int QuantizeBlock(int32_t  ** QTC_FRAME, int32_t ** TC_FRAME, uint8_t ** QP_FRAME, uint32_t row, uint32_t col, uint32_t  width, uint32_t  height, uint32_t  QP, uint32_t  block) {
 
 	if (!ValidQP(QP, block)) {
 		return 1;
 	}
 
-	uint32_t ** Q_Matrix = new uint32_t *[height];
-	for (uint32_t  i = 0; i < height; i++) {
-		Q_Matrix[i] = new uint32_t [width];
-	}
+	for (uint32_t i = 0; i < block; i++) {
+		for (uint32_t j = 0; j < block; j++) {
 
-	GenerateQ_Matrix(Q_Matrix, QP, block);
+			if (i + j < (block - 1)) {
+				QP_FRAME[row + i][col + j] = 1 << QP;
+			}
+			else if (i + j == (block - 1)) {
+				QP_FRAME[row + i][col + j] = 1 << (QP + 1);
+			}
+			else {
+				QP_FRAME[row + i][col + j] = 1 << (QP + 2);
+			}
+		}
+	}
 
 	for (uint32_t  i = 0; i < block; i++) {
 		for (uint32_t  j = 0; j < block; j++) {
 
-			QTC_FRAME[row + i][col + j] = round(TC_FRAME[row + i][col + j] / Q_Matrix[i][j]);
+			QTC_FRAME[row + i][col + j] = round(TC_FRAME[row + i][col + j] / QP_FRAME[row + i][col + j]);
 
 		}
 	}
 
 }
 
-int ScaleBlock(int32_t  ** TC_FRAME, int32_t ** QTC_FRAME, uint32_t row, uint32_t col,uint32_t  width, uint32_t  height, uint32_t  QP, uint32_t  block) {
+int ScaleBlock(int32_t  ** TC_FRAME, int32_t ** QTC_FRAME, uint8_t** QP_FRAME,uint32_t row, uint32_t col,uint32_t  width, uint32_t  height, uint32_t  QP, uint32_t  block) {
 
 	if (!ValidQP(QP, block)) {
 		return 1;
 	}
 
-	uint32_t ** Q_Matrix = new uint32_t *[height];
-	for (uint32_t  i = 0; i < height; i++) {
-		Q_Matrix[i] = new uint32_t [width];
-	}
-
-	GenerateQ_Matrix(Q_Matrix, QP, block);
-
 	for (uint32_t  i = 0; i < block; i++) {
 		for (uint32_t  j = 0; j < block; j++) {
 
-			TC_FRAME[row + i][col + j] = QTC_FRAME[row + i][col + j] * Q_Matrix[i][j];
+			TC_FRAME[row + i][col + j] = QTC_FRAME[row + i][col + j] * QP_FRAME[row + i][col + j];
 
 		}
 	}

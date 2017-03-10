@@ -25,7 +25,7 @@ struct MDIFF IntraFramePrediction(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint
 
 	for (uint32_t block_row = 0; block_row < block; block_row++) {
 		for (uint32_t block_col = 0; block_col < block; block_col++) {
-			HORIZONTAL_SAD += CUR_FRAME[row + block_row][col + block_col] - HorizontalModeArray[block_row];
+			HORIZONTAL_SAD += abs(CUR_FRAME[row + block_row][col + block_col] - HorizontalModeArray[block_row]);
 		}
 	}
 
@@ -47,7 +47,7 @@ struct MDIFF IntraFramePrediction(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint
 
 	for (uint32_t block_row = 0; block_row < block; block_row++) {
 		for (uint32_t block_col = 0; block_col < block; block_col++) {
-			VERTICAL_SAD += CUR_FRAME[row + block_row][col + block_col] - VerticalModeArray[block_col ];
+			VERTICAL_SAD += abs(CUR_FRAME[row + block_row][col + block_col] - VerticalModeArray[block_col ]);
 		}
 	}
 
@@ -67,10 +67,10 @@ struct MDIFF IntraFramePrediction(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint
 	for (int i = 0; i < block; i++) {
 		for (int j = 0; j < block; j++) {
 			if (INTRA_MODE.MODE == HORIZONTAL) {
-				(col == 0) ? REF_FRAME[row + i][col + j] = 128 : REF_FRAME[row + i][col + j] = REC_FRAME[row + i][col - 1];
+				(col == 0) ? (REF_FRAME[row + i][col + j] = 128): (REF_FRAME[row + i][col + j] = REC_FRAME[row + i][col - 1]);
 			}
 			if (INTRA_MODE.MODE == VERTICAL) {
-				(row == 0) ? REF_FRAME[row + i][col + j] = 128 : REF_FRAME[row + i][col + j] = REC_FRAME[row - 1][col + j];
+				(row == 0) ? (REF_FRAME[row + i][col + j] = 128) : (REF_FRAME[row + i][col + j] = REC_FRAME[row - 1][col + j]);
 			}
 		}
 	}
