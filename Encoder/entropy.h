@@ -160,6 +160,9 @@ void encode_mdiff(MDIFF** MDIFF_VECTOR_DIFF, int row, int col, int Frametype, ui
 		result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].Y, &count);
 		fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
 		*bitcount = count + *bitcount;
+		result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].ref, &count);
+		fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
+		*bitcount = count + *bitcount;
 	}
 }
 void entropy_wrapper(int ** QTC_FRAME, int block, int height, int width, int frame) {
