@@ -1,33 +1,31 @@
-﻿  stdafx.cpp
-  Decoder.cpp
-c:\users\juanfuentes\source\repos\ece1718h\encoder\quantization.h(67): warning C4244: '=': conversion from 'double' to 'int32_t', possible loss of data
-c:\users\juanfuentes\source\repos\ece1718h\encoder\intraframeprediction.h(67): warning C4018: '<': signed/unsigned mismatch
-c:\users\juanfuentes\source\repos\ece1718h\encoder\intraframeprediction.h(68): warning C4018: '<': signed/unsigned mismatch
-c:\users\juanfuentes\source\repos\ece1718h\encoder\discrete_cosine_transform.h(93): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\juanfuentes\source\repos\ece1718h\encoder\discrete_cosine_transform.h(94): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\juanfuentes\source\repos\ece1718h\encoder\discrete_cosine_transform.h(97): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
-c:\users\juanfuentes\source\repos\ece1718h\encoder\discrete_cosine_transform.h(101): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\juanfuentes\source\repos\ece1718h\encoder\discrete_cosine_transform.h(102): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-c:\users\juanfuentes\source\repos\ece1718h\encoder\discrete_cosine_transform.h(115): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\juanfuentes\source\repos\ece1718h\encoder\discrete_cosine_transform.h(116): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\juanfuentes\source\repos\ece1718h\encoder\discrete_cosine_transform.h(119): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
-c:\users\juanfuentes\source\repos\ece1718h\encoder\discrete_cosine_transform.h(122): warning C4244: '=': conversion from 'float' to 'int32_t', possible loss of data
-c:\users\juanfuentes\source\repos\ece1718h\encoder\discrete_cosine_transform.h(137): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\juanfuentes\source\repos\ece1718h\encoder\discrete_cosine_transform.h(138): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\juanfuentes\source\repos\ece1718h\encoder\discrete_cosine_transform.h(139): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
-c:\users\juanfuentes\source\repos\ece1718h\encoder\discrete_cosine_transform.h(142): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\juanfuentes\source\repos\ece1718h\encoder\discrete_cosine_transform.h(143): warning C4244: '=': conversion from 'float' to 'signed char', possible loss of data
-c:\users\juanfuentes\source\repos\ece1718h\encoder\discrete_cosine_transform.h(157): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\juanfuentes\source\repos\ece1718h\encoder\discrete_cosine_transform.h(158): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\juanfuentes\source\repos\ece1718h\encoder\discrete_cosine_transform.h(159): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
-c:\users\juanfuentes\source\repos\ece1718h\encoder\discrete_cosine_transform.h(162): warning C4244: '=': conversion from 'float' to 'int8_t', possible loss of data
-c:\users\juanfuentes\source\repos\ece1718h\decoder\decoder.cpp(127): warning C4018: '<': signed/unsigned mismatch
-c:\users\juanfuentes\source\repos\ece1718h\decoder\decoder.cpp(162): warning C4018: '<': signed/unsigned mismatch
-c:\users\juanfuentes\source\repos\ece1718h\decoder\decoder.cpp(162): warning C4552: '<': operator has no effect; expected operator with side-effect
-c:\users\juanfuentes\source\repos\ece1718h\decoder\decoder.cpp(192): warning C4018: '<': signed/unsigned mismatch
-c:\users\juanfuentes\source\repos\ece1718h\decoder\decoder.cpp(211): warning C4018: '<': signed/unsigned mismatch
-  Generating Code...
-c:\users\juanfuentes\source\repos\ece1718h\encoder\quantization.h(72): warning C4715: 'QuantizeBlock': not all control paths return a value
-c:\users\juanfuentes\source\repos\ece1718h\encoder\quantization.h(87): warning C4715: 'ScaleBlock': not all control paths return a value
-  Decoder.vcxproj -> C:\Users\JuanFuentes\Source\Repos\ECE1718H\Decoder\Debug\Decoder.exe
-  Decoder.vcxproj -> C:\Users\JuanFuentes\Source\Repos\ECE1718H\Decoder\Debug\Decoder.pdb (Full PDB)
+﻿  Decoder.cpp
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\quantization.h(67): warning C4244: '=': conversion from 'double' to 'int32_t', possible loss of data
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\intraframeprediction.h(67): warning C4018: '<': signed/unsigned mismatch
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\intraframeprediction.h(68): warning C4018: '<': signed/unsigned mismatch
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\discrete_cosine_transform.h(93): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\discrete_cosine_transform.h(94): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\discrete_cosine_transform.h(97): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\discrete_cosine_transform.h(101): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\discrete_cosine_transform.h(102): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\discrete_cosine_transform.h(115): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\discrete_cosine_transform.h(116): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\discrete_cosine_transform.h(119): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\discrete_cosine_transform.h(122): warning C4244: '=': conversion from 'float' to 'int32_t', possible loss of data
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\discrete_cosine_transform.h(137): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\discrete_cosine_transform.h(138): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\discrete_cosine_transform.h(139): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\discrete_cosine_transform.h(142): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\discrete_cosine_transform.h(143): warning C4244: '=': conversion from 'float' to 'signed char', possible loss of data
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\discrete_cosine_transform.h(157): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\discrete_cosine_transform.h(158): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\discrete_cosine_transform.h(159): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\discrete_cosine_transform.h(162): warning C4244: '=': conversion from 'float' to 'int8_t', possible loss of data
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(112): warning C4018: '<': signed/unsigned mismatch
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(145): warning C4018: '<': signed/unsigned mismatch
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(145): warning C4552: '<': operator has no effect; expected operator with side-effect
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(182): warning C4018: '<': signed/unsigned mismatch
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(201): warning C4018: '<': signed/unsigned mismatch
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\quantization.h(87): warning C4715: 'ScaleBlock': not all control paths return a value
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\quantization.h(72): warning C4715: 'QuantizeBlock': not all control paths return a value
+  Decoder.vcxproj -> C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\Debug\Decoder.exe
+  Decoder.vcxproj -> C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\Debug\Decoder.pdb (Full PDB)

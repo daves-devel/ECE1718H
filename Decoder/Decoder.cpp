@@ -22,6 +22,7 @@ int main(int argCnt, char **args)
 	char coeff_bitcount_name[500] = "";
 	char mdiff_bitcount_name[500] = "";
 	char decfile_name[500] = "";
+	char frame_header_name[500] = "";
 
 
 	int width = -1;
@@ -41,15 +42,9 @@ int main(int argCnt, char **args)
 	// =======================
 	while (tmpArgCnt < argCnt && (*args)[0] == '-') {
 
-		if (!strcmp((*args) + 1, "width")) {
+		if (!strcmp((*args) + 1, "decfile")) {
 			args++;
-			width = atoi(*args);
-			args++;
-			tmpArgCnt += 2;
-		}
-		else if (!strcmp((*args) + 1, "height")) {
-			args++;
-			height = atoi(*args);
+			sscanf(*args, "%s", decfile_name);
 			args++;
 			tmpArgCnt += 2;
 		}
@@ -65,40 +60,21 @@ int main(int argCnt, char **args)
 			args++;
 			tmpArgCnt += 2;
 		}
-		else if (!strcmp((*args) + 1, "decfile")) {
+		else if (!strcmp((*args) + 1, "frame_header")) {
 			args++;
-			sscanf(*args, "%s", decfile_name);
+			sscanf(*args, "%s", frame_header_name);
 			args++;
 			tmpArgCnt += 2;
 		}
-		
 		else if (!strcmp((*args) + 1, "frames")) {
 			args++;
 			frames = atoi(*args);
 			args++;
 			tmpArgCnt += 2;
 		}
-		else if (!strcmp((*args) + 1, "block")) {
+		else if (!strcmp((*args) + 1, "qp")) {
 			args++;
-			block = atoi(*args);
-			args++;
-			tmpArgCnt += 2;
-		}
-		else if (!strcmp((*args) + 1, "range")) {
-			args++;
-			range = atoi(*args);
-			args++;
-			tmpArgCnt += 2;
-		}
-		else if (!strcmp((*args) + 1, "round")) {
-			args++;
-			round = atoi(*args);
-			args++;
-			tmpArgCnt += 2;
-		}
-		else if (!strcmp((*args) + 1, "i_period")) {
-			args++;
-			i_period = atoi(*args);
+			QP = atoi(*args);
 			args++;
 			tmpArgCnt += 2;
 		}
@@ -109,10 +85,19 @@ int main(int argCnt, char **args)
 	}
 
 	FILE* decfile = fopen(decfile_name, "wb");
+	frame_header_file = fopen(frame_header_name, "rb");
 	coeff_bitcount_file = fopen(coeff_bitcount_name, "r");
 	mdiff_bitcount_file = fopen(mdiff_bitcount_name, "r");
 
+	//Read the frame header once to get frame paramters
+	fread(&FrameType, sizeof(int32_t), 1, frame_header_file);
+	fread(&block, sizeof(int32_t), 1, frame_header_file);
+	fread(&width, sizeof(int32_t), 1, frame_header_file);
+	fread(&height, sizeof(int32_t), 1, frame_header_file);
+
 	unsigned int  FRAME_SIZE = width*height;
+	//reset to begining of file
+	fseek(frame_header_file, 0, SEEK_SET);
 
 	// Allocate Memory
 	uint8_t** DEC_FRAME_2D = new uint8_t*[height];
@@ -148,24 +133,26 @@ int main(int argCnt, char **args)
 	// Decode Each Frame
 	// =========================================
 	for (int frame = 0; frame < frames; frame++) {
-
-		if ((frame%i_period) == 0) {
-			FrameType = IFRAME;
-		}
-		else {
-			FrameType = PFRAME;
-		}
+		//Read the paratemters for the frame
+		fread(&FrameType, sizeof(int32_t), 1, frame_header_file);
+		fread(&block, sizeof(int32_t), 1, frame_header_file);
+		fread(&width, sizeof(int32_t), 1, frame_header_file);
+		fread(&height, sizeof(int32_t), 1, frame_header_file);
 
 		if (FrameType == PFRAME) {
 			// Go to the beginning of the previous reconstructed frame and copy it to buffer
 			fseek(decfile, (frame - 1)*FRAME_SIZE, SEEK_SET);
 			for (unsigned int row = 0; row++; row < height) {
-				fread(DEC_FRAME_2D[row], sizeof(uint8_t), width, decfile);
+				fread(DEC_TC_FRAME_2D[row], sizeof(uint8_t), width, decfile);
+			}
+		}
+		if (FrameType == IFRAME) {
+			// Go to the beginning of the previous reconstructed frame and copy it to buffer
+			
 			}
 		}
 
-		// Go to the beginning of the current frame and copy it to buffer
-		reverse_entropy(QTC_FRAME_2D, block, height, width, frame);
+		reverse_entropy(DEC_TC_FRAME_2D, block, height, width, frame);
 		decode_mdiff_wrapper(MDIFF_VECTOR_DIFF, height, width, block, frame, FrameType);
 
 		// Apply Decode Operations on Each Block
@@ -186,6 +173,13 @@ int main(int argCnt, char **args)
 			}
 		}
 
+		uint8_t *DEC_FRAME = new uint8_t[FRAME_SIZE];
+		for (int row = 0; row < height; row++)
+			for (int col = 0; col < width; col++)
+				DEC_FRAME[col + width*row] = DEC_FRAME_2D[row][col];
+		//fclose(decfile);//Weird behavior need to close file
+		//decfile = fopen(decfile_name, "a+b");
+		fwrite(DEC_FRAME, sizeof(uint8_t), FRAME_SIZE, decfile);
 	}
 
 	// Deallocate Memory
