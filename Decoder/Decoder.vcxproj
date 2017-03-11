@@ -154,15 +154,16 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Encoder\DiffDec.h" />
+    <ClInclude Include="..\Encoder\DiffEnc.h" />
+    <ClInclude Include="..\Encoder\entropy.h" />
+    <ClInclude Include="..\Encoder\residual.h" />
     <ClInclude Include="..\header\reconstructed.h" />
-    <ClInclude Include="..\header\residual.h" />
     <ClInclude Include="..\header\stdint.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\reconstructed.cpp" />
-    <ClCompile Include="..\source\residual.cpp" />
     <ClCompile Include="Decoder.cpp" />
     <ClCompile Include="stdafx.cpp" />
   </ItemGroup>

@@ -7,6 +7,7 @@
 
 #include <common.h>
 #include <residual.h>
+#include <entropy.h>
 #include <reconstructed.h>
 #include <quantization.h>
 #include <reverse_entropy.h>

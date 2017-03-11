@@ -20,32 +20,13 @@ c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\discr
 c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\discrete_cosine_transform.h(158): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
 c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\discrete_cosine_transform.h(159): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
 c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\discrete_cosine_transform.h(162): warning C4244: '=': conversion from 'float' to 'int8_t', possible loss of data
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(125): warning C4018: '<': signed/unsigned mismatch
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(159): warning C4018: '<': signed/unsigned mismatch
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(159): warning C4552: '<': operator has no effect; expected operator with side-effect
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(176): error C2065: 'CUR_FRAME_2D': undeclared identifier
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(176): error C2065: 'REC_FRAME_2D': undeclared identifier
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(176): error C2065: 'REF_FRAME_2D': undeclared identifier
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(180): error C2065: 'CUR_FRAME_2D': undeclared identifier
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(180): error C2065: 'REC_FRAME_2D': undeclared identifier
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(180): error C2065: 'REF_FRAME_2D': undeclared identifier
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(190): error C2065: 'REF_FRAME_2D': undeclared identifier
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(198): warning C4018: '<': signed/unsigned mismatch
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(200): error C2065: 'REC_FRAME_2D': undeclared identifier
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(201): error C2065: 'REF_FRAME_2D': undeclared identifier
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(210): error C2065: 'CUR_FRAME_2D': undeclared identifier
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(210): error C2541: 'delete': cannot delete objects that are not pointers
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(211): error C2065: 'REC_FRAME_2D': undeclared identifier
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(211): error C2541: 'delete': cannot delete objects that are not pointers
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(212): error C2065: 'REF_FRAME_2D': undeclared identifier
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(212): error C2541: 'delete': cannot delete objects that are not pointers
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(220): warning C4018: '<': signed/unsigned mismatch
-  residual.cpp
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\source\residual.cpp(5): error C2660: 'generate_residual': function does not take 7 arguments
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\source\residual.cpp(10): error C2084: function 'unsigned char rounding(uint8_t,uint8_t)' already has a body
-  c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\residual.h(14): note: see previous definition of 'rounding'
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\source\residual.cpp(22): error C2568: '=': unable to resolve function overload
-  c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\source\residual.cpp(22): note: could be 'unsigned char rounding(uint8_t,uint8_t)'
-  reconstructed.cpp
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\source\reconstructed.cpp(5): error C2660: 'generate_recon': function does not take 6 arguments
-  Generating Code...
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(127): warning C4018: '<': signed/unsigned mismatch
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(162): warning C4018: '<': signed/unsigned mismatch
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(162): warning C4552: '<': operator has no effect; expected operator with side-effect
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(192): warning C4018: '<': signed/unsigned mismatch
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(211): warning C4018: '<': signed/unsigned mismatch
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\quantization.h(72): warning C4715: 'QuantizeBlock': not all control paths return a value
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\quantization.h(87): warning C4715: 'ScaleBlock': not all control paths return a value
+  LINK : C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\Debug\Decoder.exe not found or not built by the last incremental link; performing full link
+  Decoder.vcxproj -> C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\Debug\Decoder.exe
+  Decoder.vcxproj -> C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\Debug\Decoder.pdb (Full PDB)
