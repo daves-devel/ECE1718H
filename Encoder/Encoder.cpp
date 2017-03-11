@@ -35,7 +35,6 @@ int main(int argCnt, char **args)
 	int frames = -1;
 	int range = -1;
 	int block = -1;
-	int round = -1;
 	int i_period = -1;
 	int FrameType = -1;
 	int QP = -1;
@@ -458,24 +457,12 @@ int main(int argCnt, char **args)
 			}
 		}
 
-
-
-		
-		// =====================================================================================================
-		// TODOOOOOO
 		// Differential and Entropy Encode steps can be done on a whole frame here
-		// OR they can be done on a block level in the previous nested for loop after the Quantization Step.
-		// =====================================================================================================
-
 		entropy_wrapper(QTC_FRAME_2D, block, height, width, frame);
 		diff_enc_wrapper(MDIFF_VECTOR, MDIFF_VECTOR_DIFF, 0, height, width, block, frame);
 		encode_mdiff_wrapper(MDIFF_VECTOR_DIFF, height, width, block, frame, 0);
 
-		// =====================================================================================================
-		// TODOOOOO
-		// Any File Dumps can be added on any 2D array here for verification purpose
-		// =====================================================================================================
-
+		// File Dumps
 		uint8_t *REC_FRAME = new uint8_t[FRAME_SIZE];
 		for (int row = 0; row < height; row++)
 			for (int col = 0; col < width; col++)
@@ -560,7 +547,6 @@ height		= 8;
 frames		= 1;
 range		= 1;
 block		= 2;
-round		= 1;
 i_period	= 1;
 QP			= 0;
 
