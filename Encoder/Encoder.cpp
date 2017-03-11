@@ -40,6 +40,7 @@ int main(int argCnt, char **args)
 	int FrameType = -1;
 	int QP = -1;
 	int nRefFrames = 1;
+	int VBSEnable = 0;
 
 	args++;
 	int tmpArgCnt = 1;
@@ -132,6 +133,12 @@ int main(int argCnt, char **args)
 			args++;
 			tmpArgCnt += 2;
 		}
+		else if (!strcmp((*args) + 1, "VBSEnable")) {
+			args++;
+			VBSEnable = atoi(*args);
+			args++;
+			tmpArgCnt += 2;
+		}
 
 		else {
 			printf("Huh? I don't know %s (option #%d) \n", *args, tmpArgCnt);
@@ -147,8 +154,7 @@ int main(int argCnt, char **args)
 
 	// TODO Make these 2D buffers, and add the Encoder functions to the frame flow
 	unsigned int  FRAME_SIZE = width*height;
-	signed char* COEFF_REORDER = new signed char[FRAME_SIZE];
-	signed char* RLE = new signed char[FRAME_SIZE];
+	int block_split = block / 2;
 
 	// Allocate Memory
 	uint8_t** CUR_FRAME_2D	 = new uint8_t*[height];
@@ -208,6 +214,63 @@ int main(int argCnt, char **args)
 		MDIFF_VECTOR_DIFF[row / block] = new struct MDIFF[width / block];
 	}
 
+	// Allocate Memory for split buffer
+	uint8_t** CUR_FRAME_2DS = new uint8_t*[height];
+
+	uint8_t** REC_FRAME_2DS = new uint8_t*[height];
+	uint8_t** REC_FRAME_2D_2S = new uint8_t*[height];
+	uint8_t** REC_FRAME_2D_3S = new uint8_t*[height];
+	uint8_t** REC_FRAME_2D_4S = new uint8_t*[height];
+
+	uint8_t** REF_FRAME_2DS = new uint8_t*[height];
+	uint8_t** REF_FRAME_2D_2S = new uint8_t*[height];
+	uint8_t** REF_FRAME_2D_3S = new uint8_t*[height];
+	uint8_t** REF_FRAME_2D_4S = new uint8_t*[height];
+
+	int8_t** ENC_RES_FRAME_2DS = new  int8_t*[height];
+	int32_t** ENC_TC_FRAME_2DS = new int32_t*[height];
+	int8_t** DEC_RES_FRAME_2DS = new  int8_t*[height];
+	int32_t** DEC_TC_FRAME_2DS = new int32_t*[height];
+	int32_t** QTC_FRAME_2DS = new int32_t*[height];
+	uint8_t** QP_FRAME_2DS = new uint8_t*[height];
+
+	for (unsigned int row = 0; row < height; row++) {
+		CUR_FRAME_2DS[row] = new uint8_t[width];
+
+		REC_FRAME_2DS[row] = new uint8_t[width];
+		REC_FRAME_2D_2S[row] = new uint8_t[width];
+		REC_FRAME_2D_3S[row] = new uint8_t[width];
+		REC_FRAME_2D_4S[row] = new uint8_t[width];
+
+		REF_FRAME_2DS[row] = new uint8_t[width];
+		REF_FRAME_2D_2S[row] = new uint8_t[width];
+		REF_FRAME_2D_3S[row] = new uint8_t[width];
+		REF_FRAME_2D_4S[row] = new uint8_t[width];
+
+		ENC_RES_FRAME_2DS[row] = new  int8_t[width];
+		ENC_TC_FRAME_2DS[row] = new int32_t[width];
+		DEC_RES_FRAME_2DS[row] = new  int8_t[width];
+		DEC_TC_FRAME_2DS[row] = new int32_t[width];
+		QTC_FRAME_2DS[row] = new int32_t[width];
+		QP_FRAME_2DS[row] = new uint8_t[width];
+	}
+
+
+	// This 2D Buffer will Contain MDIFF data for each block 
+	struct MDIFF** MDIFF_VECTORS = new struct MDIFF*[(height / block_split)];
+	struct MDIFF** MDIFF_VECTOR_2S = new struct MDIFF*[(height / block_split)];
+	struct MDIFF** MDIFF_VECTOR_3S = new struct MDIFF*[(height / block_split)];
+	struct MDIFF** MDIFF_VECTOR_4S = new struct MDIFF*[(height / block_split)];
+
+	struct MDIFF** MDIFF_VECTOR_DIFFS = new struct MDIFF*[(height / block_split)];
+
+	for (int row = 0; row < height; row = row + block_split) {
+		MDIFF_VECTORS[row / block_split] = new struct MDIFF[width / block_split];
+		MDIFF_VECTOR_2S[row / block_split] = new struct MDIFF[width / block_split];
+		MDIFF_VECTOR_3S[row / block_split] = new struct MDIFF[width / block_split];
+		MDIFF_VECTOR_4S[row / block_split] = new struct MDIFF[width / block_split];
+		MDIFF_VECTOR_DIFFS[row / block_split] = new struct MDIFF[width / block_split];
+	}
 
 
 	// Encode Each Frame
@@ -229,7 +292,7 @@ int main(int argCnt, char **args)
 			fwrite(&height, sizeof(int32_t), 1, frame_header_file);
 		}
 
-		if (FrameType == PFRAME){
+		if (FrameType == PFRAME) {
 			// Go to the beginning of the previous reconstructed frame and copy it to buffer
 			fseek(recfile, (frame - 1)*FRAME_SIZE, SEEK_SET);
 			for (unsigned int row = 0; row++; row < height) {
@@ -253,7 +316,31 @@ int main(int argCnt, char **args)
 					fread(REC_FRAME_2D_4[row], sizeof(uint8_t), width, recfile);
 				}
 			}
-		}
+			if (VBSEnable) { //fill split buffers
+				fseek(recfile, (frame - 1)*FRAME_SIZE, SEEK_SET);
+				for (unsigned int row = 0; row++; row < height) {
+					fread(REC_FRAME_2DS[row], sizeof(uint8_t), width, recfile);
+				}
+				if (frame > 2) {
+					fseek(recfile, (frame - 2)*FRAME_SIZE, SEEK_SET);
+					for (unsigned int row = 0; row++; row < height) {
+						fread(REC_FRAME_2D_2S[row], sizeof(uint8_t), width, recfile);
+					}
+				}
+				if (frame > 3) {
+					fseek(recfile, (frame - 3)*FRAME_SIZE, SEEK_SET);
+					for (unsigned int row = 0; row++; row < height) {
+						fread(REC_FRAME_2D_3S[row], sizeof(uint8_t), width, recfile);
+					}
+				}
+				if (frame > 4) {
+					fseek(recfile, (frame - 4)*FRAME_SIZE, SEEK_SET);
+					for (unsigned int row = 0; row++; row < height) {
+						fread(REC_FRAME_2D_4S[row], sizeof(uint8_t), width, recfile);
+					}
+				}
+			}
+		}//end split buffer
 
 		// Go to the beginning of the current frame and copy it to buffer
 
@@ -261,6 +348,12 @@ int main(int argCnt, char **args)
 		for (unsigned int row = 0; row < height; row++) {
 			fread(CUR_FRAME_2D[row], sizeof(uint8_t), width, curfile);
 		}
+		if (VBSEnable) { //fill split buffer curr_frame
+			fseek(curfile, frame*FRAME_SIZE, SEEK_SET);
+			for (unsigned int row = 0; row < height; row++) {
+				fread(CUR_FRAME_2DS[row], sizeof(uint8_t), width, curfile);
+			}
+		}//end buffer curr_frame
 
 		// Apply Encode Operations on Each Block
 		for (int row = 0; row < height; row += block) {
@@ -309,6 +402,58 @@ int main(int argCnt, char **args)
 
 				// RECONSTRUCT 
 				ReconstructBlock(REC_FRAME_2D, DEC_RES_FRAME_2D, REF_FRAME_2D, row, col, block);
+
+				if (VBSEnable) {//start VBSEnable code
+					for (int row2 = row; row2 < row + (block / block_split); row2 += block_split) {
+						for (int col2 = col; col2 < col + (block / block_split); col2 += block_split) {
+
+							// IDEALLY THREAD EVERYTHING IN THIS FOR LOOP FOR PFRAMES
+
+							// PREDICTOR DATA GENERATION
+							if (FrameType == IFRAME) {
+								MDIFF_VECTORS[row2 / block_split][col2 / block_split] = IntraFramePrediction(CUR_FRAME_2DS, REC_FRAME_2DS, REF_FRAME_2DS, row2, col2, block_split);
+							}
+
+							if (FrameType == PFRAME) {
+								MDIFF_VECTORS[row2 / block_split][col2 / block_split] = InterFramePrediction(CUR_FRAME_2DS, REC_FRAME_2DS, REF_FRAME_2DS, row2, col2, width, height, block_split, range, 1);
+								//Multireference code start Only activated if nRefFrames>=2
+								if ((frame%i_period) >= 2 && nRefFrames >= 2) {
+									MDIFF_VECTOR_2[row2 / block_split][col2 / block_split] = InterFramePrediction(CUR_FRAME_2DS, REC_FRAME_2D_2S, REF_FRAME_2D_2S, row2, col2, width, height, block_split, range, 2);
+									MDIFF_VECTORS[row2 / block_split][col2 / block_split] = SelectRefWinner(MDIFF_VECTORS[row2 / block_split][col2 / block_split], MDIFF_VECTOR_2S[row2 / block_split][col2 / block_split], REF_FRAME_2DS, REF_FRAME_2D_2S, block_split, row2, col2);
+								}
+								if ((frame%i_period) >= 3 && nRefFrames >= 3) {
+									MDIFF_VECTOR_3S[row2 / block_split][col2 / block_split] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D_3, REF_FRAME_2D_3, row2, col2, width, height, block_split, range, 3);
+									MDIFF_VECTORS[row2 / block_split][col2 / block_split] = SelectRefWinner(MDIFF_VECTORS[row2 / block_split][col2 / block_split], MDIFF_VECTOR_3S[row2 / block_split][col2 / block_split], REF_FRAME_2DS, REF_FRAME_2D_3S, block_split, row2, col2);
+
+								}
+								if ((frame%i_period) >= 4 && nRefFrames >= 4) {
+									MDIFF_VECTOR_4S[row2 / block_split][col2 / block_split] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D_4, REF_FRAME_2D_4, row2, col2, width, height, block_split, range, 4);
+									MDIFF_VECTORS[row2 / block_split][col2 / block_split] = SelectRefWinner(MDIFF_VECTORS[row2 / block_split][col2 / block_split], MDIFF_VECTOR_4S[row2 / block_split][col2 / block_split], REF_FRAME_2DS, REF_FRAME_2D_4S, block_split, row2, col2);
+								}
+								//Multireference code end
+							}
+
+							// RESIDUAL 
+							GenerateResidualBlock(ENC_RES_FRAME_2DS, CUR_FRAME_2DS, REF_FRAME_2DS, row2, col2, block_split);
+
+							// DCT 
+							DCTBlock(ENC_TC_FRAME_2DS, ENC_RES_FRAME_2DS, row2, col2, block_split);
+
+							// QUANTIZE
+							QuantizeBlock(QTC_FRAME_2DS, ENC_TC_FRAME_2DS, QP_FRAME_2DS, row2, col2, width, height, QP, block_split);
+
+							// SCALE
+							ScaleBlock(DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS, row2, col2, width, height, QP, block_split);
+
+							// IDCT
+							IDCTBlock(DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, row2, col2, block_split);
+
+							// RECONSTRUCT 
+							ReconstructBlock(REC_FRAME_2DS, DEC_RES_FRAME_2DS, REF_FRAME_2DS, row2, col2, block_split);
+						}
+					}
+
+				}//End of VBSenable code
 				
 			}
 		}
