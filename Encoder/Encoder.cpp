@@ -158,31 +158,15 @@ int main(int argCnt, char **args)
 	FILE* curfile = fopen(curfile_name, "rb");
 	coeff_bitcount_file = fopen(coeff_bitcount_name, "w");
 	mdiff_bitcount_file = fopen(mdiff_bitcount_name, "w");
-	//FILE* mvfile = fopen(mvfile_name, "w");
-	//FILE* resfile = fopen(resfile_name, "wb");
 	FILE* recfile = fopen(recfile_name, "w+b");
 	//FILE* matchfile = fopen(matchfile_name, "wb");
-	//FILE* gmvXfile = fopen(gmvx_name, "wb");
-	//FILE* gmvYfile = fopen(gmvy_name, "wb");
-
+	
 	/*
 	if (curfile == NULL) {
 		printf("Cannot open input file <%s>\n", curfile_name);
 		exit(-1);
 	}
-	if (mvfile == NULL) {
-		printf("Cannot open output file <%s>\n", mvfile_name);
-		exit(-1);
-	}
-	if (resfile == NULL) {
-		printf("Cannot open output file <%s>\n", resfile_name);
-		exit(-1);
-	}
-	
-	if (recfile == NULL) {
-		printf("Cannot open output file <%s>\n", recfile_name);
-		exit(-1);
-	}
+		
 	if (block == 0) {
 		printf("Invalid Block Dimension <%d>", block);
 	}
