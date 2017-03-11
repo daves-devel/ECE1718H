@@ -71,7 +71,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Users\JuanFuentes\Source\Repos\ECE1718H\header;$(VC_IncludePath);$(WindowsSDK_IncludePath);C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\header</IncludePath>
+    <IncludePath>C:\Users\JuanFuentes\Source\Repos\ECE1718H\Encoder;C:\Users\JuanFuentes\Source\Repos\ECE1718H\header;$(VC_IncludePath);$(WindowsSDK_IncludePath);C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\header</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>

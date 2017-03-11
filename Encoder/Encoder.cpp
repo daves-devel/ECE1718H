@@ -28,6 +28,7 @@ int main(int argCnt, char **args)
 	char gmvy_name[500] = "";
 	char coeff_bitcount_name[500] = "";
 	char mdiff_bitcount_name[500] = "";
+	char frame_header_name[500] = "";
 
 	int width = -1;
 	int height = -1;
@@ -77,21 +78,15 @@ int main(int argCnt, char **args)
 			args++;
 			tmpArgCnt += 2;
 		}
-		else if (!strcmp((*args) + 1, "mvfile")) {
-			args++;
-			sscanf(*args, "%s", mvfile_name);
-			args++;
-			tmpArgCnt += 2;
-		}
-		else if (!strcmp((*args) + 1, "resfile")) {
-			args++;
-			sscanf(*args, "%s", resfile_name);
-			args++;
-			tmpArgCnt += 2;
-		}
 		else if (!strcmp((*args) + 1, "recfile")) {
 			args++;
 			sscanf(*args, "%s", recfile_name);
+			args++;
+			tmpArgCnt += 2;
+		}
+		else if (!strcmp((*args) + 1, "frame_header")) {
+			args++;
+			sscanf(*args, "%s", frame_header_name);
 			args++;
 			tmpArgCnt += 2;
 		}
@@ -119,27 +114,9 @@ int main(int argCnt, char **args)
 			args++;
 			tmpArgCnt += 2;
 		}
-		else if (!strcmp((*args) + 1, "round")) {
-			args++;
-			round = atoi(*args);
-			args++;
-			tmpArgCnt += 2;
-		}
 		else if (!strcmp((*args) + 1, "i_period")) {
 			args++;
 			i_period = atoi(*args);
-			args++;
-			tmpArgCnt += 2;
-		}
-		else if (!strcmp((*args) + 1, "gmvx")) {
-			args++;
-			sscanf(*args, "%s", gmvx_name);
-			args++;
-			tmpArgCnt += 2;
-		}
-		else if (!strcmp((*args) + 1, "gmvy")) {
-			args++;
-			sscanf(*args, "%s", gmvy_name);
 			args++;
 			tmpArgCnt += 2;
 		}
@@ -165,6 +142,7 @@ int main(int argCnt, char **args)
 	FILE* curfile = fopen(curfile_name, "rb");
 	coeff_bitcount_file = fopen(coeff_bitcount_name, "w");
 	mdiff_bitcount_file = fopen(mdiff_bitcount_name, "w");
+	frame_header_file = fopen(frame_header_name, "w+b");
 	FILE* recfile = fopen(recfile_name, "w+b");
 
 	// TODO Make these 2D buffers, and add the Encoder functions to the frame flow
@@ -238,9 +216,17 @@ int main(int argCnt, char **args)
 
 		if ((frame%i_period) == 0) { 
 			FrameType = IFRAME;
+			fwrite(&FrameType, sizeof(int32_t), 1, frame_header_file);
+			fwrite(&block, sizeof(int32_t), 1, frame_header_file);
+			fwrite(&width, sizeof(int32_t), 1, frame_header_file);
+			fwrite(&height, sizeof(int32_t), 1, frame_header_file);
 		}
 		else {
 			FrameType = PFRAME;
+			fwrite(&FrameType, sizeof(int32_t), 1, frame_header_file);
+			fwrite(&block, sizeof(int32_t), 1, frame_header_file);
+			fwrite(&width, sizeof(int32_t), 1, frame_header_file);
+			fwrite(&height, sizeof(int32_t), 1, frame_header_file);
 		}
 
 		if (FrameType == PFRAME){
