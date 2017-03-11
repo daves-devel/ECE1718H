@@ -19,6 +19,7 @@ void diff_enc(MDIFF** MDIFF_VECTOR, MDIFF** MDIFF_VECTOR_DIFF, int FrameType, in
 		else {
 			MDIFF_VECTOR_DIFF[row][col].X = MDIFF_VECTOR[row][col].X - MDIFF_VECTOR[row][col - 1].X;
 			MDIFF_VECTOR_DIFF[row][col].Y = MDIFF_VECTOR[row][col].Y - MDIFF_VECTOR[row][col - 1].Y;
+			MDIFF_VECTOR_DIFF[row][col].Y = MDIFF_VECTOR[row][col].ref - MDIFF_VECTOR[row][col - 1].ref;
 		}
 	}
 }
@@ -38,9 +39,9 @@ void diff_enc_wrapper(MDIFF** MDIFF_VECTOR, MDIFF** MDIFF_VECTOR_DIFF, int Frame
 			diff_enc(MDIFF_VECTOR, MDIFF_VECTOR_DIFF, FrameType, row/block, col/block);
 #ifdef TRACE_ON
 			fprintf(file_vector_org, "Block Y=%d X=%d\n", row/block, col/block);
-			fprintf(file_vector_org, "FRAME_TYPE: %d MODE: %d X: %d Y: %d\n", FrameType, MDIFF_VECTOR[row / block][col / block].MODE, MDIFF_VECTOR[row / block][col / block].X, MDIFF_VECTOR[row / block][col / block].Y);
+			fprintf(file_vector_org, "FRAME_TYPE: %d MODE: %d X: %d Y: %d\n", FrameType, MDIFF_VECTOR[row / block][col / block].MODE, MDIFF_VECTOR[row / block][col / block].X, MDIFF_VECTOR[row / block][col / block].Y, MDIFF_VECTOR_DIFF.ref);
 			fprintf(file_vector_aft, "Block Y=%d X=%d\n", row / block, col / block);
-			fprintf(file_vector_aft, "FRAME_TYPE: %d MODE: %d X: %d Y: %d\n", FrameType, MDIFF_VECTOR_DIFF[row / block][col / block].MODE, MDIFF_VECTOR_DIFF[row / block][col / block].X, MDIFF_VECTOR_DIFF[row / block][col / block].Y);
+			fprintf(file_vector_aft, "FRAME_TYPE: %d MODE: %d X: %d Y: %d\n", FrameType, MDIFF_VECTOR_DIFF[row / block][col / block].MODE, MDIFF_VECTOR_DIFF[row / block][col / block].X, MDIFF_VECTOR_DIFF[row / block][col / block].Y, MDIFF_VECTOR_DIFF[row / block][col / block].ref);
 #endif // TRACE_ON
 
 		}
