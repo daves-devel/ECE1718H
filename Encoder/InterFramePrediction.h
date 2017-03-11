@@ -1,9 +1,23 @@
 #include <common.h>
 
-struct MDIFF InterFramePrediction(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint8_t** REF_FRAME, int row, int col, int width, int height, int block, int range);
+struct MDIFF InterFramePrediction(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint8_t** REF_FRAME, int row, int col, int width, int height, int block, int range, int ref);
 struct MDIFF MinSADMinNORM(struct MDIFF BEST_GMV, struct MDIFF NEW_GMV);
+struct MDIFF SelectRefWinner(struct MDIFF MDIFF_CUR, struct MDIFF MDIFFV_REF , uint8_t** REF_FRAME_CUR, uint8_t** REF_FRAME_REF, int block, int row, int col);
 
-struct MDIFF InterFramePrediction(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint8_t** REF_FRAME, int row, int col, int width, int height, int block, int range) {
+struct MDIFF SelectRefWinner(struct MDIFF CUR_MDIFF, struct MDIFF REF_MDIFF, uint8_t** REF_FRAME_CUR, uint8_t** REF_FRAME_REF, int block, int row, int col) {
+	struct MDIFF WINNER = CUR_MDIFF;
+	if (CUR_MDIFF.SAD > REF_MDIFF.SAD) {
+		WINNER = REF_MDIFF;
+		for (int i = 0; i < block; i++) {
+			for (int j = 0; j < block; j++) {
+				REF_FRAME_CUR[row + i][col + j] = REF_FRAME_REF[row + i][col + j];
+			}
+		}
+	}
+	return WINNER;
+}
+
+struct MDIFF InterFramePrediction(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint8_t** REF_FRAME, int row, int col, int width, int height, int block, int range, int ref) {
 
 	struct MDIFF BEST_GMV;
 	bool firstGMV = true;
@@ -18,6 +32,7 @@ struct MDIFF InterFramePrediction(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint
 			}
 
 			struct MDIFF NEW_GMV;
+			NEW_GMV.ref = ref;
 			NEW_GMV.X = GMV_X;
 			NEW_GMV.Y = GMV_Y;
 			NEW_GMV.SAD = 0;

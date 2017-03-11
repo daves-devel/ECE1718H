@@ -38,6 +38,7 @@ int main(int argCnt, char **args)
 	int i_period = -1;
 	int FrameType = -1;
 	int QP = -1;
+	int nRefFrames = 1;
 
 	args++;
 	int tmpArgCnt = 1;
@@ -148,6 +149,12 @@ int main(int argCnt, char **args)
 			args++;
 			tmpArgCnt += 2;
 		}
+		else if (!strcmp((*args) + 1, "nRefFrames")) {
+			args++;
+			nRefFrames = atoi(*args);
+			args++;
+			tmpArgCnt += 2;
+		}
 
 		else {
 			printf("Huh? I don't know %s (option #%d) \n", *args, tmpArgCnt);
@@ -159,18 +166,6 @@ int main(int argCnt, char **args)
 	coeff_bitcount_file = fopen(coeff_bitcount_name, "w");
 	mdiff_bitcount_file = fopen(mdiff_bitcount_name, "w");
 	FILE* recfile = fopen(recfile_name, "w+b");
-	//FILE* matchfile = fopen(matchfile_name, "wb");
-	
-	/*
-	if (curfile == NULL) {
-		printf("Cannot open input file <%s>\n", curfile_name);
-		exit(-1);
-	}
-		
-	if (block == 0) {
-		printf("Invalid Block Dimension <%d>", block);
-	}
-	*/
 
 	// TODO Make these 2D buffers, and add the Encoder functions to the frame flow
 	unsigned int  FRAME_SIZE = width*height;
@@ -178,9 +173,18 @@ int main(int argCnt, char **args)
 	signed char* RLE = new signed char[FRAME_SIZE];
 
 	// Allocate Memory
-	uint8_t** CUR_FRAME_2D		= new uint8_t*[height];
-	uint8_t** REC_FRAME_2D		= new uint8_t*[height];
-	uint8_t** REF_FRAME_2D		= new uint8_t*[height];
+	uint8_t** CUR_FRAME_2D	 = new uint8_t*[height];
+
+	uint8_t** REC_FRAME_2D  = new uint8_t*[height];
+	uint8_t** REC_FRAME_2D_2 = new uint8_t*[height];
+	uint8_t** REC_FRAME_2D_3 = new uint8_t*[height];
+	uint8_t** REC_FRAME_2D_4 = new uint8_t*[height];
+
+	uint8_t** REF_FRAME_2D	 = new uint8_t*[height];
+	uint8_t** REF_FRAME_2D_2 = new uint8_t*[height];
+	uint8_t** REF_FRAME_2D_3 = new uint8_t*[height];
+	uint8_t** REF_FRAME_2D_4 = new uint8_t*[height];
+
 	 int8_t** ENC_RES_FRAME_2D	= new  int8_t*[height];
 	int32_t** ENC_TC_FRAME_2D	= new int32_t*[height];
 	 int8_t** DEC_RES_FRAME_2D	= new  int8_t*[height];
@@ -190,23 +194,39 @@ int main(int argCnt, char **args)
 
 	for (unsigned int row = 0; row < height; row++) {
 		CUR_FRAME_2D[row] = new uint8_t[width];
+
 		REC_FRAME_2D[row] = new uint8_t[width];
+		REC_FRAME_2D_2[row] = new uint8_t[width];
+		REC_FRAME_2D_3[row] = new uint8_t[width];
+		REC_FRAME_2D_4[row] = new uint8_t[width];
+
 		REF_FRAME_2D[row] = new uint8_t[width];
-	ENC_RES_FRAME_2D[row] = new  int8_t[width];
-	 ENC_TC_FRAME_2D[row] = new int32_t[width];
-	DEC_RES_FRAME_2D[row] = new  int8_t[width];
-	 DEC_TC_FRAME_2D[row] = new int32_t[width];
+		REF_FRAME_2D_2[row] = new uint8_t[width];
+		REF_FRAME_2D_3[row] = new uint8_t[width];
+		REF_FRAME_2D_4[row] = new uint8_t[width];
+
+		ENC_RES_FRAME_2D[row] = new  int8_t[width];
+		ENC_TC_FRAME_2D[row] = new int32_t[width];
+		DEC_RES_FRAME_2D[row] = new  int8_t[width];
+		DEC_TC_FRAME_2D[row] = new int32_t[width];
 		QTC_FRAME_2D[row] = new int32_t[width];
-		 QP_FRAME_2D[row] = new uint8_t[width];
+		QP_FRAME_2D[row] = new uint8_t[width];
 	}
 
 	
 	// This 2D Buffer will Contain MDIFF data for each block 
 	struct MDIFF** MDIFF_VECTOR = new struct MDIFF*[(height / block)];
+	struct MDIFF** MDIFF_VECTOR_2 = new struct MDIFF*[(height / block)];
+	struct MDIFF** MDIFF_VECTOR_3 = new struct MDIFF*[(height / block)];
+	struct MDIFF** MDIFF_VECTOR_4 = new struct MDIFF*[(height / block)];
+
 	struct MDIFF** MDIFF_VECTOR_DIFF = new struct MDIFF*[(height / block)];
 
 	for (int row = 0; row < height; row = row + block) {
 		MDIFF_VECTOR[row / block] = new struct MDIFF[width / block];
+		MDIFF_VECTOR_2[row / block] = new struct MDIFF[width / block];
+		MDIFF_VECTOR_3[row / block] = new struct MDIFF[width / block];
+		MDIFF_VECTOR_4[row / block] = new struct MDIFF[width / block];
 		MDIFF_VECTOR_DIFF[row / block] = new struct MDIFF[width / block];
 	}
 
@@ -229,6 +249,24 @@ int main(int argCnt, char **args)
 			for (unsigned int row = 0; row++; row < height) {
 				fread(REC_FRAME_2D[row], sizeof(uint8_t), width, recfile);
 			}
+			if (frame > 2) {
+				fseek(recfile, (frame - 2)*FRAME_SIZE, SEEK_SET);
+				for (unsigned int row = 0; row++; row < height) {
+					fread(REC_FRAME_2D_2[row], sizeof(uint8_t), width, recfile);
+				}
+			}
+			if (frame > 3) {
+				fseek(recfile, (frame - 3)*FRAME_SIZE, SEEK_SET);
+				for (unsigned int row = 0; row++; row < height) {
+					fread(REC_FRAME_2D_3[row], sizeof(uint8_t), width, recfile);
+				}
+			}
+			if (frame > 4) {
+				fseek(recfile, (frame - 4)*FRAME_SIZE, SEEK_SET);
+				for (unsigned int row = 0; row++; row < height) {
+					fread(REC_FRAME_2D_4[row], sizeof(uint8_t), width, recfile);
+				}
+			}
 		}
 
 		// Go to the beginning of the current frame and copy it to buffer
@@ -250,7 +288,22 @@ int main(int argCnt, char **args)
 				}
 				
 				if (FrameType == PFRAME) {
-					MDIFF_VECTOR[row/block][col/block] = InterFramePrediction (CUR_FRAME_2D, REC_FRAME_2D, REF_FRAME_2D,row, col, width, height, block, range);
+					MDIFF_VECTOR[row/block][col/block] = InterFramePrediction (CUR_FRAME_2D, REC_FRAME_2D, REF_FRAME_2D,row, col, width, height, block, range, 1);
+					//Multireference code start Only activated if nRefFrames>=2
+					if ((frame%i_period) >= 2 && nRefFrames >= 2) {
+						MDIFF_VECTOR_2[row / block][col / block] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D_2, REF_FRAME_2D_2, row, col, width, height, block, range, 2);
+						MDIFF_VECTOR[row / block][col / block] = SelectRefWinner(MDIFF_VECTOR[row/block][col/block], MDIFF_VECTOR_2[row/block][col/block], REF_FRAME_2D, REF_FRAME_2D_2, block, row, col);
+					}
+					if ((frame%i_period) >= 3 && nRefFrames >= 3) {
+						MDIFF_VECTOR_3[row / block][col / block] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D_3, REF_FRAME_2D_3, row, col, width, height, block, range, 3);
+						MDIFF_VECTOR[row / block][col / block] = SelectRefWinner(MDIFF_VECTOR[row / block][col / block], MDIFF_VECTOR_3[row / block][col / block], REF_FRAME_2D, REF_FRAME_2D_3, block, row, col);
+
+					}
+					if ((frame%i_period) >= 4 && nRefFrames >= 4) {
+						MDIFF_VECTOR_4[row / block][col / block] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D_4, REF_FRAME_2D_4, row, col, width, height, block, range, 4);
+						MDIFF_VECTOR[row / block][col / block] = SelectRefWinner(MDIFF_VECTOR[row / block][col / block], MDIFF_VECTOR_4[row / block][col / block], REF_FRAME_2D, REF_FRAME_2D_4, block, row, col);
+					}
+					//Multireference code end
 				}
 
 				// RESIDUAL 
@@ -297,6 +350,8 @@ int main(int argCnt, char **args)
 			for (int col = 0; col < width; col++)
 				REC_FRAME[col + width*row] = REC_FRAME_2D[row][col];
 
+		fclose(recfile);//Weird behavior need to close file
+		recfile = fopen(recfile_name, "a+b");
 		fwrite(REC_FRAME, sizeof(uint8_t), FRAME_SIZE, recfile);
 
 	}
@@ -307,7 +362,15 @@ int main(int argCnt, char **args)
 	for (unsigned int row = 0; row < height; row++) {
 		delete		CUR_FRAME_2D[row];
 		delete		REC_FRAME_2D[row]; 
+		delete		REC_FRAME_2D_2[row];
+		delete		REC_FRAME_2D_3[row];
+		delete		REC_FRAME_2D_4[row];
+
 		delete		REF_FRAME_2D[row];
+		delete		REF_FRAME_2D_2[row];
+		delete		REF_FRAME_2D_3[row];
+		delete		REF_FRAME_2D_4[row];
+
 		delete	ENC_RES_FRAME_2D[row]; 
 		delete   ENC_TC_FRAME_2D[row];
 		delete	DEC_RES_FRAME_2D[row];
@@ -318,7 +381,15 @@ int main(int argCnt, char **args)
 
 	delete CUR_FRAME_2D;
 	delete REC_FRAME_2D;
+	delete REC_FRAME_2D_2;
+	delete REC_FRAME_2D_3;
+	delete REC_FRAME_2D_4;
+
 	delete REF_FRAME_2D;
+	delete REF_FRAME_2D_2;
+	delete REF_FRAME_2D_3;
+	delete REF_FRAME_2D_4;
+
 	delete ENC_RES_FRAME_2D;
 	delete  ENC_TC_FRAME_2D;
 	delete DEC_RES_FRAME_2D;
@@ -328,9 +399,17 @@ int main(int argCnt, char **args)
 	
 	for (unsigned int row = 0; row < (height / block); row++) {
 		delete MDIFF_VECTOR[row];
+		delete MDIFF_VECTOR_2[row];
+		delete MDIFF_VECTOR_3[row];
+		delete MDIFF_VECTOR_4[row];
+
 	}
 
 	delete MDIFF_VECTOR;
+	delete MDIFF_VECTOR_2;
+	delete MDIFF_VECTOR_3;
+	delete MDIFF_VECTOR_4;
+
 
 	// Close Files
 	fclose(recfile);

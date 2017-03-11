@@ -31,6 +31,7 @@ struct MDIFF {
 	int MODE; // Intra Mode
 	unsigned int SAD;
 	unsigned int NORM;
+	int ref;
 };
 
 const uint32_t EVX_SEXP_GOLOMB_CODES[] = {
