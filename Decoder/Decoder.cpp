@@ -9,7 +9,7 @@
 #include <residual.h>
 #include <reconstructed.h>
 #include <quantization.h>
-#include <entropy.h>
+#include <reverse_entropy.h>
 #include <InterFramePrediction.h>
 #include <IntraFramePrediction.h>
 #include <discrete_cosine_transform.h>
@@ -18,8 +18,8 @@
 int main(int argCnt, char **args)
 {
 
-	char qtcfile_name[500] = "";
-	char mdiff_file_name[500] = "";
+	char coeff_bitcount_name[500] = "";
+	char mdiff_bitcount_name[500] = "";
 	char decfile_name[500] = "";
 
 
@@ -52,15 +52,15 @@ int main(int argCnt, char **args)
 			args++;
 			tmpArgCnt += 2;
 		}
-		else if (!strcmp((*args) + 1, "qtcfile")) {
+		else if (!strcmp((*args) + 1, "coeff_bitcount_name")) {
 			args++;
-			sscanf(*args, "%s", qtcfile_name);
+			sscanf(*args, "%s", coeff_bitcount_name);
 			args++;
 			tmpArgCnt += 2;
 		}
-		else if (!strcmp((*args) + 1, "mdiff_file")) {
+		else if (!strcmp((*args) + 1, "mdiff_bitcount_name")) {
 			args++;
-			sscanf(*args, "%s", mdiff_file_name);
+			sscanf(*args, "%s", mdiff_bitcount_name);
 			args++;
 			tmpArgCnt += 2;
 		}
@@ -70,6 +70,7 @@ int main(int argCnt, char **args)
 			args++;
 			tmpArgCnt += 2;
 		}
+		
 		else if (!strcmp((*args) + 1, "frames")) {
 			args++;
 			frames = atoi(*args);
@@ -100,51 +101,21 @@ int main(int argCnt, char **args)
 			args++;
 			tmpArgCnt += 2;
 		}
-		else if (!strcmp((*args) + 1, "qp")) {
-			args++;
-			QP = atoi(*args);
-			args++;
-			tmpArgCnt += 2;
-		}
-
 		else {
 			printf("Huh? I don't know %s (option #%d) \n", *args, tmpArgCnt);
 			exit(-1);
 		}
 	}
 
-	FILE* qtcfile = fopen(qtcfile_name, "rb");
-	FILE* mdiff_file = fopen(mdiff_file_name, "rb");
-	FILE* decfile = fopen(decfile_name, "w+b");
+	FILE* decfile = fopen(decfile_name, "wb");
+	coeff_bitcount_file = fopen(coeff_bitcount_name, "r");
+	mdiff_bitcount_file = fopen(mdiff_bitcount_name, "r");
 
-	/*
-	if (curfile == NULL) {
-	printf("Cannot open input file <%s>\n", curfile_name);
-	exit(-1);
-	}
-	if (mvfile == NULL) {
-	printf("Cannot open output file <%s>\n", mvfile_name);
-	exit(-1);
-	}
-	if (resfile == NULL) {
-	printf("Cannot open output file <%s>\n", resfile_name);
-	exit(-1);
-	}
-
-	if (recfile == NULL) {
-	printf("Cannot open output file <%s>\n", recfile_name);
-	exit(-1);
-	}
-	if (block == 0) {
-	printf("Invalid Block Dimension <%d>", block);
-	}
-	*/
 	unsigned int  FRAME_SIZE = width*height;
-	signed char* COEFF_REORDER = new signed char[FRAME_SIZE];
-	signed char* RLE = new signed char[FRAME_SIZE];
 
 	// Allocate Memory
 	uint8_t** DEC_FRAME_2D = new uint8_t*[height];
+	uint8_t** REF_FRAME_2D = new uint8_t*[height];
 	int8_t** ENC_RES_FRAME_2D = new  int8_t*[height];
 	int32_t** ENC_TC_FRAME_2D = new int32_t*[height];
 	int8_t** DEC_RES_FRAME_2D = new  int8_t*[height];
@@ -153,7 +124,6 @@ int main(int argCnt, char **args)
 	uint8_t** QP_FRAME_2D = new uint8_t*[height];
 
 	for (unsigned int row = 0; row < height; row++) {
-		CUR_FRAME_2D[row] = new uint8_t[width];
 		DEC_FRAME_2D[row] = new uint8_t[width];
 		REF_FRAME_2D[row] = new uint8_t[width];
 		ENC_RES_FRAME_2D[row] = new  int8_t[width];
@@ -174,8 +144,6 @@ int main(int argCnt, char **args)
 		MDIFF_VECTOR_DIFF[row / block] = new struct MDIFF[width / block];
 	}
 
-
-
 	// Decode Each Frame
 	// =========================================
 	for (int frame = 0; frame < frames; frame++) {
@@ -189,42 +157,21 @@ int main(int argCnt, char **args)
 
 		if (FrameType == PFRAME) {
 			// Go to the beginning of the previous reconstructed frame and copy it to buffer
-			fseek(recfile, (frame - 1)*FRAME_SIZE, SEEK_SET);
+			fseek(decfile, (frame - 1)*FRAME_SIZE, SEEK_SET);
 			for (unsigned int row = 0; row++; row < height) {
-				fread(REC_FRAME_2D[row], sizeof(uint8_t), width, recfile);
+				fread(DEC_FRAME_2D[row], sizeof(uint8_t), width, decfile);
 			}
 		}
 
 		// Go to the beginning of the current frame and copy it to buffer
-
-		fseek(curfile, frame*FRAME_SIZE, SEEK_SET);
-		for (unsigned int row = 0; row++; row < height) {
-			fread(CUR_FRAME_2D[row], sizeof(uint8_t), width, curfile);
-		}
+		reverse_entropy(QTC_FRAME_2D, block, height, width, frame);
+		decode_mdiff_wrapper(MDIFF_VECTOR_DIFF, height, width, block, frame, FrameType);
 
 		// Apply Decode Operations on Each Block
 		for (int row = 0; row < height; row += block) {
 			for (int col = 0; col < width; col += block) {
 
 				// IDEALLY THREAD EVERYTHING IN THIS FOR LOOP FOR PFRAMES
-
-				// PREDICTOR DATA GENERATION
-				if (FrameType == IFRAME) {
-					MDIFF_VECTOR[row / block][col / block] = IntraFramePrediction(CUR_FRAME_2D, REC_FRAME_2D, REF_FRAME_2D, row, col, block);
-				}
-
-				if (FrameType == PFRAME) {
-					MDIFF_VECTOR[row / block][col / block] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D, REF_FRAME_2D, row, col, width, height, block, range);
-				}
-
-				// RESIDUAL 
-				GenerateResidualBlock(ENC_RES_FRAME_2D, CUR_FRAME_2D, REF_FRAME_2D, row, col, block);
-
-				// DCT 
-				DCTBlock(ENC_TC_FRAME_2D, ENC_RES_FRAME_2D, row, col, block);
-
-				// QUANTIZE
-				QuantizeBlock(QTC_FRAME_2D, ENC_TC_FRAME_2D, QP_FRAME_2D, row, col, width, height, QP, block);
 
 				// SCALE
 				ScaleBlock(DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D, row, col, width, height, QP, block);
@@ -233,28 +180,16 @@ int main(int argCnt, char **args)
 				IDCTBlock(DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, row, col, block);
 
 				// RECONSTRUCT 
-				ReconstructBlock(REC_FRAME_2D, DEC_RES_FRAME_2D, REF_FRAME_2D, row, col, block);
+				ReconstructBlock(DEC_FRAME_2D, DEC_RES_FRAME_2D, REF_FRAME_2D, row, col, block);
 
 			}
 		}
 
-		entropy_wrapper(QTC_FRAME_2D, block, height, width, frame);
-		diff_enc_wrapper(MDIFF_VECTOR, MDIFF_VECTOR_DIFF, 0, height, width, block, frame);
-		encode_mdiff_wrapper(MDIFF_VECTOR_DIFF, height, width, block, frame, 0);
-
-		// =====================================================================================================
-		// TODOOOOO
-		// Any File Dumps can be added on any 2D array here for verification purpose
-		// =====================================================================================================
-
 	}
-
-
 
 	// Deallocate Memory
 	for (unsigned int row = 0; row < height; row++) {
-		delete		CUR_FRAME_2D[row];
-		delete		REC_FRAME_2D[row];
+		delete		DEC_FRAME_2D[row];
 		delete		REF_FRAME_2D[row];
 		delete	ENC_RES_FRAME_2D[row];
 		delete   ENC_TC_FRAME_2D[row];
@@ -264,8 +199,6 @@ int main(int argCnt, char **args)
 		delete		 QP_FRAME_2D[row];
 	}
 
-	delete CUR_FRAME_2D;
-	delete REC_FRAME_2D;
 	delete REF_FRAME_2D;
 	delete ENC_RES_FRAME_2D;
 	delete  ENC_TC_FRAME_2D;
@@ -281,13 +214,9 @@ int main(int argCnt, char **args)
 	delete MDIFF_VECTOR;
 
 	// Close Files
-	//fclose(curfile);
-	//fclose(mvfile);
-	//fclose(gmvXfile);
-	//fclose(gmvYfile);
-	//fclose(resfile);
-	//fclose(recfile);
-	//fclose(matchfile);
+	fclose(decfile);
+	fclose(mdiff_bitcount_file);
+	fclose(coeff_bitcount_file);
 	return 0;
 
 }
