@@ -15,6 +15,8 @@
 #include <IntraFramePrediction.h>
 #include <discrete_cosine_transform.h>
 #include <DiffEnc.h>
+#include <ctime>
+
 
 int main(int argCnt, char **args)
 {
@@ -27,6 +29,7 @@ int main(int argCnt, char **args)
 	char coeff_bitcount_name[500] = "";
 	char mdiff_bitcount_name[500] = "";
 	char frame_header_name[500] = "";
+	char runtime_name[500] = "";
 
 	int width = -1;
 	int height = -1;
@@ -43,7 +46,6 @@ int main(int argCnt, char **args)
 
 	args++;
 	int tmpArgCnt = 1;
-
 	//  Parse Input Arguments
 	// =======================
 	while (tmpArgCnt < argCnt && (*args)[0] == '-') {
@@ -150,6 +152,13 @@ int main(int argCnt, char **args)
 			args++;
 			tmpArgCnt += 2;
 		}
+		else if (!strcmp((*args) + 1, "runtime_name")) {
+			args++;
+			sscanf(*args, "%s", runtime_name);
+			args++;
+			tmpArgCnt += 2;
+		}
+
 		else {
 			printf("Huh? I don't know %s (option #%d) \n", *args, tmpArgCnt);
 			exit(-1);
@@ -161,6 +170,7 @@ int main(int argCnt, char **args)
 	mdiff_bitcount_file = fopen(mdiff_bitcount_name, "w");
 	frame_header_file = fopen(frame_header_name, "w+b");
 	FILE* recfile = fopen(recfile_name, "w+b");
+	FILE* runtime_file = fopen(runtime_name, "w");
 
 	// TODO Make these 2D buffers, and add the Encoder functions to the frame flow
 	unsigned int  FRAME_SIZE = width*height;
@@ -282,6 +292,8 @@ int main(int argCnt, char **args)
 		MDIFF_VECTOR_DIFFS[row / block_split] = new struct MDIFF[width / block_split];
 	}
 
+	//Runtime
+	int start_s = clock();
 
 	// Encode Each Frame
 	// =========================================
@@ -486,8 +498,10 @@ int main(int argCnt, char **args)
 		fwrite(REC_FRAME, sizeof(uint8_t), FRAME_SIZE, recfile);
 
 	}
-
-	
+	//Runtime
+	int stop_s = clock();
+	fprintf(runtime_file,"RUN_TIME %.2fs\n", (double)(clock() - start_s) / CLOCKS_PER_SEC);
+		
 
 	// Deallocate Memory
 	for (unsigned int row = 0; row < height; row++) {
