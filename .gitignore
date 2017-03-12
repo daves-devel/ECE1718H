@@ -248,3 +248,10 @@ ModelManifest.xml
 /Encoder/Encoder/original.csv
 /Encoder/Encoder/recon.csv
 /Encoder/Encoder
+/res_enc.csv
+/IP_4_Block_8.csv
+/IP_1_Block_8.csv
+/IP_10_Block_8.csv
+/dec_tc_enc.csv
+/dec_res_enc.csv
+/.MergeData.py.swp
