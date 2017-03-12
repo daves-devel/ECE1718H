@@ -27,9 +27,6 @@
     <ClInclude Include="..\header\stdint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\header\reconstructed.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\Encoder\DiffDec.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -40,6 +37,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\Encoder\residual.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Encoder\quantization.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Encoder\reconstructed.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Encoder\common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

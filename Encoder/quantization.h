@@ -77,6 +77,21 @@ int ScaleBlock(int32_t  ** TC_FRAME, int32_t ** QTC_FRAME, uint8_t** QP_FRAME,ui
 		return 1;
 	}
 
+	for (uint32_t i = 0; i < block; i++) {
+		for (uint32_t j = 0; j < block; j++) {
+
+			if (i + j < (block - 1)) {
+				QP_FRAME[row + i][col + j] = 1 << QP;
+			}
+			else if (i + j == (block - 1)) {
+				QP_FRAME[row + i][col + j] = 1 << (QP + 1);
+			}
+			else {
+				QP_FRAME[row + i][col + j] = 1 << (QP + 2);
+			}
+		}
+	}
+
 	for (uint32_t  i = 0; i < block; i++) {
 		for (uint32_t  j = 0; j < block; j++) {
 

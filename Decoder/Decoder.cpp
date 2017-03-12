@@ -14,13 +14,12 @@
 #include <InterFramePrediction.h>
 #include <IntraFramePrediction.h>
 #include <discrete_cosine_transform.h>
-#include <DiffEnc.h>
+#include <DiffDec.h>
 
 int main(int argCnt, char **args)
 {
 
-	char coeff_bitcount_name[500] = "";
-	char mdiff_bitcount_name[500] = "";
+	//char filepath[500] = "";
 	char decfile_name[500] = "";
 	char frame_header_name[500] = "";
 
@@ -48,15 +47,9 @@ int main(int argCnt, char **args)
 			args++;
 			tmpArgCnt += 2;
 		}
-		else if (!strcmp((*args) + 1, "coeff_bitcount_name")) {
+		else if (!strcmp((*args) + 1, "filepath")) {
 			args++;
-			sscanf(*args, "%s", coeff_bitcount_name);
-			args++;
-			tmpArgCnt += 2;
-		}
-		else if (!strcmp((*args) + 1, "mdiff_bitcount_name")) {
-			args++;
-			sscanf(*args, "%s", mdiff_bitcount_name);
+			sscanf(*args, "%s", filepath);
 			args++;
 			tmpArgCnt += 2;
 		}
@@ -85,9 +78,15 @@ int main(int argCnt, char **args)
 	}
 
 	FILE* decfile = fopen(decfile_name, "wb");
+	FILE* mdiff_file;
+	FILE* coeff_file;
+	char mdiff_name[0x100];
+	char coeff_name[0x100];
+
 	frame_header_file = fopen(frame_header_name, "rb");
-	coeff_bitcount_file = fopen(coeff_bitcount_name, "r");
-	mdiff_bitcount_file = fopen(mdiff_bitcount_name, "r");
+	//coeff_bitcount_file = fopen(coeff_bitcount_name, "r");
+	//mdiff_bitcount_file = fopen(mdiff_bitcount_name, "r");
+	uint32_t sz;
 
 	//Read the frame header once to get frame paramters
 	fread(&FrameType, sizeof(int32_t), 1, frame_header_file);
@@ -146,19 +145,43 @@ int main(int argCnt, char **args)
 				fread(DEC_TC_FRAME_2D[row], sizeof(uint8_t), width, decfile);
 			}
 		}
-		if (FrameType == IFRAME) {
-			// Go to the beginning of the previous reconstructed frame and copy it to buffer
-			
+
+		/*
+		snprintf(mdiff_name, sizeof(mdiff_name), "%s/MDIFF_GOLOMB_%d", filepath, frame);
+		mdiff_file = fopen(mdiff_name, "rb");
+
+		for (int row = 0; row < height; row += block) {
+			for (int col = 0; col < width; col += block) {
+				if (FrameType == PFRAME) {
+					 fread(&MDIFF_VECTOR_DIFF[row / block][col / block].X, sizeof(uint32_t), 1, mdiff_file);
+					 fread(&MDIFF_VECTOR_DIFF[row / block][col / block].Y, sizeof(uint32_t), 1, mdiff_file);
+					 fread(&MDIFF_VECTOR_DIFF[row / block][col / block].ref, sizeof(uint32_t), 1, mdiff_file);
+				}
+				else if (FrameType == IFRAME)
+				{
+					fread(&MDIFF_VECTOR_DIFF[row / block][col / block].MODE, sizeof(uint32_t), 1, mdiff_file);
+				}
 			}
 		}
 
-		reverse_entropy(DEC_TC_FRAME_2D, block, height, width, frame);
-		decode_mdiff_wrapper(MDIFF_VECTOR_DIFF, height, width, block, frame, FrameType);
+		fclose(mdiff_file);
+
+		snprintf(coeff_name, sizeof(coeff_name), "%s/COEFF_GOLOMB_CODING_%d", filepath, frame);
+		coeff_file = fopen(coeff_name, "rb");
+		fseek(coeff_file, 0L, SEEK_END);
+		sz = ftell(coeff_file);
+		rewind(coeff_file);
+		fread(QTC_FRAME_2D, sizeof(uint32_t), sz, coeff_file);
+
+		fclose(coeff_file);
+		*/
+		reverse_entropy(QTC_FRAME_2D, block, height, width, frame);
+		decode_mdiff_wrapper(MDIFF_VECTOR_DIFF, height, width, block, frame, FrameType); //x,y or intramode
+		diff_dec_wrapper(MDIFF_VECTOR, MDIFF_VECTOR_DIFF, FrameType, height, width, block, frame);
 
 		// Apply Decode Operations on Each Block
 		for (int row = 0; row < height; row += block) {
 			for (int col = 0; col < width; col += block) {
-
 				// IDEALLY THREAD EVERYTHING IN THIS FOR LOOP FOR PFRAMES
 
 				// SCALE
@@ -167,9 +190,14 @@ int main(int argCnt, char **args)
 				// IDCT
 				IDCTBlock(DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, row, col, block);
 
-				// RECONSTRUCT 
-				ReconstructBlock(DEC_FRAME_2D, DEC_RES_FRAME_2D, REF_FRAME_2D, row, col, block);
-
+				if (FrameType == PFRAME) {
+					// RECONSTRUCT 
+					ReconstructBlockDecodeP(DEC_FRAME_2D, DEC_RES_FRAME_2D, REF_FRAME_2D, row, col, block, MDIFF_VECTOR);
+				}
+				else if (FrameType == IFRAME) {
+					// RECONSTRUCT 
+					ReconstructBlockDecodeI(DEC_FRAME_2D, DEC_RES_FRAME_2D, row, col, block, MDIFF_VECTOR);
+				}
 			}
 		}
 
@@ -177,8 +205,8 @@ int main(int argCnt, char **args)
 		for (int row = 0; row < height; row++)
 			for (int col = 0; col < width; col++)
 				DEC_FRAME[col + width*row] = DEC_FRAME_2D[row][col];
-		//fclose(decfile);//Weird behavior need to close file
-		//decfile = fopen(decfile_name, "a+b");
+		fclose(decfile);//Weird behavior need to close file
+		decfile = fopen(decfile_name, "a+b");
 		fwrite(DEC_FRAME, sizeof(uint8_t), FRAME_SIZE, decfile);
 	}
 
