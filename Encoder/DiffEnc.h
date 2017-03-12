@@ -15,6 +15,7 @@ void diff_enc(MDIFF** MDIFF_VECTOR, MDIFF** MDIFF_VECTOR_DIFF, int FrameType, in
 		if (col == 0) {
 			MDIFF_VECTOR_DIFF[row][col].X = MDIFF_VECTOR[row][col].X;
 			MDIFF_VECTOR_DIFF[row][col].Y = MDIFF_VECTOR[row][col].Y;
+			MDIFF_VECTOR_DIFF[row][col].Y = MDIFF_VECTOR[row][col].ref;
 		}
 		else {
 			MDIFF_VECTOR_DIFF[row][col].X = MDIFF_VECTOR[row][col].X - MDIFF_VECTOR[row][col - 1].X;
