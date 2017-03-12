@@ -102,7 +102,7 @@ int main(int argCnt, char **args)
 		float MSE_SUM = 0.0;
 		float MSE = 0.0;
 		float PSNR = 0.0;
-		float MAX_I = 0.0;
+		float MAX_I = 255.0;
 
 		fread(REF_FRAME, sizeof(unsigned char), FRAME_SIZE, reffile);
 		fread(DEC_FRAME, sizeof(unsigned char), FRAME_SIZE, decfile);
@@ -114,9 +114,6 @@ int main(int argCnt, char **args)
 
 			// PSNR MATH
 			MSE_SUM += pow(((float)REF_FRAME[pixel] - (float)DEC_FRAME[pixel]),2);
-			if ((float)REF_FRAME[pixel] > MAX_I) {
-				MAX_I = (float)REF_FRAME[pixel];
-			}
 		}
 
 		// PSNR FINAL TOUCHES
