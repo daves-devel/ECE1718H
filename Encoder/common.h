@@ -28,12 +28,16 @@ enum INTRAMODE {
 };
 
 struct MDIFF {
-	int X; // For Inter GMV
-	int Y; // For Inter GMV
-	int MODE; // Intra Mode
+	int X, X2, X3, X4; // For Inter GMV
+	int Y, Y2, Y3, Y4; // For Inter GMV
+	int MODE, MODE2, MODE3, MODE4; // Intra Mode
 	unsigned int SAD;
 	unsigned int NORM;
-	int ref;
+	int ref=1;
+	int ref2 = 1;
+	int ref3 = 1;
+	int ref4 = 1;
+	int split=0;
 };
 
 const uint32_t EVX_SEXP_GOLOMB_CODES[] = {
@@ -109,5 +113,43 @@ const uint8_t EVX_LOG2_BYTE_LUT[] = {
 	7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
 };
 
+void VBSWinner(MDIFF** MDIFF_CUR, MDIFF** MDIFF_SLPIT, int row, int col, int block);
+
+void VBSWinner(MDIFF** MDIFF_CUR, MDIFF** MDIFF_SPLIT, int row, int col, int block) {
+	int SPLIT_SAD = 0;
+	for (int j = 0; j < 4; j++) {
+		for (int i = 0; i < 4; i++) {
+			SPLIT_SAD=MDIFF_SPLIT[row + j][col + i].SAD;
+		}
+	}
+	SPLIT_SAD = SPLIT_SAD / 4;
+	if (SPLIT_SAD < MDIFF_CUR[row][col].SAD) {
+		//Adding X and Y for Inter
+		MDIFF_CUR[row][col].X = MDIFF_SPLIT[row][col].X;
+		MDIFF_CUR[row][col].X2 = MDIFF_SPLIT[row][col + 1].X;
+		MDIFF_CUR[row][col].X3 = MDIFF_SPLIT[row + 1][col].X;
+		MDIFF_CUR[row][col].X4 = MDIFF_SPLIT[row][col + 1].X;
+		MDIFF_CUR[row][col].Y = MDIFF_SPLIT[row][col].Y;
+		MDIFF_CUR[row][col].Y2 = MDIFF_SPLIT[row][col + 1].Y;
+		MDIFF_CUR[row][col].Y3 = MDIFF_SPLIT[row + 1][col].Y;
+		MDIFF_CUR[row][col].Y4 = MDIFF_SPLIT[row][col + 1].Y;
+		//Adding modes for Intra
+		MDIFF_CUR[row][col].MODE = MDIFF_SPLIT[row][col].MODE;
+		MDIFF_CUR[row][col].MODE2 = MDIFF_SPLIT[row][col+1].MODE;
+		MDIFF_CUR[row][col].MODE3 = MDIFF_SPLIT[row+1][col].MODE;
+		MDIFF_CUR[row][col].MODE4 = MDIFF_SPLIT[row][col+1].MODE;
+		//SAD
+		MDIFF_CUR[row][col].SAD = SPLIT_SAD;
+		//NORM TODO
+
+		//REF
+		MDIFF_CUR[row][col].ref = MDIFF_SPLIT[row][col].ref;
+		MDIFF_CUR[row][col].ref2 = MDIFF_SPLIT[row][col + 1].ref;
+		MDIFF_CUR[row][col].ref3 = MDIFF_SPLIT[row + 1][col].ref;
+		MDIFF_CUR[row][col].ref4 = MDIFF_SPLIT[row][col + 1].ref;
+
+	}
+
+}
 //Entropy
 #endif

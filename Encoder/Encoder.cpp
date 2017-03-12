@@ -451,8 +451,10 @@ int main(int argCnt, char **args)
 							ReconstructBlock(REC_FRAME_2DS, DEC_RES_FRAME_2DS, REF_FRAME_2DS, row2, col2, block_split);
 						}
 					}
-
+					//Pick Winner
+					VBSWinner(MDIFF_VECTOR, MDIFF_VECTORS, row, col, block);
 				}//End of VBSenable code
+
 				
 			}
 		}
