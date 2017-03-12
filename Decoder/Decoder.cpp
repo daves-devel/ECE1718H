@@ -142,7 +142,7 @@ int main(int argCnt, char **args)
 			// Go to the beginning of the previous reconstructed frame and copy it to buffer
 			fseek(decfile, (frame - 1)*FRAME_SIZE, SEEK_SET);
 			for (unsigned int row = 0; row++; row < height) {
-				fread(DEC_TC_FRAME_2D[row], sizeof(uint8_t), width, decfile);
+				fread(REF_FRAME_2D[row], sizeof(uint8_t), width, decfile);
 			}
 		}
 
