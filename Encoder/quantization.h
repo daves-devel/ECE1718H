@@ -64,7 +64,7 @@ int QuantizeBlock(int32_t  ** QTC_FRAME, int32_t ** TC_FRAME, uint32_t ** QP_FRA
 	for (uint32_t  i = 0; i < block; i++) {
 		for (uint32_t  j = 0; j < block; j++) {
 
-			QTC_FRAME[row + i][col + j] = round(TC_FRAME[row + i][col + j] / QP_FRAME[row + i][col + j]);
+			QTC_FRAME[row + i][col + j] = TC_FRAME[row + i][col + j] / QP_FRAME[row + i][col + j];
 
 		}
 	}

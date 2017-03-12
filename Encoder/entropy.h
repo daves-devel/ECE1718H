@@ -199,6 +199,7 @@ void entropy_wrapper(int ** QTC_FRAME, int block, int height, int width, int fra
 			for (int j = 0; j < block; j++)
 				for (int i = 0; i < block; i++)
 					QTC_BLOCK[j][i] = QTC_FRAME[row + j][col + i];//Copy block into QTC_BLOCK
+			total_counter = entropy(QTC_BLOCK, block, RLE, COEFF_REORDER, golomb_file, bitcount);
 #ifdef TRACE_ON
 			fprintf_QTC_BLOCK(file_qtc, QTC_BLOCK, block, row, col);
 			fprintf_REORDER_BLOCK(file_reorder, COEFF_REORDER, block, row, col);
