@@ -24,8 +24,6 @@ int main(int argCnt, char **args)
 	char resfile_name[500] = "";
 	char recfile_name[500] = "";
 	char matchfile_name[500] = "";
-	char gmvx_name[500] = "";
-	char gmvy_name[500] = "";
 	char coeff_bitcount_name[500] = "";
 	char mdiff_bitcount_name[500] = "";
 	char frame_header_name[500] = "";
