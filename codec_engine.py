@@ -1,6 +1,6 @@
 #Author: Irfan Khan (khanirf1) 
 #Student Number: 999207665
-#Description: The Codec Engine for Assignment 1 
+#Description: The Codec Engine for Assignment 2 
 
 import os
 import sys
@@ -8,19 +8,17 @@ import sys
 def main(argv):
 
 	# Global Variables
-	# ------------------------------
-	testname	= ""
-	infile 		= ""
-	outfile		= ""
-	command		= ""
-	width		= 0
-	height 		= 0
-	frames		= 0
-	searchrange	= 0
-	rounding	= 0
-	with_old	= 0
-	height_old  = 0
-	block 		= 0
+	width			= 0
+	height 			= 0
+	frames			= 0
+	searchrange		= 0
+	with_old		= 0
+	height_old  	= 0
+	block 			= 0
+	qp              = 0
+	i_period	 	= 0
+	nRefFrames		= 0
+	VBSEnable		= 0
 
 	# Parse Input Arguments 
 	# ------------------------------
@@ -47,18 +45,32 @@ def main(argv):
 		if (argv[index] == "-range"):
 			searchrange = int(argv[index+1])
 
-		if (argv[index] == "-round"):
-			rounding = int(argv[index+1])
-
 		if (argv[index] == "-block"):
 			block = int(argv[index+1])
 
+		if (argv[index] == "-qp"):
+			qp = int(argv[index+1])
 
-	# LumaExtractor
-	# -------------------------------
-	command = "LumaExtractor\Debug\LumaExtractor.exe -frames %d -filein %s -width %d -height %d -fileout testdata\%s_LumaExtracted_%dx%d@%df.yuv" %(frames, infile, width, height, testname, width, height, frames)
-	print ("\nLumaExtractor\n" + command)
-	os.system (command)
+		if (argv[index] == "-i_period"):
+			i_period = int(argv[index+1])
+
+		if (argv[index] == "-nRefFrames"):
+			nRefFrames = int(argv[index+1])
+
+		if (argv[index] == "-VBSEnable"):
+			VBSEnable = int(argv[index+1])
+
+  	# LumaExtractor
+	# ------------------------------
+	luma_extract_command  = "LumaExtractor\Debug\LumaExtractor.exe"
+	luma_extract_command += " -frames %d" 						                %(frames)
+	luma_extract_command += " -filein %s" 						                %(infile)
+	luma_extract_command += " -width %d"						                %(width)
+	luma_extract_command += " -height %d"  						                %(height)
+	luma_extract_command += " -fileout testdata\%s_LumaExtracted_%dx%d@%df.yuv"	%(testname, width, height, frames)
+	
+	print ("\nLumaExtractor:\n" + luma_extract_command)
+	os.system (luma_extract_command)
 
 	width_old	= width
 	height_old	= height
@@ -70,32 +82,74 @@ def main(argv):
 
 	# LumaPadder
 	# -------------------------------
-	command = "LumaPad\Debug\LumaPad.exe -frames %d -width %d -height %d -block %d -filein testdata\%s_LumaExtracted_%dx%d@%df.yuv -fileout testdata\%s_LumaPadded_%dx%d@%df.yuv" %(frames,width_old,height_old,block,testname,width_old,height_old,frames,testname,width,height,frames)
-	print ("\nLumaPadder:\n" + command)
-	os.system (command)
+	luma_pad_command  = "LumaPad\Debug\LumaPad.exe"
+	luma_pad_command += " -frames %d"						                    %(frames)
+	luma_pad_command += " -width %d"							                %(width_old)
+	luma_pad_command += " -height %d"						                    %(height_old)
+	luma_pad_command += " -block %d"							                %(block)
+	luma_pad_command += " -filein testdata\%s_LumaExtracted_%dx%d@%df.yuv"		%(testname,width_old,height_old,frames)
+	luma_pad_command += " -fileout testdata\%s_LumaPadded_%dx%d@%df.yuv" 		%(testname,width,height,frames)
+	
+	print ("\nLumaPadder:\n" + luma_pad_command)
+	os.system (luma_pad_command)
 
 	# Encoder
 	# -------------------------------
-	command = "Encoder\Debug\Encoder.exe -frames %d -width %d -height %d -block %d -range %d -round %d -curfile testdata\%s_LumaPadded_%dx%d@%df.yuv -recfile testdata\%s_Reconstructed_%dx%d@%df.yuv -resfile testdata\%s_Residual_%dx%d@%df.yuv -motionfile testdata\%s_Motion_%dx%d@%df.yuv -mvfile testdata\%s_mvfile.txt -gmvx testdata\%s_GMVX -gmvy testdata\%s_GMVY" %(frames,width,height,block,searchrange,rounding,testname,width,height,frames,testname,width,height,frames,testname,width,height,frames,testname,width,height,frames,testname,testname,testname)
-	print ("\nEncoder:\n" + command)
-	os.system(command)
+	encode_command  = "Encoder\Debug\Encoder.exe"
+	encode_command += " -width %d"							                    %(width)
+	encode_command += " -height %d"						    	                %(height)
+	encode_command += " -curfile testdata\%s_LumaPadded_%dx%d@%df.yuv"		    %(testname,width,height,frames)
+	encode_command += " -recfile testdata\%s_Reconstructed_%dx%d@%df.yuv"		%(testname,width,height,frames)
+	encode_command += " -mdiff_bitcount_name testdata\%s_MDIFF_BITCOUNT.txt"	%(testname)
+	encode_command += " -frames %s" 						                    %(frames)
+	encode_command += " -block %s"							                    %(block)
+	encode_command += " -range %s"							                    %(searchrange)
+	encode_command += " -coeff_bitcount_name testdata\%s_COEFF_BITCOUNT.txt"	%(testname)
+	encode_command += " -qp %d" 							                    %(qp)
+	encode_command += " -i_period %d"						                    %(i_period)
+	encode_command += " -nRefFrames %d%" 						                %(nRefFrames)
+	encode_command += " -VBSEnable %d"						                    %(VBSEnable)
+	encode_command += " -frame_header testdata\%s_FRAME_HEADER.txt"             %(testname)
+
+	print ("\nEncoder:\n" + encode_command)
+	os.system(encode_command)
 
 	# Decoder
 	# -------------------------------
-	command = "Decoder\Debug\Decoder.exe -frames %d -width %d -height %d -block %d -decodedfile testdata\%s_Decoded_%dx%d@%df.yuv -resfile testdata\%s_Residual_%dx%d@%df.yuv -mvxfile testdata\%s_GMVX -mvyfile testdata\%s_GMVY" %(frames,width,height,block,testname,width,height,frames,testname,width,height,frames,testname,testname)
-	print ("\nDecoder:\n" + command)
-	os.system(command)
+	decode_command  = "Decoder\Debug\Decoder.exe"
+	decode_command += " -frames %d" 									        %(frames)
+	decode_command += " -qp %d"  									            %(qp)
+	decode_command += " -decfile testdata\%s_Decoded_%dx%d@%df.yuv"				%(testname,width,height,frames)
+	decode_command += " -filepath Decoder\\"
+	decode_command += " -frame_header testdata\%s_FRAME_HEADER.txt" 	        %(testname)
 
-	# DIFF
-	# --------------------------------
-	command = "DIFF\Debug\DIFF.exe -frames %d -width %d -height %d -recfile testdata\%s_Reconstructed_%dx%d@%df.yuv -decfile testdata\%s_Decoded_%dx%d@%df.yuv" %(frames,width,height,testname,width,height,frames,testname,width,height,frames)
-	print ("\nDIFF:\n" + command)
-	os.system(command)
+	print ("\nDecoder:\n" + decode_command)
+	os.system(decode_command)
 
-	# Analyze SAD
+    # DIFF
 	# --------------------------------
-	command = "AnalyzeSAD\Debug\AnalyzeSAD.exe -frames %d -width %d -height %d -reffile testdata\%s_LumaPadded_%dx%d@%df.yuv -decfile testdata\%s_Decoded_%dx%d@%df.yuv -SAD testdata\%s_SAD.txt" %(frames,width,height,testname,width,height,frames,testname,width,height,frames,testname)
-	print ("\nAnalyze SAD:\n" + command)
-	os.system(command)
+	diff_command  = "DIFF\Debug\DIFF.exe" 
+	diff_command += " -frames %d"                                               %(frames)
+	diff_command += " -width %d"                                                %(width)
+	diff_command += " -height %d"                                               %(height)
+	diff_command += " -recfile testdata\%s_Reconstructed_%dx%d@%df.yuv"         %(testname,width,height,frames)
+	diff_command += " -decfile testdata\%s_Decoded_%dx%d@%df.yuv"               %(testname,width,height,frames)
+
+	print ("\nDIFF:\n" + diff_command)
+	os.system(diff_command)
+
+	# Analyze Frame
+	# --------------------------------
+	analyze_command = "AnalyzeFrame\Debug\AnalyzeFrame.exe"
+	analyze_command += " -frames %d"                                            %(frames)
+	analyze_command += " -width %d"                                             %(width)
+	analyze_command += " -height %d"                                            %(height)
+	analyze_command += " -reffile testdata\%s_LumaPadded_%dx%d@%df.yuv"         %(testname,width,height,frames)
+	analyze_command += " -decfile testdata\%s_Decoded_%dx%d@%df.yuv"            %(testname,width,height,frames)
+	analyze_command += " -SAD testdata\%s_SAD.csv"                              %(testname)
+	analyze_command += " -PSNR testdata\%s_PSNR.csv"                            %(testname)
+
+	print ("\nAnalyze Frames:\n" + analyze_command)
+	os.system(analyze_command)
 
 main (sys.argv)
