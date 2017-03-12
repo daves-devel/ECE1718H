@@ -34,9 +34,9 @@ void ReconstructBlock(uint8_t** REC_FRAME, int8_t** RES_FRAME, uint8_t** REF_FRA
 
 void ReconstructBlockDecodeI(uint8_t** REC_FRAME, int8_t** RES_FRAME, int row, int col, int block, MDIFF** MDIFF_VECTOR_DIFF) {
 	uint32_t mode;
-	uint8_t** REF_FRAME = new uint8_t*[block];
+	uint8_t** REF_BLOCK = new uint8_t*[block];
 	for (unsigned int row = 0; row < block; row++) {
-		REF_FRAME[row] = new uint8_t[block];
+		REF_BLOCK[row] = new uint8_t[block];
 	}
 
 	mode = MDIFF_VECTOR_DIFF[row / block][col / block].MODE;
@@ -46,29 +46,29 @@ void ReconstructBlockDecodeI(uint8_t** REC_FRAME, int8_t** RES_FRAME, int row, i
 
 
 			if (mode == HORIZONTAL) {
-				(col == 0) ? (REF_FRAME[i][j] = 128) : (REF_FRAME[i][j] = REC_FRAME[row + i][col - 1]);
+				(col == 0) ? (REF_BLOCK[i][j] = 128) : (REF_BLOCK[i][j] = REC_FRAME[row + i][col - 1]);
 			}
 			else if (mode == VERTICAL)
 			{
-				(row == 0) ? (REF_FRAME[i][j] = 128) : (REF_FRAME[i][j] = REC_FRAME[row - 1][col + j]);
+				(row == 0) ? (REF_BLOCK[i][j] = 128) : (REF_BLOCK[i][j] = REC_FRAME[row - 1][col + j]);
 			}
 			else {
 				assert(mode == 0 || mode == 1);
 			}
-			REC_FRAME[row + i][col + j] = RES_FRAME[row + i][col + j] + REF_FRAME[i][j];
+			REC_FRAME[row + i][col + j] = RES_FRAME[row + i][col + j] + REF_BLOCK[i][j];
 		}
 	}
 
 	for (unsigned int row = 0; row < block; row++) {
-		delete		REC_FRAME[row];
+		delete		REF_BLOCK[row];
 	}
-	delete		REC_FRAME;
+	delete		REF_BLOCK;
 }
 
 void ReconstructBlockDecodeP(uint8_t** REC_FRAME, int8_t** RES_FRAME, uint8_t** REF_FRAME, int row, int col, int block, MDIFF** MDIFF_VECTOR_DIFF) {
 	for (int i = 0; i < block; i++) {
 		for (int j = 0; j < block; j++) {
-			uint32_t gmvx, gmvy;
+			int32_t gmvx, gmvy;
 			gmvx = MDIFF_VECTOR_DIFF[row / block][col / block].X;
 			gmvy = MDIFF_VECTOR_DIFF[row / block][col / block].Y;
 			REC_FRAME[row + i][col + j] = RES_FRAME[row + i][col + j] + REF_FRAME[row + i + gmvy][col + j + gmvx];

@@ -459,8 +459,8 @@ int main(int argCnt, char **args)
 
 		// Differential and Entropy Encode steps can be done on a whole frame here
 		entropy_wrapper(QTC_FRAME_2D, block, height, width, frame);
-		diff_enc_wrapper(MDIFF_VECTOR, MDIFF_VECTOR_DIFF, 0, height, width, block, frame);
-		encode_mdiff_wrapper(MDIFF_VECTOR_DIFF, height, width, block, frame, 0);
+		diff_enc_wrapper(MDIFF_VECTOR, MDIFF_VECTOR_DIFF, FrameType, height, width, block, frame);
+		encode_mdiff_wrapper(MDIFF_VECTOR_DIFF, height, width, block, frame, FrameType);
 
 		// File Dumps
 		uint8_t *REC_FRAME = new uint8_t[FRAME_SIZE];
