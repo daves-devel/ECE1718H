@@ -149,6 +149,6 @@ def main(argv):
 	analyze_command += " -SAD testdata\%s_SAD.txt"                              %(testname)
 
 	print ("\nAnalyze Frames:\n" + analyze_command)
-	os.system(analyzs_command)
+	os.system(analyze_command)
 
 main (sys.argv)
