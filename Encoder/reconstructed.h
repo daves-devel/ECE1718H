@@ -68,7 +68,7 @@ void ReconstructBlockDecodeI(uint8_t** REC_FRAME, int8_t** RES_FRAME, int row, i
 void ReconstructBlockDecodeP(uint8_t** REC_FRAME, int8_t** RES_FRAME, uint8_t** REF_FRAME, int row, int col, int block, MDIFF** MDIFF_VECTOR_DIFF) {
 	for (int i = 0; i < block; i++) {
 		for (int j = 0; j < block; j++) {
-			uint32_t gmvx, gmvy;
+			int32_t gmvx, gmvy;
 			gmvx = MDIFF_VECTOR_DIFF[row / block][col / block].X;
 			gmvy = MDIFF_VECTOR_DIFF[row / block][col / block].Y;
 			REC_FRAME[row + i][col + j] = RES_FRAME[row + i][col + j] + REF_FRAME[row + i + gmvy][col + j + gmvx];
