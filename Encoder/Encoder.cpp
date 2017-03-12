@@ -547,7 +547,7 @@ int main(int argCnt, char **args)
 	}
 	//Runtime
 	int stop_s = clock();
-	fprintf(runtime_file,"RUN_TIME %.2fs\n", (double)(clock() - start_s) / CLOCKS_PER_SEC);
+	fprintf(runtime_file,"%.2fs\n", (double)(clock() - start_s) / CLOCKS_PER_SEC);
 		
 
 	// Deallocate Memory

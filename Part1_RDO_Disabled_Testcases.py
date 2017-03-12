@@ -201,7 +201,7 @@ os.system(command)
 
 block 			= 16
 qp              = 1
-i_period	 	= 1
+i_period	 	= 4
 testname 		= "IP_%d_Block_%d_QP_%d" %(i_period,block,qp)
 
 command = "codec_engine.py -infile %s -testname %s -width %d -height %d -frames %d -searchrange %d -nRefFrames %d -VBSEnable %d -RDOEnable %d -FMEnabled %d -block %d -qp %d -i_period %d" %(infile,testname,width,height,frames,searchrange,nRefFrames,VBSEnable,RDOEnable,FMEnable,block,qp,i_period)

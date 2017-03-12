@@ -140,7 +140,7 @@ void encode_mdiff_wrapper(MDIFF** MDIFF_VECTOR_DIFF, int height, int width, int 
 			encode_mdiff(MDIFF_VECTOR_DIFF, row / block, col / block, Frametype, &bitcount, mdiff_golomb);
 		}
 	}
-	fprintf(mdiff_bitcount_file, "Frame %d MDIFF bitcount %d\n",frame,  bitcount);
+	fprintf(mdiff_bitcount_file, "%d,%d\n",frame,  bitcount);
 	//fclose(bitcount_file);
 	fclose(mdiff_golomb);
 }
@@ -207,7 +207,7 @@ void entropy_wrapper(int ** QTC_FRAME, int block, int height, int width, int fra
 #endif //TRACE_ON 
 		}
 	}
-	fprintf(coeff_bitcount_file, "Frame %d Coefficient bitcount %d\n",frame,  bitcount);
+	fprintf(coeff_bitcount_file, "%d,%d\n",frame,  bitcount);
 	delete QTC_BLOCK;
 	delete RLE;
 	delete COEFF_REORDER;
