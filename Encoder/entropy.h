@@ -131,7 +131,7 @@ void encode_mdiff_wrapper(MDIFF** MDIFF_VECTOR_DIFF, int height, int width, int 
 	char buf[0x100];
 	//char bitcount_name[0x100];
 	uint32_t bitcount = 0;
-	snprintf(buf, sizeof(buf), "MDIFF_GOLOMB_%d", frame);
+	snprintf(buf, sizeof(buf), "testdata\\MDIFF_GOLOMB_%d", frame);
 	mdiff_golomb = fopen(buf, "wb");
 //	snprintf(bitcount_name, sizeof(bitcount_name), "MDIFF_BITCOUNT_%d.txt", frame);
 //	bitcount_file = fopen(bitcount_name, "w");
@@ -171,18 +171,18 @@ void entropy_wrapper(int ** QTC_FRAME, int block, int height, int width, int fra
 	FILE* file_reorder;
 	FILE* file_rle;
 	char buf[0x100];
-	snprintf(buf, sizeof(buf), "QTC_BLOCK_ENC_%d.txt", frame);
+	snprintf(buf, sizeof(buf), "testdata\\QTC_BLOCK_ENC_%d.txt", frame);
 	file_qtc = fopen(buf, "w");
-	snprintf(buf, sizeof(buf), "REORDER_BLOCK_ENC_%d.txt", frame);
+	snprintf(buf, sizeof(buf), "testdata\\REORDER_BLOCK_ENC_%d.txt", frame);
 	file_reorder = fopen(buf, "w");
-	snprintf(buf, sizeof(buf), "RLE_BLOCK_ENC_%d.txt", frame);
+	snprintf(buf, sizeof(buf), "testdata\\RLE_BLOCK_ENC_%d.txt", frame);
 	file_rle = fopen(buf, "w");
 #endif // TRACE_ON
 	//FILE * bitcount_file;
 	FILE * golomb_file;
 	char golomb_name[500] = "";
 	//char bitcount_name[500] = "";
-	snprintf(golomb_name, sizeof(golomb_name), "COEFF_GOLOMB_CODING_%d", frame);
+	snprintf(golomb_name, sizeof(golomb_name), "testdata\\COEFF_GOLOMB_CODING_%d", frame);
 	golomb_file = fopen(golomb_name, "wb");
 	//snprintf(bitcount_name, sizeof(bitcount_name), "COEFF_BITCOUNT_%d.txt", frame);
 	//bitcount_file = fopen(bitcount_name, "w");
@@ -199,7 +199,6 @@ void entropy_wrapper(int ** QTC_FRAME, int block, int height, int width, int fra
 			for (int j = 0; j < block; j++)
 				for (int i = 0; i < block; i++)
 					QTC_BLOCK[j][i] = QTC_FRAME[row + j][col + i];//Copy block into QTC_BLOCK
-			total_counter=entropy(QTC_BLOCK, block, RLE, COEFF_REORDER, golomb_file, bitcount);
 #ifdef TRACE_ON
 			fprintf_QTC_BLOCK(file_qtc, QTC_BLOCK, block, row, col);
 			fprintf_REORDER_BLOCK(file_reorder, COEFF_REORDER, block, row, col);
