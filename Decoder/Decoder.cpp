@@ -16,6 +16,45 @@
 #include <discrete_cosine_transform.h>
 #include <DiffDec.h>
 
+void write_mat(FILE *fp, uint8_t**m, int N, int M) {
+
+	int i, j;
+	for (i = 0; i< N; i++) {
+		fprintf(fp, "%d", m[i][0]);
+		for (j = 1; j < M; j++) {
+			fprintf(fp, ",%d", m[i][j]);
+		}
+		fprintf(fp, "\n");
+	}
+	fprintf(fp, "\n");
+}
+
+void write_mat2(FILE *fp, int32_t**m, int N, int M) {
+
+	int i, j;
+	for (i = 0; i< N; i++) {
+		fprintf(fp, "%d", m[i][0]);
+		for (j = 1; j < M; j++) {
+			fprintf(fp, ",%d", m[i][j]);
+		}
+		fprintf(fp, "\n");
+	}
+	fprintf(fp, "\n");
+}
+
+void write_mat3(FILE *fp, int8_t**m, int N, int M) {
+
+	int i, j;
+	for (i = 0; i< N; i++) {
+		fprintf(fp, "%d", m[i][0]);
+		for (j = 1; j < M; j++) {
+			fprintf(fp, ",%d", m[i][j]);
+		}
+		fprintf(fp, "\n");
+	}
+	fprintf(fp, "\n");
+}
+
 int main(int argCnt, char **args)
 {
 
@@ -78,10 +117,9 @@ int main(int argCnt, char **args)
 	}
 
 	FILE* decfile = fopen(decfile_name, "wb");
-	FILE* mdiff_file;
-	FILE* coeff_file;
-	char mdiff_name[0x100];
-	char coeff_name[0x100];
+	FILE* reffile = fopen("res.csv", "w");
+	FILE* dectcfile = fopen("dec_tc.csv", "w");
+	FILE* decresfile = fopen("dec_res.csv", "w");
 
 	frame_header_file = fopen(frame_header_name, "rb");
 	//coeff_bitcount_file = fopen(coeff_bitcount_name, "r");
@@ -101,6 +139,7 @@ int main(int argCnt, char **args)
 	// Allocate Memory
 	uint8_t** DEC_FRAME_2D = new uint8_t*[height];
 	uint8_t** REF_FRAME_2D = new uint8_t*[height];
+	uint8_t** PREV_DEC_FRAME = new uint8_t*[height];
 	int8_t** ENC_RES_FRAME_2D = new  int8_t*[height];
 	int32_t** ENC_TC_FRAME_2D = new int32_t*[height];
 	int8_t** DEC_RES_FRAME_2D = new  int8_t*[height];
@@ -111,6 +150,7 @@ int main(int argCnt, char **args)
 	for (unsigned int row = 0; row < height; row++) {
 		DEC_FRAME_2D[row] = new uint8_t[width];
 		REF_FRAME_2D[row] = new uint8_t[width];
+		PREV_DEC_FRAME[row] = new uint8_t[width];
 		ENC_RES_FRAME_2D[row] = new  int8_t[width];
 		ENC_TC_FRAME_2D[row] = new int32_t[width];
 		DEC_RES_FRAME_2D[row] = new  int8_t[width];
@@ -141,11 +181,10 @@ int main(int argCnt, char **args)
 		if (FrameType == PFRAME) {
 			// Go to the beginning of the previous reconstructed frame and copy it to buffer
 			fseek(decfile, (frame - 1)*FRAME_SIZE, SEEK_SET);
-			for (unsigned int row = 0; row++; row < height) {
-				fread(REF_FRAME_2D[row], sizeof(uint8_t), width, decfile);
+			for (unsigned int row = 0; row < height; row++) {
+				fread(PREV_DEC_FRAME[row], sizeof(uint8_t), width, decfile);
 			}
 		}
-
 		/*
 		snprintf(mdiff_name, sizeof(mdiff_name), "%s/MDIFF_GOLOMB_%d", filepath, frame);
 		mdiff_file = fopen(mdiff_name, "rb");
@@ -192,14 +231,19 @@ int main(int argCnt, char **args)
 
 				if (FrameType == PFRAME) {
 					// RECONSTRUCT 
-					ReconstructBlockDecodeP(DEC_FRAME_2D, DEC_RES_FRAME_2D, REF_FRAME_2D, row, col, block, MDIFF_VECTOR);
+					ReconstructBlockDecodeP(DEC_FRAME_2D, DEC_RES_FRAME_2D, PREV_DEC_FRAME, REF_FRAME_2D, row, col, block, MDIFF_VECTOR);
 				}
 				else if (FrameType == IFRAME) {
 					// RECONSTRUCT 
-					ReconstructBlockDecodeI(DEC_FRAME_2D, DEC_RES_FRAME_2D, row, col, block, MDIFF_VECTOR);
+					ReconstructBlockDecodeI(DEC_FRAME_2D, DEC_RES_FRAME_2D, REF_FRAME_2D, row, col, block, MDIFF_VECTOR);
 				}
 			}
 		}
+
+		
+		write_mat(reffile, REF_FRAME_2D, height, width);
+		write_mat3(decresfile, DEC_RES_FRAME_2D, height, width);
+		write_mat2(dectcfile, DEC_TC_FRAME_2D, height, width);
 
 		uint8_t *DEC_FRAME = new uint8_t[FRAME_SIZE];
 		for (int row = 0; row < height; row++)
@@ -238,6 +282,9 @@ int main(int argCnt, char **args)
 
 	// Close Files
 	fclose(decfile);
+	fclose(reffile);
+	fclose(decresfile);
+	fclose(dectcfile);
 	//fclose(mdiff_bitcount_file);
 	//fclose(coeff_bitcount_file);
 	return 0;

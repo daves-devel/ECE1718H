@@ -4,8 +4,8 @@ void recon(int8_t * residual_mem, uint8_t* recon_mem, int block_size, int frame_
 void generate_recon(int8_t * residual_mem, uint8_t* recon_mem, int x, int y, int block_size, int frame_width, unsigned char** MOTION_FRAME);
 
 void ReconstructBlock(uint8_t** REC_FRAME,int8_t** RES_FRAME, uint8_t** REF_FRAME,int row, int col, int block);
-void ReconstructBlockDecodeI(uint8_t** REC_FRAME, int8_t** RES_FRAME, int row, int col, int block, MDIFF** MDIFF_VECTOR_DIFF);
-void ReconstructBlockDecodeP(uint8_t** REC_FRAME, int8_t** RES_FRAME, uint8_t** REF_FRAME, int row, int col, int block, MDIFF** MDIFF_VECTOR_DIFF);
+void ReconstructBlockDecodeI(uint8_t** REC_FRAME, int8_t** RES_FRAME, uint8_t** REF_FRAME, int row, int col, int block, MDIFF** MDIFF_VECTOR_DIFF);
+void ReconstructBlockDecodeP(uint8_t** REC_FRAME, int8_t** RES_FRAME, uint8_t** PREV_DEC_FRAME, uint8_t** REF_FRAME, int row, int col, int block, MDIFF** MDIFF_VECTOR_DIFF);
 
 void recon(int8_t * residual_mem, uint8_t* recon_mem, int block_size, int frame_width, int frame_height, unsigned char** MOTION_FRAME) {
 	for (int y = 0; y<frame_height; y = y + block_size) {
@@ -32,12 +32,9 @@ void ReconstructBlock(uint8_t** REC_FRAME, int8_t** RES_FRAME, uint8_t** REF_FRA
 	}
 }
 
-void ReconstructBlockDecodeI(uint8_t** REC_FRAME, int8_t** RES_FRAME, int row, int col, int block, MDIFF** MDIFF_VECTOR_DIFF) {
+void ReconstructBlockDecodeI(uint8_t** REC_FRAME, int8_t** RES_FRAME, uint8_t** REF_FRAME, int row, int col, int block, MDIFF** MDIFF_VECTOR_DIFF) {
 	uint32_t mode;
-	uint8_t** REF_BLOCK = new uint8_t*[block];
-	for (unsigned int row = 0; row < block; row++) {
-		REF_BLOCK[row] = new uint8_t[block];
-	}
+	
 
 	mode = MDIFF_VECTOR_DIFF[row / block][col / block].MODE;
 
@@ -46,32 +43,28 @@ void ReconstructBlockDecodeI(uint8_t** REC_FRAME, int8_t** RES_FRAME, int row, i
 
 
 			if (mode == HORIZONTAL) {
-				(col == 0) ? (REF_BLOCK[i][j] = 128) : (REF_BLOCK[i][j] = REC_FRAME[row + i][col - 1]);
+				(col == 0) ? (REF_FRAME[row + i][col + j] = 128) : (REF_FRAME[row + i][col + j] = REC_FRAME[row + i][col - 1]);
 			}
 			else if (mode == VERTICAL)
 			{
-				(row == 0) ? (REF_BLOCK[i][j] = 128) : (REF_BLOCK[i][j] = REC_FRAME[row - 1][col + j]);
+				(row == 0) ? (REF_FRAME[row + i][col + j] = 128) : (REF_FRAME[row + i][col + j] = REC_FRAME[row - 1][col + j]);
 			}
 			else {
 				assert(mode == 0 || mode == 1);
 			}
-			REC_FRAME[row + i][col + j] = RES_FRAME[row + i][col + j] + REF_BLOCK[i][j];
+			REC_FRAME[row + i][col + j] = RES_FRAME[row + i][col + j] + REF_FRAME[row + i][col + j];
 		}
 	}
-
-	for (unsigned int row = 0; row < block; row++) {
-		delete		REF_BLOCK[row];
-	}
-	delete		REF_BLOCK;
 }
 
-void ReconstructBlockDecodeP(uint8_t** REC_FRAME, int8_t** RES_FRAME, uint8_t** REF_FRAME, int row, int col, int block, MDIFF** MDIFF_VECTOR_DIFF) {
+void ReconstructBlockDecodeP(uint8_t** REC_FRAME, int8_t** RES_FRAME, uint8_t** PREV_DEC_FRAME, uint8_t** REF_FRAME, int row, int col, int block, MDIFF** MDIFF_VECTOR_DIFF) {
+	int32_t gmvx, gmvy;
 	for (int i = 0; i < block; i++) {
 		for (int j = 0; j < block; j++) {
-			int32_t gmvx, gmvy;
 			gmvx = MDIFF_VECTOR_DIFF[row / block][col / block].X;
 			gmvy = MDIFF_VECTOR_DIFF[row / block][col / block].Y;
-			REC_FRAME[row + i][col + j] = RES_FRAME[row + i][col + j] + REF_FRAME[row + i + gmvy][col + j + gmvx];
+			REF_FRAME[row + i][ col + j] = PREV_DEC_FRAME[row + i + gmvy][col + j + gmvx];
+			REC_FRAME[row + i][col + j] = RES_FRAME[row + i][col + j] + REF_FRAME[row + i][col + j];
 		}
 	}
 }
