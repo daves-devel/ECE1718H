@@ -432,19 +432,19 @@ int main(int argCnt, char **args)
 				}
 				
 				if (FrameType == PFRAME) {
-					MDIFF_VECTOR[row/block][col/block] = InterFramePrediction (CUR_FRAME_2D, REC_FRAME_2D, REF_FRAME_2D,row, col, width, height, block, range, 1);
+					MDIFF_VECTOR[row/block][col/block] = InterFramePrediction (CUR_FRAME_2D, REC_FRAME_2D, REF_FRAME_2D,row, col, width, height, block, range, 1, MDIFF_VECTOR, QP, RDOEnable);
 					//Multireference code start Only activated if nRefFrames>=2
 					if ((frame%i_period) >= 2 && nRefFrames >= 2) {
-						MDIFF_VECTOR_2[row / block][col / block] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D_2, REF_FRAME_2D_2, row, col, width, height, block, range, 2);
+						MDIFF_VECTOR_2[row / block][col / block] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D_2, REF_FRAME_2D_2, row, col, width, height, block, range, 2, MDIFF_VECTOR, QP, RDOEnable);
 						MDIFF_VECTOR[row / block][col / block] = SelectRefWinner(MDIFF_VECTOR[row/block][col/block], MDIFF_VECTOR_2[row/block][col/block], REF_FRAME_2D, REF_FRAME_2D_2, block, row, col);
 					}
 					if ((frame%i_period) >= 3 && nRefFrames >= 3) {
-						MDIFF_VECTOR_3[row / block][col / block] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D_3, REF_FRAME_2D_3, row, col, width, height, block, range, 3);
+						MDIFF_VECTOR_3[row / block][col / block] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D_3, REF_FRAME_2D_3, row, col, width, height, block, range, 3, MDIFF_VECTOR, QP, RDOEnable);
 						MDIFF_VECTOR[row / block][col / block] = SelectRefWinner(MDIFF_VECTOR[row / block][col / block], MDIFF_VECTOR_3[row / block][col / block], REF_FRAME_2D, REF_FRAME_2D_3, block, row, col);
 
 					}
 					if ((frame%i_period) >= 4 && nRefFrames >= 4) {
-						MDIFF_VECTOR_4[row / block][col / block] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D_4, REF_FRAME_2D_4, row, col, width, height, block, range, 4);
+						MDIFF_VECTOR_4[row / block][col / block] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D_4, REF_FRAME_2D_4, row, col, width, height, block, range, 4, MDIFF_VECTOR, QP, RDOEnable);
 						MDIFF_VECTOR[row / block][col / block] = SelectRefWinner(MDIFF_VECTOR[row / block][col / block], MDIFF_VECTOR_4[row / block][col / block], REF_FRAME_2D, REF_FRAME_2D_4, block, row, col);
 					}
 					//Multireference code end
@@ -480,19 +480,19 @@ int main(int argCnt, char **args)
 							}
 
 							if (FrameType == PFRAME) {
-								MDIFF_VECTORS[row2 / block_split][col2 / block_split] = InterFramePrediction(CUR_FRAME_2DS, REC_FRAME_2DS, REF_FRAME_2DS, row2, col2, width, height, block_split, range, 1);
+								MDIFF_VECTORS[row2 / block_split][col2 / block_split] = InterFramePrediction(CUR_FRAME_2DS, REC_FRAME_2DS, REF_FRAME_2DS, row2, col2, width, height, block_split, range, 1, MDIFF_VECTOR, QP, RDOEnable);
 								//Multireference code start Only activated if nRefFrames>=2
 								if ((frame%i_period) >= 2 && nRefFrames >= 2) {
-									MDIFF_VECTOR_2[row2 / block_split][col2 / block_split] = InterFramePrediction(CUR_FRAME_2DS, REC_FRAME_2D_2S, REF_FRAME_2D_2S, row2, col2, width, height, block_split, range, 2);
+									MDIFF_VECTOR_2[row2 / block_split][col2 / block_split] = InterFramePrediction(CUR_FRAME_2DS, REC_FRAME_2D_2S, REF_FRAME_2D_2S, row2, col2, width, height, block_split, range, 2, MDIFF_VECTOR, QP, RDOEnable);
 									MDIFF_VECTORS[row2 / block_split][col2 / block_split] = SelectRefWinner(MDIFF_VECTORS[row2 / block_split][col2 / block_split], MDIFF_VECTOR_2S[row2 / block_split][col2 / block_split], REF_FRAME_2DS, REF_FRAME_2D_2S, block_split, row2, col2);
 								}
 								if ((frame%i_period) >= 3 && nRefFrames >= 3) {
-									MDIFF_VECTOR_3S[row2 / block_split][col2 / block_split] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D_3, REF_FRAME_2D_3, row2, col2, width, height, block_split, range, 3);
+									MDIFF_VECTOR_3S[row2 / block_split][col2 / block_split] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D_3, REF_FRAME_2D_3, row2, col2, width, height, block_split, range, 3, MDIFF_VECTOR, QP, RDOEnable);
 									MDIFF_VECTORS[row2 / block_split][col2 / block_split] = SelectRefWinner(MDIFF_VECTORS[row2 / block_split][col2 / block_split], MDIFF_VECTOR_3S[row2 / block_split][col2 / block_split], REF_FRAME_2DS, REF_FRAME_2D_3S, block_split, row2, col2);
 
 								}
 								if ((frame%i_period) >= 4 && nRefFrames >= 4) {
-									MDIFF_VECTOR_4S[row2 / block_split][col2 / block_split] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D_4, REF_FRAME_2D_4, row2, col2, width, height, block_split, range, 4);
+									MDIFF_VECTOR_4S[row2 / block_split][col2 / block_split] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D_4, REF_FRAME_2D_4, row2, col2, width, height, block_split, range, 4, MDIFF_VECTOR, QP, RDOEnable);
 									MDIFF_VECTORS[row2 / block_split][col2 / block_split] = SelectRefWinner(MDIFF_VECTORS[row2 / block_split][col2 / block_split], MDIFF_VECTOR_4S[row2 / block_split][col2 / block_split], REF_FRAME_2DS, REF_FRAME_2D_4S, block_split, row2, col2);
 								}
 								//Multireference code end
