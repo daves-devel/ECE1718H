@@ -140,13 +140,14 @@ def main(argv):
 
 	# Analyze Frame
 	# --------------------------------
-	analyze_command = "AnalyzeSAD\Debug\AnalyzeFrame.exe"
+	analyze_command = "AnalyzeFrame\Debug\AnalyzeFrame.exe"
 	analyze_command += " -frames %d"                                            %(frames)
 	analyze_command += " -width %d"                                             %(width)
 	analyze_command += " -height %d"                                            %(height)
 	analyze_command += " -reffile testdata\%s_LumaPadded_%dx%d@%df.yuv"         %(testname,width,height,frames)
 	analyze_command += " -decfile testdata\%s_Decoded_%dx%d@%df.yuv"            %(testname,width,height,frames)
-	analyze_command += " -SAD testdata\%s_SAD.txt"                              %(testname)
+	analyze_command += " -SAD testdata\%s_SAD.csv"                              %(testname)
+	analyze_command += " -PSNR testdata\%s_PSNR.csv"                            %(testname)
 
 	print ("\nAnalyze Frames:\n" + analyze_command)
 	os.system(analyze_command)
