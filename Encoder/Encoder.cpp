@@ -15,6 +15,8 @@
 #include <IntraFramePrediction.h>
 #include <discrete_cosine_transform.h>
 #include <DiffEnc.h>
+#include <ctime>
+
 
 void write_mat(FILE *fp, uint8_t**m, int N, int M) {
 
@@ -66,6 +68,7 @@ int main(int argCnt, char **args)
 	char coeff_bitcount_name[500] = "";
 	char mdiff_bitcount_name[500] = "";
 	char frame_header_name[500] = "";
+	char runtime_name[500] = "";
 
 	int width = -1;
 	int height = -1;
@@ -77,10 +80,11 @@ int main(int argCnt, char **args)
 	int QP = -1;
 	int nRefFrames = 1;
 	int VBSEnable = 0;
+	int RDOEnable = 0;
+	int FMEnable = 0;
 
 	args++;
 	int tmpArgCnt = 1;
-
 	//  Parse Input Arguments
 	// =======================
 	while (tmpArgCnt < argCnt && (*args)[0] == '-') {
@@ -175,6 +179,24 @@ int main(int argCnt, char **args)
 			args++;
 			tmpArgCnt += 2;
 		}
+		else if (!strcmp((*args) + 1, "RDOEnable")) {
+			args++;
+			RDOEnable = atoi(*args);
+			args++;
+			tmpArgCnt += 2;
+		}
+		else if (!strcmp((*args) + 1, "FMEnable")) {
+			args++;
+			FMEnable = atoi(*args);
+			args++;
+			tmpArgCnt += 2;
+		}
+		else if (!strcmp((*args) + 1, "runtime_name")) {
+			args++;
+			sscanf(*args, "%s", runtime_name);
+			args++;
+			tmpArgCnt += 2;
+		}
 
 		else {
 			printf("Huh? I don't know %s (option #%d) \n", *args, tmpArgCnt);
@@ -187,6 +209,7 @@ int main(int argCnt, char **args)
 	mdiff_bitcount_file = fopen(mdiff_bitcount_name, "w");
 	frame_header_file = fopen(frame_header_name, "w+b");
 	FILE* recfile = fopen(recfile_name, "w+b");
+	FILE* runtime_file = fopen(runtime_name, "w");
 
 	FILE* reffile = fopen("res_enc.csv", "w");
 	FILE* dectcfile = fopen("dec_tc_enc.csv", "w");
@@ -214,7 +237,7 @@ int main(int argCnt, char **args)
 	 int8_t** DEC_RES_FRAME_2D	= new  int8_t*[height];
 	int32_t** DEC_TC_FRAME_2D	= new int32_t*[height];
 	int32_t** QTC_FRAME_2D		= new int32_t*[height];
-	uint8_t** QP_FRAME_2D		= new uint8_t*[height];
+	uint32_t** QP_FRAME_2D		= new uint32_t*[height];
 
 	for (unsigned int row = 0; row < height; row++) {
 		CUR_FRAME_2D[row] = new uint8_t[width];
@@ -234,7 +257,7 @@ int main(int argCnt, char **args)
 		DEC_RES_FRAME_2D[row] = new  int8_t[width];
 		DEC_TC_FRAME_2D[row] = new int32_t[width];
 		QTC_FRAME_2D[row] = new int32_t[width];
-		QP_FRAME_2D[row] = new uint8_t[width];
+		QP_FRAME_2D[row] = new uint32_t[width];
 	}
 
 	
@@ -272,7 +295,7 @@ int main(int argCnt, char **args)
 	int8_t** DEC_RES_FRAME_2DS = new  int8_t*[height];
 	int32_t** DEC_TC_FRAME_2DS = new int32_t*[height];
 	int32_t** QTC_FRAME_2DS = new int32_t*[height];
-	uint8_t** QP_FRAME_2DS = new uint8_t*[height];
+	uint32_t** QP_FRAME_2DS = new uint32_t*[height];
 
 	for (unsigned int row = 0; row < height; row++) {
 		CUR_FRAME_2DS[row] = new uint8_t[width];
@@ -292,7 +315,7 @@ int main(int argCnt, char **args)
 		DEC_RES_FRAME_2DS[row] = new  int8_t[width];
 		DEC_TC_FRAME_2DS[row] = new int32_t[width];
 		QTC_FRAME_2DS[row] = new int32_t[width];
-		QP_FRAME_2DS[row] = new uint8_t[width];
+		QP_FRAME_2DS[row] = new uint32_t[width];
 	}
 
 
@@ -312,6 +335,8 @@ int main(int argCnt, char **args)
 		MDIFF_VECTOR_DIFFS[row / block_split] = new struct MDIFF[width / block_split];
 	}
 
+	//Runtime
+	int start_s = clock();
 
 	// Encode Each Frame
 	// =========================================
@@ -520,8 +545,10 @@ int main(int argCnt, char **args)
 		fwrite(REC_FRAME, sizeof(uint8_t), FRAME_SIZE, recfile);
 
 	}
-
-	
+	//Runtime
+	int stop_s = clock();
+	fprintf(runtime_file,"RUN_TIME %.2fs\n", (double)(clock() - start_s) / CLOCKS_PER_SEC);
+		
 
 	// Deallocate Memory
 	for (unsigned int row = 0; row < height; row++) {

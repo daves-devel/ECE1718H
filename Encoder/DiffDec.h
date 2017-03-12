@@ -31,9 +31,9 @@ void diff_dec_wrapper(MDIFF** MDIFF_VECTOR, MDIFF** MDIFF_VECTOR_DIFF, int Frame
 	FILE* file_vector_org;
 	FILE* file_vector_aft;
 	char buf[0x100];
-	snprintf(buf, sizeof(buf), "MDIFF_ORG_DEC%d.txt", frame);
+	snprintf(buf, sizeof(buf), "testdata\\MDIFF_ORG_DEC%d.txt", frame);
 	file_vector_org = fopen(buf, "w");
-	snprintf(buf, sizeof(buf), "MDIFF_AFT_DEC%d.txt", frame);
+	snprintf(buf, sizeof(buf), "testdata\\MDIFF_AFT_DEC%d.txt", frame);
 	file_vector_aft = fopen(buf, "w");
 #endif
 	for (int row = 0; row < height; row = row + block) {

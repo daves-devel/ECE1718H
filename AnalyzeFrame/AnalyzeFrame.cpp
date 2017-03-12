@@ -121,7 +121,7 @@ int main(int argCnt, char **args)
 		PSNR = 20*log10(MAX_I) - 10 * log10(MSE);
 
 		fprintf(SADfile,"%d,%d\n", frame+1, SAD); 
-		fprintf(PSNRfile, "%d,%f", frame + 1, PSNR); 
+		fprintf(PSNRfile, "%d,%f\n", frame + 1, PSNR); 
 	}
 
 	delete REF_FRAME;

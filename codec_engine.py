@@ -7,7 +7,10 @@ import sys
 
 def main(argv):
 
+
 	# Global Variables
+	infile			= ""
+	testname		= ""
 	width			= 0
 	height 			= 0
 	frames			= 0
@@ -19,6 +22,8 @@ def main(argv):
 	i_period	 	= 0
 	nRefFrames		= 0
 	VBSEnable		= 0
+	RDOEnable       = 0
+	FMEnable        = 0
 
 	# Parse Input Arguments 
 	# ------------------------------
@@ -27,10 +32,7 @@ def main(argv):
 		if (argv[index] == "-infile"):
 			infile = argv[index+1]
 
-		if (argv[index] == "-outfile"):
-			outfile = argv[index+1]
-
-		if (argv[index] == "-test"):
+		if (argv[index] == "-testname"):
 			testname = argv[index+1]
 
 		if (argv[index] == "-width"):
@@ -42,7 +44,7 @@ def main(argv):
 		if (argv[index] == "-frames"):
 			frames = int(argv[index+1])
 
-		if (argv[index] == "-range"):
+		if (argv[index] == "-searchrange"):
 			searchrange = int(argv[index+1])
 
 		if (argv[index] == "-block"):
@@ -59,6 +61,12 @@ def main(argv):
 
 		if (argv[index] == "-VBSEnable"):
 			VBSEnable = int(argv[index+1])
+
+		if (argv[index] == "-RDOEnable"):
+			RDOEnable = int(argv[index+1])
+
+		if (argv[index] == "-FMEnable"):
+			FMEnable = int(argv[index+1])
 
   	# LumaExtractor
 	# ------------------------------
@@ -107,8 +115,10 @@ def main(argv):
 	encode_command += " -coeff_bitcount_name testdata\%s_COEFF_BITCOUNT.txt"	%(testname)
 	encode_command += " -qp %d" 							                    %(qp)
 	encode_command += " -i_period %d"						                    %(i_period)
-	encode_command += " -nRefFrames %d%" 						                %(nRefFrames)
+	encode_command += " -nRefFrames %d" 						                %(nRefFrames)
 	encode_command += " -VBSEnable %d"						                    %(VBSEnable)
+	encode_command += " -RDOEnable %d"						                    %(RDOEnable)
+	encode_command += " -FMEnable %d"						                    %(FMEnable)
 	encode_command += " -frame_header testdata\%s_FRAME_HEADER.txt"             %(testname)
 
 	print ("\nEncoder:\n" + encode_command)
@@ -123,8 +133,8 @@ def main(argv):
 	decode_command += " -filepath Decoder\\"
 	decode_command += " -frame_header testdata\%s_FRAME_HEADER.txt" 	        %(testname)
 
-	print ("\nDecoder:\n" + decode_command)
-	os.system(decode_command)
+	#print ("\nDecoder:\n" + decode_command)
+	#os.system(decode_command)
 
     # DIFF
 	# --------------------------------
@@ -135,8 +145,8 @@ def main(argv):
 	diff_command += " -recfile testdata\%s_Reconstructed_%dx%d@%df.yuv"         %(testname,width,height,frames)
 	diff_command += " -decfile testdata\%s_Decoded_%dx%d@%df.yuv"               %(testname,width,height,frames)
 
-	print ("\nDIFF:\n" + diff_command)
-	os.system(diff_command)
+	#print ("\nDIFF:\n" + diff_command)
+	#os.system(diff_command)
 
 	# Analyze Frame
 	# --------------------------------
@@ -145,7 +155,7 @@ def main(argv):
 	analyze_command += " -width %d"                                             %(width)
 	analyze_command += " -height %d"                                            %(height)
 	analyze_command += " -reffile testdata\%s_LumaPadded_%dx%d@%df.yuv"         %(testname,width,height,frames)
-	analyze_command += " -decfile testdata\%s_Decoded_%dx%d@%df.yuv"            %(testname,width,height,frames)
+	analyze_command += " -decfile testdata\%s_Reconstructed_%dx%d@%df.yuv"      %(testname,width,height,frames)
 	analyze_command += " -SAD testdata\%s_SAD.csv"                              %(testname)
 	analyze_command += " -PSNR testdata\%s_PSNR.csv"                            %(testname)
 
