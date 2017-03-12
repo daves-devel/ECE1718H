@@ -31,7 +31,7 @@ struct MDIFF InterFramePrediction(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint
 	int REF_PREV = 0;
 
 	int PREV_GVM_NOT_AVAILAIBLE=0;
-	if (col != 0 && QP >= 7 && RDO_EN) {
+	if (col != 0 && QP >= 6 && RDO_EN) {//QP HARD CODED
 		GMV_X_PREV	=	MDIFF_PREVIOUS[row/block][(col/block) - 1].X;
 		GMV_Y_PREV	=	MDIFF_PREVIOUS[row/block][(col/block) - 1].Y;
 		SAD_PREV	=		MDIFF_PREVIOUS[row / block][(col / block) - 1].SAD;
@@ -57,7 +57,7 @@ struct MDIFF InterFramePrediction(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint
 			}
 
 			//RDO CODE
-			if (col != 0 && QP >= 7 && RDO_EN && !PREV_GVM_NOT_AVAILAIBLE) {
+			if (col != 0 && QP >= 6 && RDO_EN && !PREV_GVM_NOT_AVAILAIBLE) { //QP Harcoded
 				BEST_GMV.ref = ref;
 				BEST_GMV.X = GMV_X_PREV;
 				BEST_GMV.Y = GMV_Y_PREV;
