@@ -1,4 +1,5 @@
 ﻿  Decoder.cpp
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\common.h(126): warning C4018: '<': signed/unsigned mismatch
 c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\reconstructed.h(38): warning C4018: '<': signed/unsigned mismatch
 c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\reconstructed.h(62): warning C4018: '<': signed/unsigned mismatch
 c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\quantization.h(67): warning C4244: '=': conversion from 'double' to 'int32_t', possible loss of data

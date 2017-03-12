@@ -238,8 +238,8 @@ int main(int argCnt, char **args)
 
 	// Close Files
 	fclose(decfile);
-	fclose(mdiff_bitcount_file);
-	fclose(coeff_bitcount_file);
+	//fclose(mdiff_bitcount_file);
+	//fclose(coeff_bitcount_file);
 	return 0;
 
 }
