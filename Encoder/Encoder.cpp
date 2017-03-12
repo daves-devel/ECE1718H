@@ -16,6 +16,45 @@
 #include <discrete_cosine_transform.h>
 #include <DiffEnc.h>
 
+void write_mat(FILE *fp, uint8_t**m, int N, int M) {
+
+	int i, j;
+	for (i = 0; i< N; i++) {
+		fprintf(fp, "%d", m[i][0]);
+		for (j = 1; j < M; j++) {
+			fprintf(fp, ",%d", m[i][j]);
+		}
+		fprintf(fp, "\n");
+	}
+	fprintf(fp, "\n");
+}
+
+void write_mat2(FILE *fp, int32_t**m, int N, int M) {
+
+	int i, j;
+	for (i = 0; i< N; i++) {
+		fprintf(fp, "%d", m[i][0]);
+		for (j = 1; j < M; j++) {
+			fprintf(fp, ",%d", m[i][j]);
+		}
+		fprintf(fp, "\n");
+	}
+	fprintf(fp, "\n");
+}
+
+void write_mat3(FILE *fp, int8_t**m, int N, int M) {
+
+	int i, j;
+	for (i = 0; i< N; i++) {
+		fprintf(fp, "%d", m[i][0]);
+		for (j = 1; j < M; j++) {
+			fprintf(fp, ",%d", m[i][j]);
+		}
+		fprintf(fp, "\n");
+	}
+	fprintf(fp, "\n");
+}
+
 int main(int argCnt, char **args)
 {
 
@@ -148,6 +187,10 @@ int main(int argCnt, char **args)
 	mdiff_bitcount_file = fopen(mdiff_bitcount_name, "w");
 	frame_header_file = fopen(frame_header_name, "w+b");
 	FILE* recfile = fopen(recfile_name, "w+b");
+
+	FILE* reffile = fopen("res_enc.csv", "w");
+	FILE* dectcfile = fopen("dec_tc_enc.csv", "w");
+	FILE* decresfile = fopen("dec_res_enc.csv", "w");
 
 	// TODO Make these 2D buffers, and add the Encoder functions to the frame flow
 	unsigned int  FRAME_SIZE = width*height;
@@ -461,6 +504,10 @@ int main(int argCnt, char **args)
 		entropy_wrapper(QTC_FRAME_2D, block, height, width, frame);
 		diff_enc_wrapper(MDIFF_VECTOR, MDIFF_VECTOR_DIFF, FrameType, height, width, block, frame);
 		encode_mdiff_wrapper(MDIFF_VECTOR_DIFF, height, width, block, frame, FrameType);
+		
+		write_mat(reffile, REF_FRAME_2D, height, width);
+		write_mat3(decresfile, DEC_RES_FRAME_2D, height, width);
+		write_mat2(dectcfile, DEC_TC_FRAME_2D, height, width);
 
 		// File Dumps
 		uint8_t *REC_FRAME = new uint8_t[FRAME_SIZE];
@@ -533,6 +580,9 @@ int main(int argCnt, char **args)
 	fclose(recfile);
 	fclose(mdiff_bitcount_file);
 	fclose(coeff_bitcount_file);
+	fclose(reffile);
+	fclose(decresfile);
+	fclose(dectcfile);
 	return 0;
 
 }
