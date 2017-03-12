@@ -143,6 +143,9 @@ void decode_mdiff(MDIFF** MDIFF_VECTOR_DIFF, int row, int col, int Frametype, FI
 		fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
 		result = decode_signed_golomb_value(encoded_value, &count);
 		MDIFF_VECTOR_DIFF[row][col].Y = result;
+		fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
+		result = decode_signed_golomb_value(encoded_value, &count);
+		MDIFF_VECTOR_DIFF[row][col].ref = result;
 	}
 
 }
