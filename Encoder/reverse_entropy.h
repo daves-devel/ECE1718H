@@ -96,7 +96,7 @@ void reverse_entropy(int ** QTC_FRAME, int block, int height, int width, int fra
 	int col = 0;
 	FILE* golomb_file;
 	char mdiff_golomb_name[0x100];
-	snprintf(mdiff_golomb_name, sizeof(mdiff_golomb_name), "COEFF_GOLOMB_CODING_%d", frame);
+	snprintf(mdiff_golomb_name, sizeof(mdiff_golomb_name), "%s\\COEFF_GOLOMB_CODING_%d", filepath, frame);
 	golomb_file = fopen(mdiff_golomb_name, "rb");
 
 	int ** QTC_BLOCK = new int*[block];
@@ -151,7 +151,7 @@ void decode_mdiff(MDIFF** MDIFF_VECTOR_DIFF, int row, int col, int Frametype, FI
 void decode_mdiff_wrapper(MDIFF** MDIFF_VECTOR_DIFF, int height, int width, int block, int frame, int Frametype) {
 	FILE* file_mdiff_golomb;
 	char mdiff_golomb_name[0x100];
-	snprintf(mdiff_golomb_name, sizeof(mdiff_golomb_name), "MDIFF_GOLOMB_%d", frame);
+	snprintf(mdiff_golomb_name, sizeof(mdiff_golomb_name), "%s\\MDIFF_GOLOMB_%d", filepath, frame);
 	file_mdiff_golomb = fopen(mdiff_golomb_name, "rb");
 	while (!feof(file_mdiff_golomb)) {
 		for (int row = 0; row < height; row = row + block) {

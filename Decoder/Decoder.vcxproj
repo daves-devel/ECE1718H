@@ -88,7 +88,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions); _CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions); _CRT_SECURE_NO_WARNINGS; ; TRACE_ON</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Encoder</AdditionalIncludeDirectories>
     </ClCompile>
@@ -103,7 +103,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions); ; TRACE_ON</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Encoder</AdditionalIncludeDirectories>
     </ClCompile>
@@ -120,7 +120,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions); ; TRACE_ON</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Encoder</AdditionalIncludeDirectories>
     </ClCompile>
@@ -139,7 +139,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions); ; TRACE_ON</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Encoder</AdditionalIncludeDirectories>
     </ClCompile>
@@ -154,11 +154,13 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Encoder\common.h" />
     <ClInclude Include="..\Encoder\DiffDec.h" />
     <ClInclude Include="..\Encoder\DiffEnc.h" />
     <ClInclude Include="..\Encoder\entropy.h" />
+    <ClInclude Include="..\Encoder\quantization.h" />
+    <ClInclude Include="..\Encoder\reconstructed.h" />
     <ClInclude Include="..\Encoder\residual.h" />
-    <ClInclude Include="..\header\reconstructed.h" />
     <ClInclude Include="..\header\stdint.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />

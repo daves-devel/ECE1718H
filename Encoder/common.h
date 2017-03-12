@@ -15,6 +15,7 @@
 FILE* coeff_bitcount_file;
 FILE* mdiff_bitcount_file;
 FILE* frame_header_file;
+char filepath[500];
 
 enum FRAME {
 	IFRAME = 0,
