@@ -38,6 +38,8 @@ int main(int argCnt, char **args)
 	int QP = -1;
 	int nRefFrames = 1;
 	int VBSEnable = 0;
+	int RDOEnable = 0;
+	int FMEnable = 0;
 
 	args++;
 	int tmpArgCnt = 1;
@@ -136,7 +138,18 @@ int main(int argCnt, char **args)
 			args++;
 			tmpArgCnt += 2;
 		}
-
+		else if (!strcmp((*args) + 1, "RDOEnable")) {
+			args++;
+			RDOEnable = atoi(*args);
+			args++;
+			tmpArgCnt += 2;
+		}
+		else if (!strcmp((*args) + 1, "FMEnable")) {
+			args++;
+			FMEnable = atoi(*args);
+			args++;
+			tmpArgCnt += 2;
+		}
 		else {
 			printf("Huh? I don't know %s (option #%d) \n", *args, tmpArgCnt);
 			exit(-1);
