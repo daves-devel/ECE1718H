@@ -3,7 +3,7 @@
 bool ValidQP(uint32_t  QP, uint32_t  block);
 void GenerateQ_Matrix(uint32_t  ** Q_Matrix, uint32_t  QP, uint32_t  block);
 int QuantizeBlock(int32_t  ** QTC_FRAME, int32_t ** TC_FRAME, uint32_t** QP_FRAME,uint32_t row, uint32_t col, uint32_t  width, uint32_t  height, uint32_t  QP, uint32_t  block);
-int ScaleBlock(int32_t  ** TC_FRAME, int32_t ** QTC_FRAME, uint32_t** QP_FRAME, uint32_t row, uint32_t col, uint32_t  width, uint32_t  height, uint32_t  QP, uint32_t  block);
+int ScaleBlock(int32_t  ** TC_FRAME, int32_t ** QTC_FRAME, int32_t** QP_FRAME, uint32_t row, uint32_t col, uint32_t  width, uint32_t  height, uint32_t  QP, uint32_t  block);
 
 bool ValidQP(uint32_t  QP, uint32_t  block) {
 
@@ -71,7 +71,7 @@ int QuantizeBlock(int32_t  ** QTC_FRAME, int32_t ** TC_FRAME, uint32_t ** QP_FRA
 
 }
 
-int ScaleBlock(int32_t  ** TC_FRAME, int32_t ** QTC_FRAME, uint32_t** QP_FRAME,uint32_t row, uint32_t col,uint32_t  width, uint32_t  height, uint32_t  QP, uint32_t  block) {
+int ScaleBlock(int32_t  ** TC_FRAME, int32_t ** QTC_FRAME, int32_t** QP_FRAME,uint32_t row, uint32_t col,uint32_t  width, uint32_t  height, uint32_t  QP, uint32_t  block) {
 
 	if (!ValidQP(QP, block)) {
 		return 1;
