@@ -12,7 +12,6 @@ def main(argv):
 	height 			= 0
 	frames			= 0
 	searchrange		= 0
-	rounding		= 0
 	with_old		= 0
 	height_old  	= 0
 	block 			= 0
@@ -105,7 +104,7 @@ def main(argv):
 	encode_command += " -frames %s" 						                    %(frames)
 	encode_command += " -block %s"							                    %(block)
 	encode_command += " -range %s"							                    %(searchrange)
-	encode_command += " -coeff_bitcount_name testdata\%_COEFF_BITCOUNT.txt"		%(testname)
+	encode_command += " -coeff_bitcount_name testdata\%s_COEFF_BITCOUNT.txt"	%(testname)
 	encode_command += " -qp %d" 							                    %(qp)
 	encode_command += " -i_period %d"						                    %(i_period)
 	encode_command += " -nRefFrames %d%" 						                %(nRefFrames)
@@ -149,7 +148,7 @@ def main(argv):
 	analyze_command += " -decfile testdata\%s_Decoded_%dx%d@%df.yuv"            %(testname,width,height,frames)
 	analyze_command += " -SAD testdata\%s_SAD.txt"                              %(testname)
 
-	print ("\nAnalyze SAD:\n" + analyze_command)
-	os.system(analyzse_command)
+	print ("\nAnalyze Frames:\n" + analyze_command)
+	os.system(analyzs_command)
 
 main (sys.argv)
