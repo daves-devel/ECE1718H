@@ -1,5 +1,4 @@
-﻿  stdafx.cpp
-  Decoder.cpp
+﻿  Decoder.cpp
 c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\common.h(126): warning C4018: '<': signed/unsigned mismatch
 c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\intraframeprediction.h(67): warning C4018: '<': signed/unsigned mismatch
 c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\intraframeprediction.h(68): warning C4018: '<': signed/unsigned mismatch
@@ -26,8 +25,7 @@ c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decod
 c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(258): warning C4018: '<': signed/unsigned mismatch
 c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(277): warning C4018: '<': signed/unsigned mismatch
 c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(127): warning C4101: 'sz': unreferenced local variable
-  Generating Code...
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\quantization.h(72): warning C4715: 'QuantizeBlock': not all control paths return a value
 c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\quantization.h(102): warning C4715: 'ScaleBlock': not all control paths return a value
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\quantization.h(72): warning C4715: 'QuantizeBlock': not all control paths return a value
   Decoder.vcxproj -> C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\Debug\Decoder.exe
   Decoder.vcxproj -> C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\Debug\Decoder.pdb (Full PDB)

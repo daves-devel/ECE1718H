@@ -211,7 +211,7 @@ int main(int argCnt, char **args)
 	FILE* recfile = fopen(recfile_name, "w+b");
 	FILE* runtime_file = fopen(runtime_name, "w");
 
-	FILE* reffile = fopen("res_enc.csv", "w");
+	FILE* reffile = fopen("ref_enc.csv", "w");
 	FILE* dectcfile = fopen("dec_tc_enc.csv", "w");
 	FILE* decresfile = fopen("dec_res_enc.csv", "w");
 
