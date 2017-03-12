@@ -145,7 +145,7 @@ int main(int argCnt, char **args)
 	int8_t** DEC_RES_FRAME_2D = new  int8_t*[height];
 	int32_t** DEC_TC_FRAME_2D = new int32_t*[height];
 	int32_t** QTC_FRAME_2D = new int32_t*[height];
-	uint8_t** QP_FRAME_2D = new uint8_t*[height];
+	uint32_t** QP_FRAME_2D = new uint32_t*[height];
 
 	for (unsigned int row = 0; row < height; row++) {
 		DEC_FRAME_2D[row] = new uint8_t[width];
@@ -156,7 +156,7 @@ int main(int argCnt, char **args)
 		DEC_RES_FRAME_2D[row] = new  int8_t[width];
 		DEC_TC_FRAME_2D[row] = new int32_t[width];
 		QTC_FRAME_2D[row] = new int32_t[width];
-		QP_FRAME_2D[row] = new uint8_t[width];
+		QP_FRAME_2D[row] = new uint32_t[width];
 	}
 
 
