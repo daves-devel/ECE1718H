@@ -2,18 +2,18 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommandArguments>-decfile "C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\foreman_dec_352_352x288.yuv" -filepath "C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder" -frame_header "C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\FRAME_HEADER.txt" -frames 10 -qp 4</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>-decfile "C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\foreman_dec_352x288.yuv" -filepath "C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Encoder\Encoder" -frame_header "C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\FRAME_HEADER.txt" -frames 2 -qp 4</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LocalDebuggerCommandArguments>-decfile "C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\foreman_dec_352_352x288.yuv" -filepath "C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder" -frame_header "C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\FRAME_HEADER.txt" -frames 10 -qp 4</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>-decfile "C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\foreman_dec_352x288.yuv" -filepath "C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Encoder\Encoder" -frame_header "C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\FRAME_HEADER.txt" -frames 2 -qp 4</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LocalDebuggerCommandArguments>-decfile "C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\foreman_dec_352_352x288.yuv" -filepath "C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder" -frame_header "C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\FRAME_HEADER.txt" -frames 10 -qp 4</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>-decfile "C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\foreman_dec_352x288.yuv" -filepath "C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Encoder\Encoder" -frame_header "C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\FRAME_HEADER.txt" -frames 2 -qp 4</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LocalDebuggerCommandArguments>-decfile "C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\foreman_dec_352_352x288.yuv" -filepath "C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder" -frame_header "C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\FRAME_HEADER.txt" -frames 10 -qp 4</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>-decfile "C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\foreman_dec_352x288.yuv" -filepath "C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Encoder\Encoder" -frame_header "C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\FRAME_HEADER.txt" -frames 2 -qp 4</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
 </Project>
