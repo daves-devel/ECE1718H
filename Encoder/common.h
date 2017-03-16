@@ -113,41 +113,52 @@ const uint8_t EVX_LOG2_BYTE_LUT[] = {
 	7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
 };
 
-void VBSWinner(MDIFF** MDIFF_CUR, MDIFF** MDIFF_SLPIT, int row, int col, int block);
+void VBSWinner(MDIFF** MDIFF_CUR, MDIFF** MDIFF_SLPIT, int row, int col, int block, uint8_t** CUR_FRAME_2D, uint8_t**CUR_FRAME_2DS);
 
-void VBSWinner(MDIFF** MDIFF_CUR, MDIFF** MDIFF_SPLIT, int row, int col, int block) {
+void VBSWinner(MDIFF** MDIFF_CUR, MDIFF** MDIFF_SPLIT, int row, int col, int block, uint8_t** CUR_FRAME_2D, uint8_t**CUR_FRAME_2DS) {
+	int row_split = row / (block / 2);
+	int col_split = col / (block / 2);
+	int row_org = row / block;
+	int col_org = col / block;
 	int SPLIT_SAD = 0;
-	for (int j = 0; j < 4; j++) {
-		for (int i = 0; i < 4; i++) {
-			SPLIT_SAD=MDIFF_SPLIT[row + j][col + i].SAD;
+	for (int j = 0; j < 2; j++) {
+		for (int i = 0; i < 2; i++) {
+			SPLIT_SAD=MDIFF_SPLIT[row_split + j][col_split + i].SAD + SPLIT_SAD;
 		}
 	}
-	SPLIT_SAD = SPLIT_SAD / 4;
-	if (SPLIT_SAD < MDIFF_CUR[row][col].SAD) {
+	MDIFF_CUR[row_org][col_org].split=0;
+	if (SPLIT_SAD < MDIFF_CUR[row_org][col_org].SAD) {
 		//Adding X and Y for Inter
-		MDIFF_CUR[row][col].X = MDIFF_SPLIT[row][col].X;
-		MDIFF_CUR[row][col].X2 = MDIFF_SPLIT[row][col + 1].X;
-		MDIFF_CUR[row][col].X3 = MDIFF_SPLIT[row + 1][col].X;
-		MDIFF_CUR[row][col].X4 = MDIFF_SPLIT[row][col + 1].X;
-		MDIFF_CUR[row][col].Y = MDIFF_SPLIT[row][col].Y;
-		MDIFF_CUR[row][col].Y2 = MDIFF_SPLIT[row][col + 1].Y;
-		MDIFF_CUR[row][col].Y3 = MDIFF_SPLIT[row + 1][col].Y;
-		MDIFF_CUR[row][col].Y4 = MDIFF_SPLIT[row][col + 1].Y;
+		MDIFF_CUR[row_org][col_org].X =		MDIFF_SPLIT[row_split]		[col_split].X;
+		MDIFF_CUR[row_org][col_org].X2 =	MDIFF_SPLIT[row_split]		[col_split + 1].X;
+		MDIFF_CUR[row_org][col_org].X3 =	MDIFF_SPLIT[row_split + 1]	[col_split].X;
+		MDIFF_CUR[row_org][col_org].X4 =	MDIFF_SPLIT[row_split + 1]	[col_split + 1].X;
+		MDIFF_CUR[row_org][col_org].Y =		MDIFF_SPLIT[row_split]		[col_split].Y;
+		MDIFF_CUR[row_org][col_org].Y2 =	MDIFF_SPLIT[row_split]		[col_split + 1].Y;
+		MDIFF_CUR[row_org][col_org].Y3 =	MDIFF_SPLIT[row_split + 1]	[col_split].Y;
+		MDIFF_CUR[row_org][col_org].Y4 =	MDIFF_SPLIT[row_split + 1]	[col_split + 1].Y;
 		//Adding modes for Intra
-		MDIFF_CUR[row][col].MODE = MDIFF_SPLIT[row][col].MODE;
-		MDIFF_CUR[row][col].MODE2 = MDIFF_SPLIT[row][col+1].MODE;
-		MDIFF_CUR[row][col].MODE3 = MDIFF_SPLIT[row+1][col].MODE;
-		MDIFF_CUR[row][col].MODE4 = MDIFF_SPLIT[row][col+1].MODE;
+		MDIFF_CUR[row_org][col_org].MODE =	MDIFF_SPLIT[row_split]		[col_split].MODE;
+		MDIFF_CUR[row_org][col_org].MODE2 = MDIFF_SPLIT[row_split]		[col_split +1].MODE;
+		MDIFF_CUR[row_org][col_org].MODE3 = MDIFF_SPLIT[row_split + 1]	[col_split].MODE;
+		MDIFF_CUR[row_org][col_org].MODE4 = MDIFF_SPLIT[row_split + 1]	[col_split +1].MODE;
 		//SAD
-		MDIFF_CUR[row][col].SAD = SPLIT_SAD;
+		MDIFF_CUR[row_org][col_org].SAD = SPLIT_SAD;
 		//NORM TODO
 
 		//REF
-		MDIFF_CUR[row][col].ref = MDIFF_SPLIT[row][col].ref;
-		MDIFF_CUR[row][col].ref2 = MDIFF_SPLIT[row][col + 1].ref;
-		MDIFF_CUR[row][col].ref3 = MDIFF_SPLIT[row + 1][col].ref;
-		MDIFF_CUR[row][col].ref4 = MDIFF_SPLIT[row][col + 1].ref;
+		MDIFF_CUR[row_org][col_org].ref	 = MDIFF_SPLIT[row_split]		[col_split].ref;
+		MDIFF_CUR[row_org][col_org].ref2 = MDIFF_SPLIT[row_split]		[col_split + 1].ref;
+		MDIFF_CUR[row_org][col_org].ref3 = MDIFF_SPLIT[row_split + 1]	[col_split].ref;
+		MDIFF_CUR[row_org][col_org].ref4 = MDIFF_SPLIT[row_split + 1]	[col_split + 1].ref;
 
+		//SPLIT
+		MDIFF_CUR[row_org][col_org].split = 1;
+		for (int row = row_org; row < row_org + block; row++) {
+			for (int col = col_org; col < col_org + block; col++) {
+				CUR_FRAME_2D[row][col] = CUR_FRAME_2DS[row][col];
+			}
+		}
 	}
 
 }
