@@ -53,7 +53,9 @@ void diff_enc_wrapper(MDIFF** MDIFF_VECTOR, MDIFF** MDIFF_VECTOR_DIFF, int Frame
 					MDIFF_VECTOR[row / block][col / block].ref, MDIFF_VECTOR[row / block][col / block].ref2, MDIFF_VECTOR[row / block][col / block].ref3, MDIFF_VECTOR[row / block][col / block].ref4);
 			}
 			fprintf(file_vector_aft, "Block Y=%d X=%d\n", row / block, col / block);
-			fprintf(file_vector_aft, "FRAME_TYPE: %d MODE: %d X: %d Y: %d ref %d\n", FrameType, MDIFF_VECTOR_DIFF[row / block][col / block].MODE, MDIFF_VECTOR_DIFF[row / block][col / block].X, MDIFF_VECTOR_DIFF[row / block][col / block].Y, MDIFF_VECTOR_DIFF[row / block][col / block].ref);
+			fprintf(file_vector_aft, "FRAME_TYPE: %d MODE: %d X: %d Y: %d ref %d\n", FrameType, MDIFF_VECTOR_DIFF[row / block][col / block].MODE, 
+				MDIFF_VECTOR_DIFF[row / block][col / block].X, MDIFF_VECTOR_DIFF[row / block][col / block].Y, 
+				MDIFF_VECTOR_DIFF[row / block][col / block].ref);
 #endif // TRACE_ON
 
 		}
