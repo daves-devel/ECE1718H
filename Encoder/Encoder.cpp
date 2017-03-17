@@ -469,8 +469,8 @@ int main(int argCnt, char **args)
 				ReconstructBlock(REC_FRAME_2D, DEC_RES_FRAME_2D, REF_FRAME_2D, row, col, block);
 
 				if (VBSEnable) {//start VBSEnable code
-					for (int row2 = row; row2 < row + (block / block_split); row2 += block_split) {
-						for (int col2 = col; col2 < col + (block / block_split); col2 += block_split) {
+					for (int row2 = row; row2 < row + block; row2 += block_split) {
+						for (int col2 = col; col2 < col + block; col2 += block_split) {
 
 							// IDEALLY THREAD EVERYTHING IN THIS FOR LOOP FOR PFRAMES
 
@@ -480,19 +480,19 @@ int main(int argCnt, char **args)
 							}
 
 							if (FrameType == PFRAME) {
-								MDIFF_VECTORS[row2 / block_split][col2 / block_split] = InterFramePrediction(CUR_FRAME_2DS, REC_FRAME_2DS, REF_FRAME_2DS, row2, col2, width, height, block_split, range, 1, MDIFF_VECTOR, QP, RDOEnable);
+								MDIFF_VECTORS[row2 / block_split][col2 / block_split] = InterFramePrediction(CUR_FRAME_2DS, REC_FRAME_2DS, REF_FRAME_2DS, row2, col2, width, height, block_split, range, 1, MDIFF_VECTORS, QP, RDOEnable);
 								//Multireference code start Only activated if nRefFrames>=2
 								if ((frame%i_period) >= 2 && nRefFrames >= 2) {
-									MDIFF_VECTOR_2[row2 / block_split][col2 / block_split] = InterFramePrediction(CUR_FRAME_2DS, REC_FRAME_2D_2S, REF_FRAME_2D_2S, row2, col2, width, height, block_split, range, 2, MDIFF_VECTOR, QP, RDOEnable);
+									MDIFF_VECTOR_2S[row2 / block_split][col2 / block_split] = InterFramePrediction(CUR_FRAME_2DS, REC_FRAME_2D_2S, REF_FRAME_2D_2S, row2, col2, width, height, block_split, range, 2, MDIFF_VECTORS, QP, RDOEnable);
 									MDIFF_VECTORS[row2 / block_split][col2 / block_split] = SelectRefWinner(MDIFF_VECTORS[row2 / block_split][col2 / block_split], MDIFF_VECTOR_2S[row2 / block_split][col2 / block_split], REF_FRAME_2DS, REF_FRAME_2D_2S, block_split, row2, col2);
 								}
 								if ((frame%i_period) >= 3 && nRefFrames >= 3) {
-									MDIFF_VECTOR_3S[row2 / block_split][col2 / block_split] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D_3, REF_FRAME_2D_3, row2, col2, width, height, block_split, range, 3, MDIFF_VECTOR, QP, RDOEnable);
+									MDIFF_VECTOR_3S[row2 / block_split][col2 / block_split] = InterFramePrediction(CUR_FRAME_2DS, REC_FRAME_2D_3S, REF_FRAME_2D_3S, row2, col2, width, height, block_split, range, 3, MDIFF_VECTORS, QP, RDOEnable);
 									MDIFF_VECTORS[row2 / block_split][col2 / block_split] = SelectRefWinner(MDIFF_VECTORS[row2 / block_split][col2 / block_split], MDIFF_VECTOR_3S[row2 / block_split][col2 / block_split], REF_FRAME_2DS, REF_FRAME_2D_3S, block_split, row2, col2);
 
 								}
 								if ((frame%i_period) >= 4 && nRefFrames >= 4) {
-									MDIFF_VECTOR_4S[row2 / block_split][col2 / block_split] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D_4, REF_FRAME_2D_4, row2, col2, width, height, block_split, range, 4, MDIFF_VECTOR, QP, RDOEnable);
+									MDIFF_VECTOR_4S[row2 / block_split][col2 / block_split] = InterFramePrediction(CUR_FRAME_2DS, REC_FRAME_2D_4S, REF_FRAME_2D_4S, row2, col2, width, height, block_split, range, 4, MDIFF_VECTORS, QP, RDOEnable);
 									MDIFF_VECTORS[row2 / block_split][col2 / block_split] = SelectRefWinner(MDIFF_VECTORS[row2 / block_split][col2 / block_split], MDIFF_VECTOR_4S[row2 / block_split][col2 / block_split], REF_FRAME_2DS, REF_FRAME_2D_4S, block_split, row2, col2);
 								}
 								//Multireference code end
@@ -518,10 +518,8 @@ int main(int argCnt, char **args)
 						}
 					}
 					//Pick Winner
-					VBSWinner(MDIFF_VECTOR, MDIFF_VECTORS, row, col, block);
+					VBSWinner(MDIFF_VECTOR, MDIFF_VECTORS, row, col, block, REC_FRAME_2D, REC_FRAME_2DS);
 				}//End of VBSenable code
-
-				
 			}
 		}
 
@@ -549,7 +547,6 @@ int main(int argCnt, char **args)
 	int stop_s = clock();
 	fprintf(runtime_file,"%.2f\n", (double)(clock() - start_s) / CLOCKS_PER_SEC);
 		
-
 	// Deallocate Memory
 	for (unsigned int row = 0; row < height; row++) {
 		delete		CUR_FRAME_2D[row];
