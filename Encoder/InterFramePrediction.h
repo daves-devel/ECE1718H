@@ -131,3 +131,26 @@ struct MDIFF MinSADMinNORM(struct MDIFF BEST_GMV,struct MDIFF NEW_GMV) {
 
 	return BEST_GMV;
 }
+
+struct MDIFF MultiRefInterPrediction(uint8_t **CUR_FRAME_2D, uint8_t **REC_FRAME_2D_2, uint8_t **REC_FRAME_2D_3, uint8_t **REC_FRAME_2D_4,
+										uint8_t **REF_FRAME_2D, uint8_t **REF_FRAME_2D_2, uint8_t **REF_FRAME_2D_3, uint8_t **REF_FRAME_2D_4,
+										int row, int col, int width, int height, int block, int range, int QP, int RDOEnable, int nRefFrames, int frame, int i_period,
+										MDIFF **MDIFF_VECTOR, MDIFF **MDIFF_VECTOR_2, MDIFF **MDIFF_VECTOR_3, MDIFF **MDIFF_VECTOR_4) {
+
+	if ((frame%i_period) >= 2 && nRefFrames >= 2) {
+		MDIFF_VECTOR_2[row / block][col / block] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D_2, REF_FRAME_2D_2, row, col, width, height, block, range, 2, MDIFF_VECTOR, QP, RDOEnable);
+		MDIFF_VECTOR[row / block][col / block] = SelectRefWinner(MDIFF_VECTOR[row / block][col / block], MDIFF_VECTOR_2[row / block][col / block], REF_FRAME_2D, REF_FRAME_2D_2, block, row, col);
+	}
+	if ((frame%i_period) >= 3 && nRefFrames >= 3) {
+		MDIFF_VECTOR_3[row / block][col / block] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D_3, REF_FRAME_2D_3, row, col, width, height, block, range, 3, MDIFF_VECTOR, QP, RDOEnable);
+		MDIFF_VECTOR[row / block][col / block] = SelectRefWinner(MDIFF_VECTOR[row / block][col / block], MDIFF_VECTOR_3[row / block][col / block], REF_FRAME_2D, REF_FRAME_2D_3, block, row, col);
+
+	}
+	if ((frame%i_period) >= 4 && nRefFrames >= 4) {
+		MDIFF_VECTOR_4[row / block][col / block] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D_4, REF_FRAME_2D_4, row, col, width, height, block, range, 4, MDIFF_VECTOR, QP, RDOEnable);
+		MDIFF_VECTOR[row / block][col / block] = SelectRefWinner(MDIFF_VECTOR[row / block][col / block], MDIFF_VECTOR_4[row / block][col / block], REF_FRAME_2D, REF_FRAME_2D_4, block, row, col);
+	}
+	return MDIFF_VECTOR[row / block][col / block];
+}
+
+

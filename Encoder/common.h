@@ -15,7 +15,12 @@
 FILE* coeff_bitcount_file;
 FILE* mdiff_bitcount_file;
 FILE* frame_header_file;
-char filepath[500];
+FILE* golomb_file;
+FILE* mdiff_golomb;
+char golomb_name[500] = "";
+char filepath[500] = "";
+char mdiff_name[500] = "";
+
 
 enum FRAME {
 	IFRAME = 0,
