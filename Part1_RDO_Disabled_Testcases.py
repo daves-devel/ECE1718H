@@ -52,4 +52,4 @@ for i_period in i_period_list:
 		testname 		= "IP_%d_Block_%d_QP_%d" %(i_period,block,qp)
 		command 		= "codec_engine.py -infile %s -testname %s -width %d -height %d -frames %d -searchrange %d -nRefFrames %d -VBSEnable %d -RDOEnable %d -FMEnabled %d -block %d -qp %d -i_period %d" %(infile,testname,width,height,frames,searchrange,nRefFrames,VBSEnable,RDOEnable,FMEnable,block,qp,i_period)
 		print ("\n" + testname + "\n=======================\n" + command+"\n")
-		os.system(command)
+		#os.system(command)

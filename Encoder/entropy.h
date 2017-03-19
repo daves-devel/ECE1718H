@@ -65,12 +65,12 @@ uint32_t encode_signed_golomb_value(int8_t input, uint8_t *count);
 
 void convert_signed_golomb_value(int *RLE, int total_counter, FILE* golomb_file, int &bitcount);
 int16_t decode_signed_golomb_value(uint32_t input, uint8_t *count);
-void entropy_wrapper(int ** QTC_FRAME, int block, int height, int width, int frame);
+int entropy_wrapper(int ** QTC_FRAME, int block, int height, int width, int frame);
 void fprintf_QTC_BLOCK(FILE* file, int ** in, int block, int row, int col);
 void fprintf_REORDER_BLOCK(FILE* file, int * in, int block, int row, int col);
 void fprintf_RLE(FILE* file, int * in, int total_counter, int row, int col);
 void encode_mdiff(MDIFF** MDIFF_VECTOR_DIFF, int row, int col, int Frametype, uint32_t *bitcount, FILE* mdiff_golomb);
-void encode_mdiff_wrapper(MDIFF** MDIFF_VECTOR_DIFF, int height, int width, int block, int frame, int Frametype);
+int encode_mdiff_wrapper(MDIFF** MDIFF_VECTOR_DIFF, int height, int width, int block, int frame, int Frametype, int row, int col);
 
 
 int rle_encode(int *COEFF_REORDER, int *RLE, int block){
@@ -125,24 +125,10 @@ void convert_signed_golomb_value(int *RLE, int total_counter, FILE * golomb_file
 	}
 }
 
-void encode_mdiff_wrapper(MDIFF** MDIFF_VECTOR_DIFF, int height, int width, int block, int frame, int Frametype) {
-	FILE* mdiff_golomb;
-	//FILE* bitcount_file;
-	char buf[0x100];
-	//char bitcount_name[0x100];
+int encode_mdiff_wrapper(MDIFF** MDIFF_VECTOR_DIFF, int height, int width, int block, int frame, int Frametype, int row, int col) {
 	uint32_t bitcount = 0;
-	snprintf(buf, sizeof(buf), "testdata\\MDIFF_GOLOMB_%d", frame);
-	mdiff_golomb = fopen(buf, "wb");
-//	snprintf(bitcount_name, sizeof(bitcount_name), "MDIFF_BITCOUNT_%d.txt", frame);
-//	bitcount_file = fopen(bitcount_name, "w");
-	for (int row = 0; row < height; row = row + block) {
-		for (int col = 0; col < width; col = col + block) {
-			encode_mdiff(MDIFF_VECTOR_DIFF, row / block, col / block, Frametype, &bitcount, mdiff_golomb);
-		}
-	}
-	fprintf(mdiff_bitcount_file, "%d,%d\n",frame,  bitcount);
-	//fclose(bitcount_file);
-	fclose(mdiff_golomb);
+	encode_mdiff(MDIFF_VECTOR_DIFF, row / block, col / block, Frametype, &bitcount, mdiff_golomb);
+	return bitcount;
 }
 
 void encode_mdiff(MDIFF** MDIFF_VECTOR_DIFF, int row, int col, int Frametype, uint32_t *bitcount, FILE* mdiff_golomb ) {
@@ -165,7 +151,7 @@ void encode_mdiff(MDIFF** MDIFF_VECTOR_DIFF, int row, int col, int Frametype, ui
 		*bitcount = count + *bitcount;
 	}
 }
-void entropy_wrapper(int ** QTC_FRAME, int block, int height, int width, int frame) {
+int entropy_wrapper(int ** QTC_FRAME, int block, int height, int width, int frame, int row, int col) {
 #ifdef TRACE_ON
 	FILE* file_qtc;
 	FILE* file_reorder;
@@ -178,14 +164,6 @@ void entropy_wrapper(int ** QTC_FRAME, int block, int height, int width, int fra
 	snprintf(buf, sizeof(buf), "testdata\\RLE_BLOCK_ENC_%d.txt", frame);
 	file_rle = fopen(buf, "w");
 #endif // TRACE_ON
-	//FILE * bitcount_file;
-	FILE * golomb_file;
-	char golomb_name[500] = "";
-	//char bitcount_name[500] = "";
-	snprintf(golomb_name, sizeof(golomb_name), "testdata\\COEFF_GOLOMB_CODING_%d", frame);
-	golomb_file = fopen(golomb_name, "wb");
-	//snprintf(bitcount_name, sizeof(bitcount_name), "COEFF_BITCOUNT_%d.txt", frame);
-	//bitcount_file = fopen(bitcount_name, "w");
 	int total_counter=0;
 	int bitcount=0;
 	int ** QTC_BLOCK = new int*[block];
@@ -194,31 +172,24 @@ void entropy_wrapper(int ** QTC_FRAME, int block, int height, int width, int fra
 	for (int i = 0; i < block; i++)
 		QTC_BLOCK[i] = new int[block];
 
-	for (int row = 0; row < height; row += block) {
-		for (int col = 0; col < width; col += block) {
-			for (int j = 0; j < block; j++)
-				for (int i = 0; i < block; i++)
-					QTC_BLOCK[j][i] = QTC_FRAME[row + j][col + i];//Copy block into QTC_BLOCK
-			total_counter = entropy(QTC_BLOCK, block, RLE, COEFF_REORDER, golomb_file, bitcount);
+	for (int j = 0; j < block; j++)
+		for (int i = 0; i < block; i++)
+			QTC_BLOCK[j][i] = QTC_FRAME[row + j][col + i];//Copy block into QTC_BLOCK
+	total_counter = entropy(QTC_BLOCK, block, RLE, COEFF_REORDER, golomb_file, bitcount);
 #ifdef TRACE_ON
 			fprintf_QTC_BLOCK(file_qtc, QTC_BLOCK, block, row, col);
 			fprintf_REORDER_BLOCK(file_reorder, COEFF_REORDER, block, row, col);
 			fprintf_RLE(file_rle, RLE, total_counter, row, col);
 #endif //TRACE_ON 
-		}
-	}
-	fprintf(coeff_bitcount_file, "%d,%d\n",frame,  bitcount);
 	delete QTC_BLOCK;
 	delete RLE;
 	delete COEFF_REORDER;
-	fclose(golomb_file);
-	//fclose(bitcount_file);
 #ifdef TRACE_ON
 	fclose(file_qtc);
 	fclose(file_reorder);
 	fclose(file_rle);
 #endif
-	return;
+	return bitcount;
 }
 
 int entropy(int ** QTC_BLOCK, int block, int * RLE, int * COEFF_REORDER, FILE* golomb_file, int &bitcount) {

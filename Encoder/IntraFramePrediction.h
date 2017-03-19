@@ -57,9 +57,11 @@ struct MDIFF IntraFramePrediction(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint
 
 	if (HORIZONTAL_SAD < VERTICAL_SAD) {
 		INTRA_MODE.MODE = HORIZONTAL;
+		INTRA_MODE.SAD = HORIZONTAL_SAD;
 	}
 	else {
 		INTRA_MODE.MODE = VERTICAL;
+		INTRA_MODE.SAD = VERTICAL_SAD;
 	}
 
 	// Fill the Reference Frame Block

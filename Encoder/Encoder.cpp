@@ -82,7 +82,8 @@ int main(int argCnt, char **args)
 	int VBSEnable = 0;
 	int RDOEnable = 0;
 	int FMEnable = 0;
-
+	int coeff_bitcount = 0;
+	int mdiff_bitcount = 0;
 	args++;
 	int tmpArgCnt = 1;
 	//  Parse Input Arguments
@@ -341,7 +342,15 @@ int main(int argCnt, char **args)
 	// Encode Each Frame
 	// =========================================
 	for (int frame = 0; frame < frames; frame++) {
-
+		//Open GOLOMB and MDIFF files
+		snprintf(golomb_name, sizeof(golomb_name), "testdata\\COEFF_GOLOMB_CODING_%d", frame);
+		snprintf(mdiff_bitcount_name, sizeof(mdiff_bitcount_name), "testdata\\MDIFF_GOLOMB_%d", frame);
+		mdiff_golomb = fopen(mdiff_bitcount_name, "wb");
+		golomb_file = fopen(golomb_name, "wb");
+		//Reset bitcounts
+		coeff_bitcount = 0;
+		mdiff_bitcount = 0;
+		
 		if ((frame%i_period) == 0) { 
 			FrameType = IFRAME;
 			fwrite(&FrameType, sizeof(int32_t), 1, frame_header_file);
@@ -432,22 +441,14 @@ int main(int argCnt, char **args)
 				}
 				
 				if (FrameType == PFRAME) {
-					MDIFF_VECTOR[row/block][col/block] = InterFramePrediction (CUR_FRAME_2D, REC_FRAME_2D, REF_FRAME_2D,row, col, width, height, block, range, 1);
+					MDIFF_VECTOR[row / block][col / block] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D, REF_FRAME_2D, row, col, width, height, block, range, 1, MDIFF_VECTOR, QP, RDOEnable);
 					//Multireference code start Only activated if nRefFrames>=2
-					if ((frame%i_period) >= 2 && nRefFrames >= 2) {
-						MDIFF_VECTOR_2[row / block][col / block] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D_2, REF_FRAME_2D_2, row, col, width, height, block, range, 2);
-						MDIFF_VECTOR[row / block][col / block] = SelectRefWinner(MDIFF_VECTOR[row/block][col/block], MDIFF_VECTOR_2[row/block][col/block], REF_FRAME_2D, REF_FRAME_2D_2, block, row, col);
+					if (nRefFrames >= 2) {
+						MDIFF_VECTOR[row / block][col / block] = MultiRefInterPrediction(CUR_FRAME_2D, REC_FRAME_2D_2, REC_FRAME_2D_3, REC_FRAME_2D_4,
+							REF_FRAME_2D, REF_FRAME_2D_2, REF_FRAME_2D_3, REF_FRAME_2D_4,
+							row, col, width, height, block, range, QP, RDOEnable, nRefFrames, frame, i_period,
+							MDIFF_VECTOR, MDIFF_VECTOR_2, MDIFF_VECTOR_3, MDIFF_VECTOR_4);
 					}
-					if ((frame%i_period) >= 3 && nRefFrames >= 3) {
-						MDIFF_VECTOR_3[row / block][col / block] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D_3, REF_FRAME_2D_3, row, col, width, height, block, range, 3);
-						MDIFF_VECTOR[row / block][col / block] = SelectRefWinner(MDIFF_VECTOR[row / block][col / block], MDIFF_VECTOR_3[row / block][col / block], REF_FRAME_2D, REF_FRAME_2D_3, block, row, col);
-
-					}
-					if ((frame%i_period) >= 4 && nRefFrames >= 4) {
-						MDIFF_VECTOR_4[row / block][col / block] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D_4, REF_FRAME_2D_4, row, col, width, height, block, range, 4);
-						MDIFF_VECTOR[row / block][col / block] = SelectRefWinner(MDIFF_VECTOR[row / block][col / block], MDIFF_VECTOR_4[row / block][col / block], REF_FRAME_2D, REF_FRAME_2D_4, block, row, col);
-					}
-					//Multireference code end
 				}
 
 				// RESIDUAL 
@@ -469,8 +470,8 @@ int main(int argCnt, char **args)
 				ReconstructBlock(REC_FRAME_2D, DEC_RES_FRAME_2D, REF_FRAME_2D, row, col, block);
 
 				if (VBSEnable) {//start VBSEnable code
-					for (int row2 = row; row2 < row + (block / block_split); row2 += block_split) {
-						for (int col2 = col; col2 < col + (block / block_split); col2 += block_split) {
+					for (int row2 = row; row2 < row + block; row2 += block_split) {
+						for (int col2 = col; col2 < col + block; col2 += block_split) {
 
 							// IDEALLY THREAD EVERYTHING IN THIS FOR LOOP FOR PFRAMES
 
@@ -480,22 +481,14 @@ int main(int argCnt, char **args)
 							}
 
 							if (FrameType == PFRAME) {
-								MDIFF_VECTORS[row2 / block_split][col2 / block_split] = InterFramePrediction(CUR_FRAME_2DS, REC_FRAME_2DS, REF_FRAME_2DS, row2, col2, width, height, block_split, range, 1);
+								MDIFF_VECTORS[row2 / block_split][col2 / block_split] = InterFramePrediction(CUR_FRAME_2DS, REC_FRAME_2DS, REF_FRAME_2DS, row2, col2, width, height, block_split, range, 1, MDIFF_VECTORS, QP, RDOEnable);
 								//Multireference code start Only activated if nRefFrames>=2
-								if ((frame%i_period) >= 2 && nRefFrames >= 2) {
-									MDIFF_VECTOR_2[row2 / block_split][col2 / block_split] = InterFramePrediction(CUR_FRAME_2DS, REC_FRAME_2D_2S, REF_FRAME_2D_2S, row2, col2, width, height, block_split, range, 2);
-									MDIFF_VECTORS[row2 / block_split][col2 / block_split] = SelectRefWinner(MDIFF_VECTORS[row2 / block_split][col2 / block_split], MDIFF_VECTOR_2S[row2 / block_split][col2 / block_split], REF_FRAME_2DS, REF_FRAME_2D_2S, block_split, row2, col2);
+								if (nRefFrames >= 2) {
+									MDIFF_VECTORS[row / block][col / block] = MultiRefInterPrediction(CUR_FRAME_2DS, REC_FRAME_2D_2S, REC_FRAME_2D_3S, REC_FRAME_2D_4S,
+										REF_FRAME_2DS, REF_FRAME_2D_2S, REF_FRAME_2D_3S, REF_FRAME_2D_4S,
+										row, col, width, height, block, range, QP, RDOEnable, nRefFrames, frame, i_period,
+										MDIFF_VECTORS, MDIFF_VECTOR_2S, MDIFF_VECTOR_3S, MDIFF_VECTOR_4S);
 								}
-								if ((frame%i_period) >= 3 && nRefFrames >= 3) {
-									MDIFF_VECTOR_3S[row2 / block_split][col2 / block_split] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D_3, REF_FRAME_2D_3, row2, col2, width, height, block_split, range, 3);
-									MDIFF_VECTORS[row2 / block_split][col2 / block_split] = SelectRefWinner(MDIFF_VECTORS[row2 / block_split][col2 / block_split], MDIFF_VECTOR_3S[row2 / block_split][col2 / block_split], REF_FRAME_2DS, REF_FRAME_2D_3S, block_split, row2, col2);
-
-								}
-								if ((frame%i_period) >= 4 && nRefFrames >= 4) {
-									MDIFF_VECTOR_4S[row2 / block_split][col2 / block_split] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D_4, REF_FRAME_2D_4, row2, col2, width, height, block_split, range, 4);
-									MDIFF_VECTORS[row2 / block_split][col2 / block_split] = SelectRefWinner(MDIFF_VECTORS[row2 / block_split][col2 / block_split], MDIFF_VECTOR_4S[row2 / block_split][col2 / block_split], REF_FRAME_2DS, REF_FRAME_2D_4S, block_split, row2, col2);
-								}
-								//Multireference code end
 							}
 
 							// RESIDUAL 
@@ -518,23 +511,21 @@ int main(int argCnt, char **args)
 						}
 					}
 					//Pick Winner
-					VBSWinner(MDIFF_VECTOR, MDIFF_VECTORS, row, col, block);
+					VBSWinner(MDIFF_VECTOR, MDIFF_VECTORS, row, col, block, REC_FRAME_2D, REC_FRAME_2DS);
 				}//End of VBSenable code
-
-				
+				 // Differential and Entropy Encode steps 
+				coeff_bitcount +=entropy_wrapper(QTC_FRAME_2D, block, height, width, frame, row, col);
+				diff_enc_wrapper(MDIFF_VECTOR, MDIFF_VECTOR_DIFF, FrameType, height, width, block, frame, row, col);
+				mdiff_bitcount +=encode_mdiff_wrapper(MDIFF_VECTOR_DIFF, height, width, block, frame, FrameType, row, col);
 			}
 		}
-
-		// Differential and Entropy Encode steps can be done on a whole frame here
-		entropy_wrapper(QTC_FRAME_2D, block, height, width, frame);
-		diff_enc_wrapper(MDIFF_VECTOR, MDIFF_VECTOR_DIFF, FrameType, height, width, block, frame);
-		encode_mdiff_wrapper(MDIFF_VECTOR_DIFF, height, width, block, frame, FrameType);
 		
 		write_mat(reffile, REF_FRAME_2D, height, width);
 		write_mat3(decresfile, DEC_RES_FRAME_2D, height, width);
 		write_mat2(dectcfile, DEC_TC_FRAME_2D, height, width);
 
 		// File Dumps
+		//RECON
 		uint8_t *REC_FRAME = new uint8_t[FRAME_SIZE];
 		for (int row = 0; row < height; row++)
 			for (int col = 0; col < width; col++)
@@ -543,13 +534,16 @@ int main(int argCnt, char **args)
 		fclose(recfile);//Weird behavior need to close file
 		recfile = fopen(recfile_name, "a+b");
 		fwrite(REC_FRAME, sizeof(uint8_t), FRAME_SIZE, recfile);
-
+		//Bitcount
+		fprintf(coeff_bitcount_file, "%d,%d\n", frame, coeff_bitcount);
+		fprintf(mdiff_bitcount_file, "%d,%d\n", frame, mdiff_bitcount);
+		fclose(mdiff_golomb);
+		fclose(golomb_file);
 	}
 	//Runtime
 	int stop_s = clock();
 	fprintf(runtime_file,"%.2f\n", (double)(clock() - start_s) / CLOCKS_PER_SEC);
 		
-
 	// Deallocate Memory
 	for (unsigned int row = 0; row < height; row++) {
 		delete		CUR_FRAME_2D[row];

@@ -1,6 +1,6 @@
 #include <common.h>
 
-struct MDIFF InterFramePrediction(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint8_t** REF_FRAME, int row, int col, int width, int height, int block, int range, int ref);
+struct MDIFF InterFramePrediction(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint8_t** REF_FRAME, int row, int col, int width, int height, int block, int range, int ref, MDIFF MDIFF_PREVIOUS, int QP, int RDO_EN);
 struct MDIFF MinSADMinNORM(struct MDIFF BEST_GMV, struct MDIFF NEW_GMV);
 struct MDIFF SelectRefWinner(struct MDIFF MDIFF_CUR, struct MDIFF MDIFFV_REF , uint8_t** REF_FRAME_CUR, uint8_t** REF_FRAME_REF, int block, int row, int col);
 
@@ -17,10 +17,35 @@ struct MDIFF SelectRefWinner(struct MDIFF CUR_MDIFF, struct MDIFF REF_MDIFF, uin
 	return WINNER;
 }
 
-struct MDIFF InterFramePrediction(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint8_t** REF_FRAME, int row, int col, int width, int height, int block, int range, int ref) {
+struct MDIFF InterFramePrediction(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint8_t** REF_FRAME, int row, int col, int width, int height, int block, int range, int ref, MDIFF **MDIFF_PREVIOUS, int QP, int RDO_EN) {
 
 	struct MDIFF BEST_GMV;
 	bool firstGMV = true;
+
+
+	//RDO CODE
+	int GMV_X_PREV = 0;
+	int GMV_Y_PREV = 0;
+	int SAD_PREV = 0;
+	int NORM_PREV = 0;
+	int REF_PREV = 0;
+
+	int PREV_GVM_NOT_AVAILAIBLE=0;
+	if (col != 0 && QP >= 6 && RDO_EN) {//QP HARD CODED
+		GMV_X_PREV	=	MDIFF_PREVIOUS[row/block][(col/block) - 1].X;
+		GMV_Y_PREV	=	MDIFF_PREVIOUS[row/block][(col/block) - 1].Y;
+		SAD_PREV	=		MDIFF_PREVIOUS[row / block][(col / block) - 1].SAD;
+		NORM_PREV	=		MDIFF_PREVIOUS[row/block][(col/block) - 1].NORM;
+		REF_PREV	=		MDIFF_PREVIOUS[row / block][(col / block) - 1].ref;
+
+		if (((GMV_X_PREV + col) < 0) || ((GMV_X_PREV + col + block) > width)) {
+			PREV_GVM_NOT_AVAILAIBLE=1;
+		}
+		if (((GMV_Y_PREV + row) < 0) || ((GMV_Y_PREV + row + block) > height)) {
+			PREV_GVM_NOT_AVAILAIBLE=1;
+		}
+	}
+	//RDO CODE END
 
 	for (int GMV_X = 0 - range; GMV_X <= range; GMV_X++) {
 		for (int GMV_Y = 0 - range; GMV_Y <= range; GMV_Y++) {
@@ -30,6 +55,18 @@ struct MDIFF InterFramePrediction(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint
 			if (((GMV_Y + row) < 0) || ((GMV_Y + row + block) > height)) {
 				continue; //Block outside search space so don't compute
 			}
+
+			//RDO CODE
+			if (col != 0 && QP >= 6 && RDO_EN && !PREV_GVM_NOT_AVAILAIBLE) { //QP Harcoded
+				BEST_GMV.ref = ref;
+				BEST_GMV.X = GMV_X_PREV;
+				BEST_GMV.Y = GMV_Y_PREV;
+				BEST_GMV.SAD = SAD_PREV;
+				BEST_GMV.NORM = NORM_PREV;
+				BEST_GMV.ref = REF_PREV;
+				break;
+			}
+			//RDO END
 
 			struct MDIFF NEW_GMV;
 			NEW_GMV.ref = ref;
@@ -94,3 +131,26 @@ struct MDIFF MinSADMinNORM(struct MDIFF BEST_GMV,struct MDIFF NEW_GMV) {
 
 	return BEST_GMV;
 }
+
+struct MDIFF MultiRefInterPrediction(uint8_t **CUR_FRAME_2D, uint8_t **REC_FRAME_2D_2, uint8_t **REC_FRAME_2D_3, uint8_t **REC_FRAME_2D_4,
+										uint8_t **REF_FRAME_2D, uint8_t **REF_FRAME_2D_2, uint8_t **REF_FRAME_2D_3, uint8_t **REF_FRAME_2D_4,
+										int row, int col, int width, int height, int block, int range, int QP, int RDOEnable, int nRefFrames, int frame, int i_period,
+										MDIFF **MDIFF_VECTOR, MDIFF **MDIFF_VECTOR_2, MDIFF **MDIFF_VECTOR_3, MDIFF **MDIFF_VECTOR_4) {
+
+	if ((frame%i_period) >= 2 && nRefFrames >= 2) {
+		MDIFF_VECTOR_2[row / block][col / block] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D_2, REF_FRAME_2D_2, row, col, width, height, block, range, 2, MDIFF_VECTOR, QP, RDOEnable);
+		MDIFF_VECTOR[row / block][col / block] = SelectRefWinner(MDIFF_VECTOR[row / block][col / block], MDIFF_VECTOR_2[row / block][col / block], REF_FRAME_2D, REF_FRAME_2D_2, block, row, col);
+	}
+	if ((frame%i_period) >= 3 && nRefFrames >= 3) {
+		MDIFF_VECTOR_3[row / block][col / block] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D_3, REF_FRAME_2D_3, row, col, width, height, block, range, 3, MDIFF_VECTOR, QP, RDOEnable);
+		MDIFF_VECTOR[row / block][col / block] = SelectRefWinner(MDIFF_VECTOR[row / block][col / block], MDIFF_VECTOR_3[row / block][col / block], REF_FRAME_2D, REF_FRAME_2D_3, block, row, col);
+
+	}
+	if ((frame%i_period) >= 4 && nRefFrames >= 4) {
+		MDIFF_VECTOR_4[row / block][col / block] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D_4, REF_FRAME_2D_4, row, col, width, height, block, range, 4, MDIFF_VECTOR, QP, RDOEnable);
+		MDIFF_VECTOR[row / block][col / block] = SelectRefWinner(MDIFF_VECTOR[row / block][col / block], MDIFF_VECTOR_4[row / block][col / block], REF_FRAME_2D, REF_FRAME_2D_4, block, row, col);
+	}
+	return MDIFF_VECTOR[row / block][col / block];
+}
+
+
