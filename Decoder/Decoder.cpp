@@ -116,7 +116,7 @@ int main(int argCnt, char **args)
 		}
 	}
 
-	FILE* decfile = fopen(decfile_name, "wb");
+	FILE* decfile = fopen(decfile_name, "w+b");
 	FILE* reffile = fopen("ref.csv", "w");
 	FILE* dectcfile = fopen("dec_tc.csv", "w");
 	FILE* decresfile = fopen("dec_res.csv", "w");
@@ -184,6 +184,16 @@ int main(int argCnt, char **args)
 			for (unsigned int row = 0; row < height; row++) {
 				fread(PREV_DEC_FRAME[row], sizeof(uint8_t), width, decfile);
 			}
+			// Create a intermediate frame from the previous decoded frame and the motion vectors for the frame
+	/*		for (int row = 0; row < height; row += block) {
+				for (int col = 0; col < width; col += block) {
+					for (int i = 0; i < block; i++) {
+						for (int j = 0; j < block; j++) {
+							PREV_DEC_FRAME[row + i][col + j] = DEC_FRAME_2D[row + i][col + j];
+						}
+					}
+				}
+			}*/
 		}
 		/*
 		snprintf(mdiff_name, sizeof(mdiff_name), "%s/MDIFF_GOLOMB_%d", filepath, frame);
