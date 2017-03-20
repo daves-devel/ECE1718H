@@ -18,76 +18,43 @@
 #include <ctime>
 
 
-void write_mat(FILE *fp, uint8_t**m, int N, int M) {
 
-	int i, j;
-	for (i = 0; i< N; i++) {
-		fprintf(fp, "%d", m[i][0]);
-		for (j = 1; j < M; j++) {
-			fprintf(fp, ",%d", m[i][j]);
-		}
-		fprintf(fp, "\n");
-	}
-	fprintf(fp, "\n");
-}
-
-void write_mat2(FILE *fp, int32_t**m, int N, int M) {
-
-	int i, j;
-	for (i = 0; i< N; i++) {
-		fprintf(fp, "%d", m[i][0]);
-		for (j = 1; j < M; j++) {
-			fprintf(fp, ",%d", m[i][j]);
-		}
-		fprintf(fp, "\n");
-	}
-	fprintf(fp, "\n");
-}
-
-void write_mat3(FILE *fp, int8_t**m, int N, int M) {
-
-	int i, j;
-	for (i = 0; i< N; i++) {
-		fprintf(fp, "%d", m[i][0]);
-		for (j = 1; j < M; j++) {
-			fprintf(fp, ",%d", m[i][j]);
-		}
-		fprintf(fp, "\n");
-	}
-	fprintf(fp, "\n");
-}
 
 int main(int argCnt, char **args)
 {
 
-	char curfile_name[500] = "";
-	char mvfile_name[500] = "";
-	char resfile_name[500] = "";
-	char recfile_name[500] = "";
-	char matchfile_name[500] = "";
-	char coeff_bitcount_name[500] = "";
-	char mdiff_bitcount_name[500] = "";
-	char frame_header_name[500] = "";
-	char runtime_name[500] = "";
+	char curfile_name[500]			= "";
+	char mvfile_name[500]			= "";
+	char resfile_name[500]			= "";
+	char recfile_name[500]			= "";
+	char matchfile_name[500]		= "";
+	char coeff_bitcount_name[500]	= "";
+	char mdiff_bitcount_name[500]	= "";
+	char frame_header_name[500]		= "";
+	char runtime_name[500]			= "";
 
-	int width = -1;
-	int height = -1;
-	int frames = -1;
-	int range = -1;
-	int block = -1;
-	int i_period = -1;
-	int FrameType = -1;
-	int QP = -1;
-	int nRefFrames = 1;
-	int VBSEnable = 0;
-	int RDOEnable = 0;
-	int FMEnable = 0;
-	int coeff_bitcount = 0;
-	int mdiff_bitcount = 0;
-	args++;
-	int tmpArgCnt = 1;
+	int width			= -1;
+	int height			= -1;
+	int frames			= -1;
+	int range			= -1;
+	int block			= -1;
+	int i_period		= -1;
+	int FrameType		= -1;
+	int QP				= -1;
+	int nRefFrames		= 1;
+	int VBSEnable		= 0;
+	int RDOEnable		= 0;
+	int FMEnable		= 0;
+	int coeff_bitcount	= 0;
+	int mdiff_bitcount	= 0;
+
+
 	//  Parse Input Arguments
 	// =======================
+
+	args++;
+	int tmpArgCnt = 1;
+
 	while (tmpArgCnt < argCnt && (*args)[0] == '-') {
 
 		if (!strcmp((*args) + 1, "width")) {
@@ -319,7 +286,6 @@ int main(int argCnt, char **args)
 		QP_FRAME_2DS[row] = new int32_t[width];
 	}
 
-
 	// This 2D Buffer will Contain MDIFF data for each block 
 	struct MDIFF** MDIFF_VECTORS = new struct MDIFF*[(height / block_split)];
 	struct MDIFF** MDIFF_VECTOR_2S = new struct MDIFF*[(height / block_split)];
@@ -334,6 +300,21 @@ int main(int argCnt, char **args)
 		MDIFF_VECTOR_3S[row / block_split] = new struct MDIFF[width / block_split];
 		MDIFF_VECTOR_4S[row / block_split] = new struct MDIFF[width / block_split];
 		MDIFF_VECTOR_DIFFS[row / block_split] = new struct MDIFF[width / block_split];
+	}
+
+	// PICK INTERFRAME ALGORITHM
+	uint32_t INTERMODE;
+	if ((RDOEnable) && (QP >= 6)) {
+		INTERMODE = RDO;
+		printf("RDO ENABLED\n");
+	}
+	else if (FMEnable) {
+		INTERMODE = FME;
+		printf("FME ENABLED\n");
+	}
+	else {
+		INTERMODE = DEFAULT;
+		printf("DEFAULT INTERMODE\n");
 	}
 
 	//Runtime
@@ -441,12 +422,12 @@ int main(int argCnt, char **args)
 				}
 				
 				if (FrameType == PFRAME) {
-					MDIFF_VECTOR[row / block][col / block] = InterFramePrediction(CUR_FRAME_2D, REC_FRAME_2D, REF_FRAME_2D, row, col, width, height, block, range, 1, MDIFF_VECTOR, QP, RDOEnable);
+					MDIFF_VECTOR[row / block][col / block] = InterFramePrediction(INTERMODE,CUR_FRAME_2D, REC_FRAME_2D, REF_FRAME_2D, row, col, width, height, block, range, 1, MDIFF_VECTOR);
 					//Multireference code start Only activated if nRefFrames>=2
 					if (nRefFrames >= 2) {
-						MDIFF_VECTOR[row / block][col / block] = MultiRefInterPrediction(CUR_FRAME_2D, REC_FRAME_2D_2, REC_FRAME_2D_3, REC_FRAME_2D_4,
+						MDIFF_VECTOR[row / block][col / block] = MultiRefInterPrediction(INTERMODE,CUR_FRAME_2D, REC_FRAME_2D_2, REC_FRAME_2D_3, REC_FRAME_2D_4,
 							REF_FRAME_2D, REF_FRAME_2D_2, REF_FRAME_2D_3, REF_FRAME_2D_4,
-							row, col, width, height, block, range, QP, RDOEnable, nRefFrames, frame, i_period,
+							row, col, width, height, block, range, nRefFrames, frame, i_period,
 							MDIFF_VECTOR, MDIFF_VECTOR_2, MDIFF_VECTOR_3, MDIFF_VECTOR_4);
 					}
 				}
@@ -481,12 +462,12 @@ int main(int argCnt, char **args)
 							}
 
 							if (FrameType == PFRAME) {
-								MDIFF_VECTORS[row2 / block_split][col2 / block_split] = InterFramePrediction(CUR_FRAME_2DS, REC_FRAME_2DS, REF_FRAME_2DS, row2, col2, width, height, block_split, range, 1, MDIFF_VECTORS, QP, RDOEnable);
+								MDIFF_VECTORS[row2 / block_split][col2 / block_split] = InterFramePrediction(INTERMODE,CUR_FRAME_2DS, REC_FRAME_2DS, REF_FRAME_2DS, row2, col2, width, height, block_split, range, 1, MDIFF_VECTORS);
 								//Multireference code start Only activated if nRefFrames>=2
 								if (nRefFrames >= 2) {
-									MDIFF_VECTORS[row / block][col / block] = MultiRefInterPrediction(CUR_FRAME_2DS, REC_FRAME_2D_2S, REC_FRAME_2D_3S, REC_FRAME_2D_4S,
+									MDIFF_VECTORS[row / block][col / block] = MultiRefInterPrediction(INTERMODE,CUR_FRAME_2DS, REC_FRAME_2D_2S, REC_FRAME_2D_3S, REC_FRAME_2D_4S,
 										REF_FRAME_2DS, REF_FRAME_2D_2S, REF_FRAME_2D_3S, REF_FRAME_2D_4S,
-										row, col, width, height, block, range, QP, RDOEnable, nRefFrames, frame, i_period,
+										row, col, width, height, block, range, QP, RDOEnable, nRefFrames,
 										MDIFF_VECTORS, MDIFF_VECTOR_2S, MDIFF_VECTOR_3S, MDIFF_VECTOR_4S);
 								}
 							}

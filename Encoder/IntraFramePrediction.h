@@ -72,7 +72,7 @@ struct MDIFF IntraFramePrediction(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint
 				(col == 0) ? (REF_FRAME[row + i][col + j] = 128): (REF_FRAME[row + i][col + j] = REC_FRAME[row + i][col - 1]);
 			}
 			if (INTRA_MODE.MODE == VERTICAL) {
-				(row == 0) ? (REF_FRAME[row + i][col + j] = 128) : (REF_FRAME[row + i][col + j] = REC_FRAME[row - 1][col + j]);
+				(row == 0) ? (REF_FRAME[row + i][col + j] = 128): (REF_FRAME[row + i][col + j] = REC_FRAME[row - 1][col + j]);
 			}
 		}
 	}

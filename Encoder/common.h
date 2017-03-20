@@ -32,6 +32,12 @@ enum INTRAMODE {
 	VERTICAL = 1
 };
 
+enum INTERMODE {
+	DEFAULT = 0,
+	RDO     = 1,
+	FME	    = 2
+};
+
 struct MDIFF {
 	int X, X2, X3, X4; // For Inter GMV
 	int Y, Y2, Y3, Y4; // For Inter GMV
@@ -118,54 +124,45 @@ const uint8_t EVX_LOG2_BYTE_LUT[] = {
 	7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
 };
 
-void VBSWinner(MDIFF** MDIFF_CUR, MDIFF** MDIFF_SLPIT, int row, int col, int block, uint8_t** CUR_FRAME_2D, uint8_t**CUR_FRAME_2DS);
+void write_mat(FILE *fp, uint8_t**m, int N, int M) {
 
-void VBSWinner(MDIFF** MDIFF_CUR, MDIFF** MDIFF_SPLIT, int row, int col, int block, uint8_t** CUR_FRAME_2D, uint8_t**CUR_FRAME_2DS) {
-	int row_split = row / (block / 2);
-	int col_split = col / (block / 2);
-	int row_org = row / block;
-	int col_org = col / block;
-	int SPLIT_SAD = 0;
-	for (int j = 0; j < 2; j++) {
-		for (int i = 0; i < 2; i++) {
-			SPLIT_SAD=MDIFF_SPLIT[row_split + j][col_split + i].SAD + SPLIT_SAD;
+	int i, j;
+	for (i = 0; i< N; i++) {
+		fprintf(fp, "%d", m[i][0]);
+		for (j = 1; j < M; j++) {
+			fprintf(fp, ",%d", m[i][j]);
 		}
+		fprintf(fp, "\n");
 	}
-	MDIFF_CUR[row_org][col_org].split=0;
-	if (SPLIT_SAD < MDIFF_CUR[row_org][col_org].SAD) {
-		//Adding X and Y for Inter
-		MDIFF_CUR[row_org][col_org].X =		MDIFF_SPLIT[row_split]		[col_split].X;
-		MDIFF_CUR[row_org][col_org].X2 =	MDIFF_SPLIT[row_split]		[col_split + 1].X;
-		MDIFF_CUR[row_org][col_org].X3 =	MDIFF_SPLIT[row_split + 1]	[col_split].X;
-		MDIFF_CUR[row_org][col_org].X4 =	MDIFF_SPLIT[row_split + 1]	[col_split + 1].X;
-		MDIFF_CUR[row_org][col_org].Y =		MDIFF_SPLIT[row_split]		[col_split].Y;
-		MDIFF_CUR[row_org][col_org].Y2 =	MDIFF_SPLIT[row_split]		[col_split + 1].Y;
-		MDIFF_CUR[row_org][col_org].Y3 =	MDIFF_SPLIT[row_split + 1]	[col_split].Y;
-		MDIFF_CUR[row_org][col_org].Y4 =	MDIFF_SPLIT[row_split + 1]	[col_split + 1].Y;
-		//Adding modes for Intra
-		MDIFF_CUR[row_org][col_org].MODE =	MDIFF_SPLIT[row_split]		[col_split].MODE;
-		MDIFF_CUR[row_org][col_org].MODE2 = MDIFF_SPLIT[row_split]		[col_split +1].MODE;
-		MDIFF_CUR[row_org][col_org].MODE3 = MDIFF_SPLIT[row_split + 1]	[col_split].MODE;
-		MDIFF_CUR[row_org][col_org].MODE4 = MDIFF_SPLIT[row_split + 1]	[col_split +1].MODE;
-		//SAD
-		MDIFF_CUR[row_org][col_org].SAD = SPLIT_SAD;
-		//NORM TODO
-
-		//REF
-		MDIFF_CUR[row_org][col_org].ref	 = MDIFF_SPLIT[row_split]		[col_split].ref;
-		MDIFF_CUR[row_org][col_org].ref2 = MDIFF_SPLIT[row_split]		[col_split + 1].ref;
-		MDIFF_CUR[row_org][col_org].ref3 = MDIFF_SPLIT[row_split + 1]	[col_split].ref;
-		MDIFF_CUR[row_org][col_org].ref4 = MDIFF_SPLIT[row_split + 1]	[col_split + 1].ref;
-
-		//SPLIT
-		MDIFF_CUR[row_org][col_org].split = 1;
-		for (int row = row_org; row < row_org + block; row++) {
-			for (int col = col_org; col < col_org + block; col++) {
-				CUR_FRAME_2D[row][col] = CUR_FRAME_2DS[row][col];
-			}
-		}
-	}
-
+	fprintf(fp, "\n");
 }
+
+void write_mat2(FILE *fp, int32_t**m, int N, int M) {
+
+	int i, j;
+	for (i = 0; i< N; i++) {
+		fprintf(fp, "%d", m[i][0]);
+		for (j = 1; j < M; j++) {
+			fprintf(fp, ",%d", m[i][j]);
+		}
+		fprintf(fp, "\n");
+	}
+	fprintf(fp, "\n");
+}
+
+void write_mat3(FILE *fp, int8_t**m, int N, int M) {
+
+	int i, j;
+	for (i = 0; i< N; i++) {
+		fprintf(fp, "%d", m[i][0]);
+		for (j = 1; j < M; j++) {
+			fprintf(fp, ",%d", m[i][j]);
+		}
+		fprintf(fp, "\n");
+	}
+	fprintf(fp, "\n");
+}
+
+
 //Entropy
 #endif

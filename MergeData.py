@@ -2,9 +2,10 @@ import os
 import sys
 import csv
 
-block			= 8
-qp_list 		= [0,3,6,9]
+block			= 16
+qp_list 		= [1,4,7,10]
 i_period_list 		= [1,4,10]
+rdo			= 0 
 
 for i_period in i_period_list:
 
@@ -13,7 +14,7 @@ for i_period in i_period_list:
 	psnr		= [[0]*4 for k in range(10)];
 	runtime 	= [[0]*4 for k in range(10)];
 	
-	testgroup = "IP_%d_Block_%d" %(i_period,block)
+	testgroup = "Block_%d_IP_%d_RDO_%d" %(block,i_period,rdo)
 	output = open ("%s.csv" %(testgroup),'w')
 	output.write("%s\n" %testgroup)
 
@@ -24,7 +25,7 @@ for i_period in i_period_list:
 
 	file_iterator = 0
 	for qp in qp_list:
-		testname = "IP_%d_Block_%d_QP_%d" %(i_period,block,qp)
+		testname = "Block_%d_IP_%d_QP_%d_RDO_%d" %(block,i_period,qp,rdo)
 		input = open ("testdata\\" + testname + "_COEFF_BITCOUNT.csv",'r')
 		iterator = 0
 		for line in input:
@@ -45,7 +46,7 @@ for i_period in i_period_list:
 
 	file_iterator = 0
 	for qp in qp_list:
-		testname = "IP_%d_Block_%d_QP_%d" %(i_period,block,qp)
+		testname = "Block_%d_IP_%d_QP_%d_RDO_%d" %(block,i_period,qp,rdo)			
 		input = open ("testdata\\" + testname + "_MDIFF_BITCOUNT.csv",'r')
 		iterator = 0
 		for line in input:
@@ -68,7 +69,7 @@ for i_period in i_period_list:
 
 	file_iterator = 0
 	for qp in qp_list:
-		testname = "IP_%d_Block_%d_QP_%d" %(i_period,block,qp)
+		testname = "Block_%d_IP_%d_QP_%d_RDO_%d" %(block,i_period,qp,rdo)		
 		input = open ("testdata\\" + testname + "_PSNR.csv",'r')
 		iterator = 0
 		for line in input:
@@ -89,7 +90,7 @@ for i_period in i_period_list:
 	output.write("\n")
 
 	for qp in qp_list:
-		testname = "IP_%d_Block_%d_QP_%d" %(i_period,block,qp)
+		testname = "Block_%d_IP_%d_QP_%d_RDO_%d" %(block,i_period,qp,rdo)		
 		input = open ("testdata\\" + testname + "_RUNTIME.csv",'r')
 		for line in input:
 			runtime = line.strip()
