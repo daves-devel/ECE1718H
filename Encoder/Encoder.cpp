@@ -43,7 +43,6 @@ int main(int argCnt, char **args)
 	int FrameType		= -1;
 	int QP				= -1;
 	int nRefFrames		= 1;
-	int VBSEnable		= 0;
 	int RDOEnable		= 0;
 	int FMEnable		= 0;
 	int coeff_bitcount	= 0;
@@ -563,7 +562,6 @@ int main(int argCnt, char **args)
 		delete		REC_FRAME_2D_2[row];
 		delete		REC_FRAME_2D_3[row];
 		delete		REC_FRAME_2D_4[row];
-
 		delete		REF_FRAME_2D[row];
 		delete		REF_FRAME_2D_2[row];
 		delete		REF_FRAME_2D_3[row];
