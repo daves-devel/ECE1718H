@@ -28,6 +28,7 @@ int main(int argCnt, char **args)
 	char resfile_name[500]			= "";
 	char recfile_name[500]			= "";
 	char matchfile_name[500]		= "";
+	char bitcount_row_name[500] = "";
 	char coeff_bitcount_name[500]	= "";
 	char mdiff_bitcount_name[500]	= "";
 	char frame_header_name[500]		= "";
@@ -42,11 +43,11 @@ int main(int argCnt, char **args)
 	int FrameType		= -1;
 	int QP				= -1;
 	int nRefFrames		= 1;
-	int VBSEnable		= 0;
 	int RDOEnable		= 0;
 	int FMEnable		= 0;
 	int coeff_bitcount	= 0;
 	int mdiff_bitcount	= 0;
+	int bitcount_row	 = 0;
 
 
 	//  Parse Input Arguments
@@ -102,6 +103,12 @@ int main(int argCnt, char **args)
 		else if (!strcmp((*args) + 1, "matchfile")) {
 			args++;
 			sscanf(*args, "%s", matchfile_name);
+			args++;
+			tmpArgCnt += 2;
+		}
+		else if (!strcmp((*args) + 1, "bitcount_row")) {
+			args++;
+			sscanf(*args, "%s", bitcount_row_name);
 			args++;
 			tmpArgCnt += 2;
 		}
@@ -182,6 +189,7 @@ int main(int argCnt, char **args)
 	FILE* reffile = fopen("ref_enc.csv", "w");
 	FILE* dectcfile = fopen("dec_tc_enc.csv", "w");
 	FILE* decresfile = fopen("dec_res_enc.csv", "w");
+	FILE* bitcountrowfile = fopen(bitcount_row_name, "w");
 
 	// TODO Make these 2D buffers, and add the Encoder functions to the frame flow
 	unsigned int  FRAME_SIZE = width*height;
@@ -319,6 +327,9 @@ int main(int argCnt, char **args)
 
 	//Runtime
 	int start_s = clock();
+
+	//Bitcount per row
+	uint32_t *BITCOUNT_ROW = new uint32_t[height / block];
 
 	// Encode Each Frame
 	// =========================================
@@ -495,9 +506,18 @@ int main(int argCnt, char **args)
 					VBSWinner(MDIFF_VECTOR, MDIFF_VECTORS, row, col, block, REC_FRAME_2D, REC_FRAME_2DS);
 				}//End of VBSenable code
 				 // Differential and Entropy Encode steps 
-				coeff_bitcount +=entropy_wrapper(QTC_FRAME_2D, block, height, width, frame, row, col);
+				int bitcount_temp=0;
+				bitcount_temp =entropy_wrapper(QTC_FRAME_2D, block, height, width, frame, row, col);
+				coeff_bitcount = coeff_bitcount + bitcount_temp;
+				bitcount_row = bitcount_row + bitcount_temp;
 				diff_enc_wrapper(MDIFF_VECTOR, MDIFF_VECTOR_DIFF, FrameType, height, width, block, frame, row, col);
-				mdiff_bitcount +=encode_mdiff_wrapper(MDIFF_VECTOR_DIFF, height, width, block, frame, FrameType, row, col);
+				bitcount_temp =encode_mdiff_wrapper(MDIFF_VECTOR_DIFF, height, width, block, frame, FrameType, row, col);
+				mdiff_bitcount = mdiff_bitcount + bitcount_temp;
+				bitcount_row = bitcount_row + bitcount_temp;
+				if (col + block == width) {//Collect bitcount per row
+					BITCOUNT_ROW[row / block] = bitcount_row;
+					bitcount_row = 0;
+				}
 			}
 		}
 		
@@ -515,11 +535,21 @@ int main(int argCnt, char **args)
 		fclose(recfile);//Weird behavior need to close file
 		recfile = fopen(recfile_name, "a+b");
 		fwrite(REC_FRAME, sizeof(uint8_t), FRAME_SIZE, recfile);
-		//Bitcount
+		//Bitcount Per frame
 		fprintf(coeff_bitcount_file, "%d,%d\n", frame, coeff_bitcount);
 		fprintf(mdiff_bitcount_file, "%d,%d\n", frame, mdiff_bitcount);
 		fclose(mdiff_golomb);
 		fclose(golomb_file);
+		//Bitcount Per row
+		int average=0;
+		for (int i = 0; i < height; i = i + block) {
+			average += BITCOUNT_ROW[i / block];
+		}
+		if (FrameType == IFRAME)
+			fprintf(bitcountrowfile, "I_FRAME:%d %d\n",frame, average / (height / block));
+		else
+			fprintf(bitcountrowfile, "P_FRAME:%d %d\n",frame, average / (height / block));
+
 	}
 	//Runtime
 	int stop_s = clock();
@@ -532,7 +562,6 @@ int main(int argCnt, char **args)
 		delete		REC_FRAME_2D_2[row];
 		delete		REC_FRAME_2D_3[row];
 		delete		REC_FRAME_2D_4[row];
-
 		delete		REF_FRAME_2D[row];
 		delete		REF_FRAME_2D_2[row];
 		delete		REF_FRAME_2D_3[row];

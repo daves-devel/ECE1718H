@@ -20,6 +20,7 @@ FILE* mdiff_golomb;
 char golomb_name[500] = "";
 char filepath[500] = "";
 char mdiff_name[500] = "";
+int VBSEnable = 0;
 
 
 enum FRAME {

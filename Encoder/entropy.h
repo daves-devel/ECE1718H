@@ -134,21 +134,89 @@ int encode_mdiff_wrapper(MDIFF** MDIFF_VECTOR_DIFF, int height, int width, int b
 void encode_mdiff(MDIFF** MDIFF_VECTOR_DIFF, int row, int col, int Frametype, uint32_t *bitcount, FILE* mdiff_golomb ) {
 	uint8_t count=0;
 	uint32_t result;
-	if (Frametype == IFRAME) {
-		result=encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].MODE, &count);
-		fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
-		*bitcount = count + *bitcount;
+	if (VBSEnable == 0) {//TODO remove later on once basic decoder is brought up
+		if (Frametype == IFRAME) {
+			result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].MODE, &count);
+			fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
+			*bitcount = count + *bitcount;
+		}
+		else {
+			result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].X, &count);
+			fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
+			*bitcount = count + *bitcount;
+			result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].Y, &count);
+			fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
+			*bitcount = count + *bitcount;
+			result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].ref, &count);
+			fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
+			*bitcount = count + *bitcount;
+		}
 	}
 	else {
-		result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].X, &count);
-		fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
-		*bitcount = count + *bitcount;
-		result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].Y, &count);
-		fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
-		*bitcount = count + *bitcount;
-		result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].ref, &count);
-		fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
-		*bitcount = count + *bitcount;
+		if (Frametype == IFRAME) {
+			//SPLIT
+			result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].split, &count);
+			fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
+			*bitcount = count + *bitcount;
+			//MODES
+			result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].MODE, &count);
+			fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
+			*bitcount = count + *bitcount;
+			result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].MODE2, &count);
+			fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
+			*bitcount = count + *bitcount;
+			result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].MODE3, &count);
+			fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
+			*bitcount = count + *bitcount;
+			result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].MODE4, &count);
+			fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
+			*bitcount = count + *bitcount;
+		}
+		else {
+			//SPLIT
+			result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].split, &count);
+			fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
+			*bitcount = count + *bitcount;
+			//Xs
+			result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].X, &count);
+			fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
+			*bitcount = count + *bitcount;
+			result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].X2, &count);
+			fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
+			*bitcount = count + *bitcount;
+			result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].X3, &count);
+			fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
+			*bitcount = count + *bitcount;
+			result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].X4, &count);
+			fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
+			*bitcount = count + *bitcount;
+			//Ys
+			result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].Y, &count);
+			fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
+			*bitcount = count + *bitcount;
+			result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].Y2, &count);
+			fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
+			*bitcount = count + *bitcount;
+			result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].Y3, &count);
+			fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
+			*bitcount = count + *bitcount;
+			result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].Y4, &count);
+			fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
+			*bitcount = count + *bitcount;
+			//REF
+			result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].ref, &count);
+			fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
+			*bitcount = count + *bitcount;
+			result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].ref2, &count);
+			fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
+			*bitcount = count + *bitcount;
+			result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].ref3, &count);
+			fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
+			*bitcount = count + *bitcount;
+			result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].ref4, &count);
+			fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
+			*bitcount = count + *bitcount;
+		}
 	}
 }
 int entropy_wrapper(int ** QTC_FRAME, int block, int height, int width, int frame, int row, int col) {
