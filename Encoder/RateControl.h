@@ -4,6 +4,8 @@ int row_rate_control(int row, int targetBr, int RCflag, int width, int height, i
 
 
 int row_rate_control(int row, int targetBr, int RCflag, int width, int height, int FrameType, int block, int current_bitcount) {
+	if (row + block == height)
+		return 0;
 	int RCqp=0;
 	int frame_remaining_bits;
 	int row_target;
@@ -21,12 +23,12 @@ int row_rate_control(int row, int targetBr, int RCflag, int width, int height, i
 				table_value = QCIF_P_TABLE[i];
 		}
 		else {
-			if (FrameType == PFRAME)
+			if (FrameType == IFRAME)
 				table_value = CIF_I_TABLE[i];
 			else
 				table_value = CIF_P_TABLE[i];
 		}
-		if (row_target < table_value) {
+		if (row_target > table_value) {
 			RCqp = i;
 			break;
 		}

@@ -175,7 +175,7 @@ int main(int argCnt, char **args)
 			args++;
 			tmpArgCnt += 2;
 		}
-		else if (!strcmp((*args) + 1, "targetBR")) {
+		else if (!strcmp((*args) + 1, "targetBr")) {
 			args++;
 			targetBr = atoi(*args);
 			args++;
@@ -547,7 +547,7 @@ int main(int argCnt, char **args)
 					BITCOUNT_ROW[row / block] = bitcount_row;
 					bitcount_row = 0;
 					if(RCflag==1)
-						row_rate_control(row, targetBr, RCflag, width, height, FrameType, block, coeff_bitcount + mdiff_bitcount);
+						QP = row_rate_control(row, targetBr, RCflag, width, height, FrameType, block, coeff_bitcount + mdiff_bitcount);
 				}
 			}
 		}
