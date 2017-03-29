@@ -21,6 +21,8 @@ char golomb_name[500] = "";
 char filepath[500] = "";
 char mdiff_name[500] = "";
 int VBSEnable = 0;
+int fps = 30;
+int QCIF_WIDTH = 176;
 
 
 enum FRAME {
@@ -163,7 +165,17 @@ void write_mat3(FILE *fp, int8_t**m, int N, int M) {
 	}
 	fprintf(fp, "\n");
 }
+int CIF_I_TABLE[12] = { 2112, 1936, 1760, 1584, 1408, 1232, 1056, 880, 704, 528, 400, 200 };
+int CIF_P_TABLE[12] = { 2112, 1936, 1760, 1584, 1408, 1232, 1056, 880, 704, 528, 400, 200 };
+int QCIF_I_TABLE[12] = { 2112, 1936, 1760, 1584, 1408, 1232, 1056, 880, 704, 528, 400, 200 };
+int QCIF_P_TABLE[12] = { 2112, 1936, 1760, 1584, 1408, 1232, 1056, 880, 704, 528, 400, 200 };
 
-
+#ifdef TRACE_ON
+FILE* file_vector_org;
+FILE* file_vector_aft;
+FILE* file_qtc;
+FILE* file_reorder;
+FILE* file_rle;
+#endif
 //Entropy
 #endif
