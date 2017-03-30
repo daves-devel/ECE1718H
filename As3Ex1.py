@@ -25,8 +25,8 @@ nRefFrames		= 1
 VBSEnable		= 1
 RDOEnable       = 0
 FMEnable        = 1
-#qp_list 		= [0,1,2,4,5,6,7,8,9,10]
-qp_list = [3]
+qp_list 		= [0,1,2,3,4,5,6,7,8,9,10,11]
+#qp_list = [3]
 i_period_list 	= [1,21]
 
 # CIF TEST CASES
