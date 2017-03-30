@@ -16,44 +16,6 @@
 #include <discrete_cosine_transform.h>
 #include <DiffDec.h>
 
-void write_mat(FILE *fp, uint8_t**m, int N, int M) {
-
-	int i, j;
-	for (i = 0; i< N; i++) {
-		fprintf(fp, "%d", m[i][0]);
-		for (j = 1; j < M; j++) {
-			fprintf(fp, ",%d", m[i][j]);
-		}
-		fprintf(fp, "\n");
-	}
-	fprintf(fp, "\n");
-}
-
-void write_mat2(FILE *fp, int32_t**m, int N, int M) {
-
-	int i, j;
-	for (i = 0; i< N; i++) {
-		fprintf(fp, "%d", m[i][0]);
-		for (j = 1; j < M; j++) {
-			fprintf(fp, ",%d", m[i][j]);
-		}
-		fprintf(fp, "\n");
-	}
-	fprintf(fp, "\n");
-}
-
-void write_mat3(FILE *fp, int8_t**m, int N, int M) {
-
-	int i, j;
-	for (i = 0; i< N; i++) {
-		fprintf(fp, "%d", m[i][0]);
-		for (j = 1; j < M; j++) {
-			fprintf(fp, ",%d", m[i][j]);
-		}
-		fprintf(fp, "\n");
-	}
-	fprintf(fp, "\n");
-}
 
 int main(int argCnt, char **args)
 {
