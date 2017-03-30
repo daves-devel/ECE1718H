@@ -54,21 +54,14 @@ void diff_enc(MDIFF** MDIFF_VECTOR, MDIFF** MDIFF_VECTOR_DIFF, int FrameType, in
 }
 
 void diff_enc_wrapper(MDIFF** MDIFF_VECTOR, MDIFF** MDIFF_VECTOR_DIFF, int FrameType, int height, int width, int block, int frame, int row, int col) {
-#ifdef TRACE_ON
-	FILE* file_vector_org;
-	FILE* file_vector_aft;
-	char buf[0x100];
-	snprintf(buf, sizeof(buf), "testdata\\MDIFF_ORG_ENC%d.txt", frame);
-	file_vector_org = fopen(buf, "w");
-	snprintf(buf, sizeof(buf), "testdata\\MDIFF_AFT_ENC%d.txt", frame);
-	file_vector_aft = fopen(buf, "w");
-#endif
-			diff_enc(MDIFF_VECTOR, MDIFF_VECTOR_DIFF, FrameType, row/block, col/block);
+	diff_enc(MDIFF_VECTOR, MDIFF_VECTOR_DIFF, FrameType, row/block, col/block);
 #ifdef TRACE_ON
 			if (MDIFF_VECTOR[row / block][col / block].split == 0) {
 				fprintf(file_vector_org, "Block Y=%d X=%d\n", row / block, col / block);
-				fprintf(file_vector_org, "FRAME_TYPE: %d MODE: %d X: %d Y: %d ref %d\n", FrameType, MDIFF_VECTOR[row / block][col / block].MODE, 
-					MDIFF_VECTOR[row / block][col / block].X, MDIFF_VECTOR[row / block][col / block].Y, MDIFF_VECTOR[row / block][col / block].ref);
+				fprintf(file_vector_org, "FRAME_TYPE: %d SPLIT: %d MODE: %d X: %d Y: %d ref %d\n", FrameType, MDIFF_VECTOR[row/block][col/block].split, 
+					MDIFF_VECTOR[row / block][col / block].MODE, 
+					MDIFF_VECTOR[row / block][col / block].X, MDIFF_VECTOR[row / block][col / block].Y, 
+					MDIFF_VECTOR[row / block][col / block].ref);
 			}
 			else {
 				fprintf(file_vector_org, "Block Y=%d X=%d\n", row / block, col / block);

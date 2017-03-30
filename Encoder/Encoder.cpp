@@ -15,6 +15,7 @@
 #include <IntraFramePrediction.h>
 #include <discrete_cosine_transform.h>
 #include <DiffEnc.h>
+#include <RateControl.h>
 #include <ctime>
 
 
@@ -48,6 +49,8 @@ int main(int argCnt, char **args)
 	int coeff_bitcount	= 0;
 	int mdiff_bitcount	= 0;
 	int bitcount_row	 = 0;
+	int targetBr = 0;
+	int	RCflag = 0;
 
 
 	//  Parse Input Arguments
@@ -169,6 +172,18 @@ int main(int argCnt, char **args)
 		else if (!strcmp((*args) + 1, "runtime_name")) {
 			args++;
 			sscanf(*args, "%s", runtime_name);
+			args++;
+			tmpArgCnt += 2;
+		}
+		else if (!strcmp((*args) + 1, "targetBr")) {
+			args++;
+			targetBr = atoi(*args);
+			args++;
+			tmpArgCnt += 2;
+		}
+		else if (!strcmp((*args) + 1, "RCflag")) {
+			args++;
+			RCflag = atoi(*args);
 			args++;
 			tmpArgCnt += 2;
 		}
@@ -339,6 +354,20 @@ int main(int argCnt, char **args)
 		snprintf(mdiff_bitcount_name, sizeof(mdiff_bitcount_name), "testdata\\MDIFF_GOLOMB_%d", frame);
 		mdiff_golomb = fopen(mdiff_bitcount_name, "wb");
 		golomb_file = fopen(golomb_name, "wb");
+#ifdef TRACE_ON
+		char buf[0x100];
+		snprintf(buf, sizeof(buf), "testdata\\MDIFF_ORG_ENC%d.txt", frame);
+		file_vector_org = fopen(buf, "w");
+		snprintf(buf, sizeof(buf), "testdata\\MDIFF_AFT_ENC%d.txt", frame);
+		file_vector_aft = fopen(buf, "w");
+		snprintf(buf, sizeof(buf), "testdata\\QTC_BLOCK_ENC_%d.txt", frame);
+		file_qtc = fopen(buf, "w");
+		snprintf(buf, sizeof(buf), "testdata\\REORDER_BLOCK_ENC_%d.txt", frame);
+		file_reorder = fopen(buf, "w");
+		snprintf(buf, sizeof(buf), "testdata\\RLE_BLOCK_ENC_%d.txt", frame);
+		file_rle = fopen(buf, "w");
+#endif // TRACE_ON
+
 		//Reset bitcounts
 		coeff_bitcount = 0;
 		mdiff_bitcount = 0;
@@ -511,12 +540,14 @@ int main(int argCnt, char **args)
 				coeff_bitcount = coeff_bitcount + bitcount_temp;
 				bitcount_row = bitcount_row + bitcount_temp;
 				diff_enc_wrapper(MDIFF_VECTOR, MDIFF_VECTOR_DIFF, FrameType, height, width, block, frame, row, col);
-				bitcount_temp =encode_mdiff_wrapper(MDIFF_VECTOR_DIFF, height, width, block, frame, FrameType, row, col);
+				bitcount_temp =encode_mdiff_wrapper(MDIFF_VECTOR_DIFF, MDIFF_VECTOR, height, width, block, frame, FrameType, row, col);
 				mdiff_bitcount = mdiff_bitcount + bitcount_temp;
 				bitcount_row = bitcount_row + bitcount_temp;
 				if (col + block == width) {//Collect bitcount per row
 					BITCOUNT_ROW[row / block] = bitcount_row;
 					bitcount_row = 0;
+					if(RCflag==1)
+						QP = row_rate_control(row, targetBr, RCflag, width, height, FrameType, block, coeff_bitcount + mdiff_bitcount);
 				}
 			}
 		}
@@ -549,6 +580,14 @@ int main(int argCnt, char **args)
 			fprintf(bitcountrowfile, "I_FRAME,%d,%d\n",frame, average / (height / block));
 		else
 			fprintf(bitcountrowfile, "P_FRAME,%d,%d\n",frame, average / (height / block));
+
+#ifdef TRACE_ON
+		fclose(file_vector_org);
+		fclose(file_vector_aft);
+		fclose(file_qtc);
+		fclose(file_reorder);
+		fclose(file_rle);
+#endif 
 
 	}
 	//Runtime
