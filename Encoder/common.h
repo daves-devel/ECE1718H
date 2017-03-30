@@ -153,7 +153,7 @@ void write_mat2(FILE *fp, int32_t**m, int N, int M) {
 	fprintf(fp, "\n");
 }
 
-void write_mat3(FILE *fp, int8_t**m, int N, int M) {
+void write_mat3(FILE *fp, int32_t**m, int N, int M) {
 
 	int i, j;
 	for (i = 0; i< N; i++) {

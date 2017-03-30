@@ -140,9 +140,9 @@ int main(int argCnt, char **args)
 	uint8_t** DEC_FRAME_2D = new uint8_t*[height];
 	uint8_t** REF_FRAME_2D = new uint8_t*[height];
 	uint8_t** PREV_DEC_FRAME = new uint8_t*[height];
-	int8_t** ENC_RES_FRAME_2D = new  int8_t*[height];
+	int32_t** ENC_RES_FRAME_2D = new  int32_t*[height];
 	int32_t** ENC_TC_FRAME_2D = new int32_t*[height];
-	int8_t** DEC_RES_FRAME_2D = new  int8_t*[height];
+	int32_t** DEC_RES_FRAME_2D = new  int32_t*[height];
 	int32_t** DEC_TC_FRAME_2D = new int32_t*[height];
 	int32_t** QTC_FRAME_2D = new int32_t*[height];
 	int32_t** QP_FRAME_2D = new int32_t*[height];
@@ -151,9 +151,9 @@ int main(int argCnt, char **args)
 		DEC_FRAME_2D[row] = new uint8_t[width];
 		REF_FRAME_2D[row] = new uint8_t[width];
 		PREV_DEC_FRAME[row] = new uint8_t[width];
-		ENC_RES_FRAME_2D[row] = new  int8_t[width];
+		ENC_RES_FRAME_2D[row] = new  int32_t[width];
 		ENC_TC_FRAME_2D[row] = new int32_t[width];
-		DEC_RES_FRAME_2D[row] = new  int8_t[width];
+		DEC_RES_FRAME_2D[row] = new  int32_t[width];
 		DEC_TC_FRAME_2D[row] = new int32_t[width];
 		QTC_FRAME_2D[row] = new int32_t[width];
 		QP_FRAME_2D[row] = new int32_t[width];

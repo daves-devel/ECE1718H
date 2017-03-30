@@ -1,7 +1,7 @@
 #include <common.h>
 void residual(int8_t * residual_mem, uint8_t * frame_mem, int block_size, int frame_width, int frame_height, uint8_t rounding_n, unsigned char** MOTION_FRAME);
 void generate_residual(int8_t* residual_mem, uint8_t* frame_mem, int x, int y, int block_size, int frame_width, uint8_t rounding_n, unsigned char** MOTION_FRAME);
-void GenerateResidualBlock(int8_t** residual_mem, uint8_t** frame_mem, uint8_t** REF_FRAME, int row, int col , int block);
+void GenerateResidualBlock(int32_t** residual_mem, uint8_t** frame_mem, uint8_t** REF_FRAME, int row, int col , int block);
 
 void residual(int8_t * residual_mem, uint8_t* frame_mem, int block_size, int frame_width, int frame_height, uint8_t rounding_n, unsigned char** MOTION_FRAME) {
 	for (int y = 0; y<frame_height; y = y + block_size) {
@@ -28,7 +28,7 @@ void generate_residual(int8_t * residual_mem, uint8_t* frame_mem, int x, int y, 
 	}
 }
 
-void GenerateResidualBlock(int8_t ** RES_FRAME, uint8_t** CUR_FRAME, uint8_t** REF_FRAME,int row, int col, int block) {
+void GenerateResidualBlock(int32_t ** RES_FRAME, uint8_t** CUR_FRAME, uint8_t** REF_FRAME,int row, int col, int block) {
 	for (int i = 0; i< block; i++) {
 		for (int j = 0; j< block; j++) {
 			RES_FRAME[row + i][col + j] = CUR_FRAME[row + i][col + j] - REF_FRAME[row + i][col + j];

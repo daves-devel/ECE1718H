@@ -223,9 +223,9 @@ int main(int argCnt, char **args)
 	uint8_t** REF_FRAME_2D_3 = new uint8_t*[height];
 	uint8_t** REF_FRAME_2D_4 = new uint8_t*[height];
 
-	 int8_t** ENC_RES_FRAME_2D	= new  int8_t*[height];
+	 int32_t** ENC_RES_FRAME_2D	= new  int32_t*[height];
 	int32_t** ENC_TC_FRAME_2D	= new int32_t*[height];
-	 int8_t** DEC_RES_FRAME_2D	= new  int8_t*[height];
+	 int32_t** DEC_RES_FRAME_2D	= new  int32_t*[height];
 	int32_t** DEC_TC_FRAME_2D	= new int32_t*[height];
 	int32_t** QTC_FRAME_2D		= new int32_t*[height];
 	int32_t** QP_FRAME_2D		= new int32_t*[height];
@@ -243,9 +243,9 @@ int main(int argCnt, char **args)
 		REF_FRAME_2D_3[row] = new uint8_t[width];
 		REF_FRAME_2D_4[row] = new uint8_t[width];
 
-		ENC_RES_FRAME_2D[row] = new  int8_t[width];
+		ENC_RES_FRAME_2D[row] = new  int32_t[width];
 		ENC_TC_FRAME_2D[row] = new int32_t[width];
-		DEC_RES_FRAME_2D[row] = new  int8_t[width];
+		DEC_RES_FRAME_2D[row] = new  int32_t[width];
 		DEC_TC_FRAME_2D[row] = new int32_t[width];
 		QTC_FRAME_2D[row] = new int32_t[width];
 		QP_FRAME_2D[row] = new int32_t[width];
@@ -281,9 +281,9 @@ int main(int argCnt, char **args)
 	uint8_t** REF_FRAME_2D_3S = new uint8_t*[height];
 	uint8_t** REF_FRAME_2D_4S = new uint8_t*[height];
 
-	int8_t** ENC_RES_FRAME_2DS = new  int8_t*[height];
+	int32_t** ENC_RES_FRAME_2DS = new  int32_t*[height];
 	int32_t** ENC_TC_FRAME_2DS = new int32_t*[height];
-	int8_t** DEC_RES_FRAME_2DS = new  int8_t*[height];
+	int32_t** DEC_RES_FRAME_2DS = new  int32_t*[height];
 	int32_t** DEC_TC_FRAME_2DS = new int32_t*[height];
 	int32_t** QTC_FRAME_2DS = new int32_t*[height];
 	int32_t** QP_FRAME_2DS = new int32_t*[height];
@@ -301,9 +301,9 @@ int main(int argCnt, char **args)
 		REF_FRAME_2D_3S[row] = new uint8_t[width];
 		REF_FRAME_2D_4S[row] = new uint8_t[width];
 
-		ENC_RES_FRAME_2DS[row] = new  int8_t[width];
+		ENC_RES_FRAME_2DS[row] = new  int32_t[width];
 		ENC_TC_FRAME_2DS[row] = new int32_t[width];
-		DEC_RES_FRAME_2DS[row] = new  int8_t[width];
+		DEC_RES_FRAME_2DS[row] = new  int32_t[width];
 		DEC_TC_FRAME_2DS[row] = new int32_t[width];
 		QTC_FRAME_2DS[row] = new int32_t[width];
 		QP_FRAME_2DS[row] = new int32_t[width];

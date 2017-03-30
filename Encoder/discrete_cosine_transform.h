@@ -6,8 +6,8 @@ void idct_frame_wrapper(signed char **Matrix_FRAME, int **DCTMatrix_frame, int w
 void idct(signed char **Matrix, int **DCTMatrix, int block_size);
 void write_mat(FILE *fp, signed char **m, int N, int M);
 
-void DCTBlock(int32_t** TC_FRAME, int8_t** RES_FRAME, int row, int col, int block_size);
-void IDCTBlock(int8_t **RES_FRAME, int32_t ** TC_FRAME, int row, int col, int block_size);
+void DCTBlock(int32_t** TC_FRAME, int32_t** RES_FRAME, int row, int col, int block_size);
+void IDCTBlock(int32_t **RES_FRAME, int32_t ** TC_FRAME, int row, int col, int block_size);
 
 void write_mat(FILE *fp, signed char **m, int N, int M) {
 
@@ -105,7 +105,7 @@ void dct(int **DCTMatrix, signed char **Matrix, int block_size) {
 	}
 }
 
-void DCTBlock(int32_t** TC_FRAME, int8_t** RES_FRAME, int row, int col, int block_size) {
+void DCTBlock(int32_t** TC_FRAME, int32_t** RES_FRAME, int row, int col, int block_size) {
 
 	int i, j, u, v;
 	float alpha_u, alpha_v, temp_float;
@@ -145,7 +145,7 @@ void idct(signed char **Matrix, int **DCTMatrix, int block_size) {
 	}
 }
 
-void IDCTBlock(int8_t **RES_FRAME, int32_t ** TC_FRAME,int row, int col, int block_size) {
+void IDCTBlock(int32_t **RES_FRAME, int32_t ** TC_FRAME,int row, int col, int block_size) {
 	int i, j, u, v;
 	float alpha_u, alpha_v, temp_float;
 

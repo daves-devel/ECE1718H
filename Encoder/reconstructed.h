@@ -3,7 +3,7 @@
 void recon(int8_t * residual_mem, uint8_t* recon_mem, int block_size, int frame_width, int frame_height, unsigned char** MOTION_FRAME);
 void generate_recon(int8_t * residual_mem, uint8_t* recon_mem, int x, int y, int block_size, int frame_width, unsigned char** MOTION_FRAME);
 
-void ReconstructBlock(uint8_t** REC_FRAME,int8_t** RES_FRAME, uint8_t** REF_FRAME,int row, int col, int block);
+void ReconstructBlock(uint8_t** REC_FRAME,int32_t** RES_FRAME, uint8_t** REF_FRAME,int row, int col, int block);
 void ReconstructBlockDecodeI(uint8_t** REC_FRAME, int8_t** RES_FRAME, uint8_t** REF_FRAME, int row, int col, int block, MDIFF** MDIFF_VECTOR_DIFF);
 void ReconstructBlockDecodeP(uint8_t** REC_FRAME, int8_t** RES_FRAME, uint8_t** PREV_DEC_FRAME, uint8_t** REF_FRAME, int row, int col, int block, MDIFF** MDIFF_VECTOR_DIFF);
 
@@ -24,7 +24,7 @@ void generate_recon(int8_t * residual_mem, uint8_t* recon_mem, int x, int y, int
 	}
 }
 
-void ReconstructBlock(uint8_t** REC_FRAME, int8_t** RES_FRAME, uint8_t** REF_FRAME, int row, int col, int block) {
+void ReconstructBlock(uint8_t** REC_FRAME, int32_t** RES_FRAME, uint8_t** REF_FRAME, int row, int col, int block) {
 	for (int i = 0; i < block; i++) {
 		for (int j = 0; j < block; j++) {
 			REC_FRAME[row + i][col + j] = RES_FRAME[row + i][col + j] + REF_FRAME[row + i][col + j];
@@ -32,7 +32,7 @@ void ReconstructBlock(uint8_t** REC_FRAME, int8_t** RES_FRAME, uint8_t** REF_FRA
 	}
 }
 
-void ReconstructBlockDecodeI(uint8_t** REC_FRAME, int8_t** RES_FRAME, uint8_t** REF_FRAME, int row, int col, int block, MDIFF** MDIFF_VECTOR_DIFF) {
+void ReconstructBlockDecodeI(uint8_t** REC_FRAME, int32_t** RES_FRAME, uint8_t** REF_FRAME, int row, int col, int block, MDIFF** MDIFF_VECTOR_DIFF) {
 	uint32_t mode;
 	
 
@@ -57,7 +57,7 @@ void ReconstructBlockDecodeI(uint8_t** REC_FRAME, int8_t** RES_FRAME, uint8_t** 
 	}
 }
 
-void ReconstructBlockDecodeP(uint8_t** REC_FRAME, int8_t** RES_FRAME, uint8_t** PREV_DEC_FRAME, uint8_t** REF_FRAME, int row, int col, int block, MDIFF** MDIFF_VECTOR_DIFF) {
+void ReconstructBlockDecodeP(uint8_t** REC_FRAME, int32_t** RES_FRAME, uint8_t** PREV_DEC_FRAME, uint8_t** REF_FRAME, int row, int col, int block, MDIFF** MDIFF_VECTOR_DIFF) {
 	int32_t gmvx, gmvy;
 	for (int i = 0; i < block; i++) {
 		for (int j = 0; j < block; j++) {
