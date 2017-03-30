@@ -546,9 +546,9 @@ int main(int argCnt, char **args)
 			average += BITCOUNT_ROW[i / block];
 		}
 		if (FrameType == IFRAME)
-			fprintf(bitcountrowfile, "I_FRAME:%d %d\n",frame, average / (height / block));
+			fprintf(bitcountrowfile, "I_FRAME,%d,%d\n",frame, average / (height / block));
 		else
-			fprintf(bitcountrowfile, "P_FRAME:%d %d\n",frame, average / (height / block));
+			fprintf(bitcountrowfile, "P_FRAME,%d,%d\n",frame, average / (height / block));
 
 	}
 	//Runtime

@@ -121,6 +121,7 @@ def main(argv):
 	encode_command += " -frame_header testdata\%s_FRAME_HEADER.txt"             %(testname)
 	encode_command += " -FMEnable %d"						                    %(FMEnable)
 	encode_command += " -runtime_name testdata\%s_RUNTIME.csv"					%(testname)
+	encode_command += " -bitcount_row testdata\%s_BITCOUNT_ROW.csv"				%(testname)
 	
 	print ("\nEncoder:\n" + encode_command)
 	os.system(encode_command)

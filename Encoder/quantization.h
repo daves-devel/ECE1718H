@@ -9,7 +9,7 @@ bool ValidQP(uint32_t  QP, uint32_t  block) {
 
 	uint32_t  minQP = 0;
 	uint32_t  logI = (uint32_t )log2((double)block);
-	uint32_t  maxQP = logI + 7;
+	uint32_t  maxQP = logI + 8;
 
 	if ((QP >= minQP) && (QP <= maxQP)) {
 		return true;

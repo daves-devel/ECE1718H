@@ -18,9 +18,9 @@ FMEnable        	= 0
 
 
 # TRUE FOR ALL THESE TEST CASES
-infile			= "resource\\foreman_cif.yuv"
-width			= 352
-height 			= 288
+infile			= "resource\\akiyo_qcif.yuv"
+width			= 176
+height 			= 144
 frames			= 2
 searchrange		= 2
 nRefFrames		= 1

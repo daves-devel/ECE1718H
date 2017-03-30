@@ -179,6 +179,9 @@ struct MDIFF InterFrameThreeStep(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint8
 				if (((GMV_Y + row) < 0) || ((GMV_Y + row + block) > height)) {
 					continue; //Block outside search space so don't compute
 				}
+				if ((abs(GMV_X) > 16) || (abs(GMV_Y) > 16)) {
+					continue; // GMV outside search range
+				}
 
 				struct MDIFF NEW_GMV;
 				NEW_GMV.X = GMV_X;
