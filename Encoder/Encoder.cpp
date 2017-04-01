@@ -327,7 +327,7 @@ int main(int argCnt, char **args)
 
 	// PICK INTERFRAME ALGORITHM
 	uint32_t INTERMODE;
-	if ((RDOEnable) && (QP >= 6)) {
+	if ((RDOEnable) && (QP >= 8)) {
 		INTERMODE = RDO;
 		printf("RDO ENABLED\n");
 	}

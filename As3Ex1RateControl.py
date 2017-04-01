@@ -24,9 +24,9 @@ searchrange		= 8
 block 			= 16
 nRefFrames		= 1
 VBSEnable		= 1
-RDOEnable       = 0
+RDOEnable       = 1
 FMEnable        = 1
-i_period_list 	= [1,21]
+i_period_list 	= [1,4, 21]
 RCflag			= 1
 
 
