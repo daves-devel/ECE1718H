@@ -68,6 +68,12 @@ def main(argv):
 		if (argv[index] == "-FMEnable"):
 			FMEnable = int(argv[index+1])
 
+		if (argv[index] == "-targetBr"):
+			targetBr = int(argv[index+1])
+
+		if (argv[index] == "-RCflag"):
+			RCflag = int(argv[index+1])
+
   	# LumaExtractor
 	# ------------------------------
 	luma_extract_command  = "LumaExtractor\Debug\LumaExtractor.exe"
@@ -123,6 +129,8 @@ def main(argv):
 	encode_command += " -runtime_name testdata\%s_RUNTIME.csv"					%(testname)
 	encode_command += " -bitcount_row testdata\%s_BITCOUNT_ROW.csv"				%(testname)
 	encode_command += " -total_bitcount_name testdata\%s_TOTAL_BITCOUNT.csv"	%(testname)
+	encode_command += " -targetBr %d"						                    %(targetBr)
+	encode_command += " -RCflag %d"						                        %(RCflag)
 	
 	print ("\nEncoder:\n" + encode_command)
 	os.system(encode_command)
