@@ -460,6 +460,8 @@ int main(int argCnt, char **args)
 
 		// Apply Encode Operations on Each Block
 		for (int row = 0; row < height; row += block) {
+			if (row == 0 && RCflag == 1)
+				QP = 4;
 			for (int col = 0; col < width; col += block) {
 
 				// IDEALLY THREAD EVERYTHING IN THIS FOR LOOP FOR PFRAMES
