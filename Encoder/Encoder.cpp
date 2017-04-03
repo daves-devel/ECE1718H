@@ -32,6 +32,7 @@ int main(int argCnt, char **args)
 	char bitcount_row_name[500] = "";
 	char coeff_bitcount_name[500]	= "";
 	char mdiff_bitcount_name[500]	= "";
+	char total_bitcount_name[500] = "";
 	char frame_header_name[500]		= "";
 	char runtime_name[500]			= "";
 
@@ -82,6 +83,12 @@ int main(int argCnt, char **args)
 		else if (!strcmp((*args) + 1, "mdiff_bitcount_name")) {
 			args++;
 			sscanf(*args, "%s", mdiff_bitcount_name);
+			args++;
+			tmpArgCnt += 2;
+		}
+		else if (!strcmp((*args) + 1, "total_bitcount_name")) {
+			args++;
+			sscanf(*args, "%s", total_bitcount_name);
 			args++;
 			tmpArgCnt += 2;
 		}
@@ -197,6 +204,7 @@ int main(int argCnt, char **args)
 	FILE* curfile = fopen(curfile_name, "rb");
 	coeff_bitcount_file = fopen(coeff_bitcount_name, "w");
 	mdiff_bitcount_file = fopen(mdiff_bitcount_name, "w");
+	total_bitcount_file = fopen(total_bitcount_name, "w");
 	frame_header_file = fopen(frame_header_name, "w+b");
 	FILE* recfile = fopen(recfile_name, "w+b");
 	FILE* runtime_file = fopen(runtime_name, "w");
@@ -351,8 +359,8 @@ int main(int argCnt, char **args)
 	for (int frame = 0; frame < frames; frame++) {
 		//Open GOLOMB and MDIFF files
 		snprintf(golomb_name, sizeof(golomb_name), "testdata\\COEFF_GOLOMB_CODING_%d", frame);
-		snprintf(mdiff_bitcount_name, sizeof(mdiff_bitcount_name), "testdata\\MDIFF_GOLOMB_%d", frame);
-		mdiff_golomb = fopen(mdiff_bitcount_name, "wb");
+		snprintf(mdiff_name, sizeof(mdiff_name), "testdata\\MDIFF_GOLOMB_%d", frame);
+		mdiff_golomb = fopen(mdiff_name, "wb");
 		golomb_file = fopen(golomb_name, "wb");
 #ifdef TRACE_ON
 		char buf[0x100];
@@ -569,6 +577,7 @@ int main(int argCnt, char **args)
 		//Bitcount Per frame
 		fprintf(coeff_bitcount_file, "%d,%d\n", frame, coeff_bitcount);
 		fprintf(mdiff_bitcount_file, "%d,%d\n", frame, mdiff_bitcount);
+		fprintf(total_bitcount_file, "%d,%d\n", frame, coeff_bitcount + mdiff_bitcount);
 		fclose(mdiff_golomb);
 		fclose(golomb_file);
 		//Bitcount Per row
@@ -650,6 +659,7 @@ int main(int argCnt, char **args)
 	fclose(recfile);
 	fclose(mdiff_bitcount_file);
 	fclose(coeff_bitcount_file);
+	fclose(total_bitcount_file);
 	fclose(reffile);
 	fclose(decresfile);
 	fclose(dectcfile);

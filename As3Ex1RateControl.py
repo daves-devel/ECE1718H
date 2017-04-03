@@ -18,6 +18,7 @@ FMEnable        = 0
 RCflag			= 0
 
 
+
 # TRUE FOR ALL THESE TEST CASES
 frames			= 21
 searchrange		= 8
@@ -37,7 +38,7 @@ infile = "resource\\TestCIF.yuv"
 width  = 352
 height = 288
 targetBr = 2400000
-qp_list = [5]
+qp_list = [4]
 
 for i_period in i_period_list:
 	for qp in qp_list:
@@ -53,7 +54,7 @@ infile = "resource\\TestQCIF.yuv"
 width  = 176
 height = 144
 targetBr = 960000
-qp_list = [5]
+qp_list = [4]
 
 
 for i_period in i_period_list:

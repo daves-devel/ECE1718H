@@ -14,6 +14,7 @@
 
 FILE* coeff_bitcount_file;
 FILE* mdiff_bitcount_file;
+FILE* total_bitcount_file;
 FILE* frame_header_file;
 FILE* golomb_file;
 FILE* mdiff_golomb;
@@ -165,10 +166,10 @@ void write_mat3(FILE *fp, int32_t**m, int N, int M) {
 	}
 	fprintf(fp, "\n");
 }
-int CIF_I_TABLE[12] = { 61121, 41936, 27601, 11584, 8408, 7232, 1056, 880, 704, 528, 400, 200 };
-int CIF_P_TABLE[12] = { 2112, 1936, 1760, 1584, 1408, 1232, 1056, 880, 704, 528, 400, 200 };
-int QCIF_I_TABLE[12] = { 2112, 1936, 1760, 1584, 1408, 1232, 1056, 880, 704, 528, 400, 200 };
-int QCIF_P_TABLE[12] = { 2112, 1936, 1760, 1584, 1408, 1232, 1056, 880, 704, 528, 400, 200 };
+int CIF_I_TABLE[12] = { 22089,	15756,	10715,	6911,	4224,	2634,	1675,	1181,	886,	673,	213,	68};
+int CIF_P_TABLE[12] = { 19697,	13690,	9348,	6043,	3653,	2330,	1694,	1467,	237,	183,	130,	126 };
+int QCIF_I_TABLE[12] = { 12449,	9309,	6788,	4726,	3073,	1877,	1090,	683,	526,	326,	125,	35 };
+int QCIF_P_TABLE[12] = { 9689,	6968,	4870,	3371,	2159,	1375,	864,	707,	153,	102,	71,		71 };
 
 #ifdef TRACE_ON
 FILE* file_vector_org;
