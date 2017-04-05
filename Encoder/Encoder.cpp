@@ -442,6 +442,7 @@ int main(int argCnt, char **args)
 
 	//Bitcount per row
 	uint32_t *BITCOUNT_ROW = new uint32_t[height / block];
+	double *BITCOUNT_ROW_PERCENT = new double[height / block];
 
 	// Encode Each Frame
 	// =========================================
@@ -451,7 +452,6 @@ int main(int argCnt, char **args)
 		snprintf(mdiff_name, sizeof(mdiff_name), "testdata\\MDIFF_GOLOMB_%d", frame);
 		mdiff_golomb = fopen(mdiff_name, "wb");
 		golomb_file = fopen(golomb_name, "wb");
-		printf("testing");
 #ifdef TRACE_ON
 		char buf[0x100];
 		snprintf(buf, sizeof(buf), "testdata\\MDIFF_ORG_ENC%d.txt", frame);
@@ -550,8 +550,8 @@ int main(int argCnt, char **args)
 
 		// Apply Encode Operations on Each Block
 		for (int row = 0; row < height; row += block) {
-			if (row == 0 && RCflag == 1)
-				QP = row_rate_control(row-block, targetBr, RCflag, width, height, FrameType, block, 0);
+			if (row == 0 && RCflag >= 1)
+				QP = row_rate_control(row-block, targetBr, RCflag, width, height, FrameType, block, 0, QP, BITCOUNT_ROW, BITCOUNT_ROW_PERCENT, 0);//TODO
 			for (int col = 0; col < width; col += block) {
 				Encode(FrameType, row, col, block, nRefFrames, INTERMODE, frame, i_period, width, height, QP,
 					MDIFF_VECTOR, MDIFF_VECTOR_2, MDIFF_VECTOR_3, MDIFF_VECTOR_4,
@@ -581,9 +581,10 @@ int main(int argCnt, char **args)
 				bitcount_row = bitcount_row + bitcount_temp;
 				if (col + block == width) {//Collect bitcount per row
 					BITCOUNT_ROW[row / block] = bitcount_row;
+					if (RCflag >= 1) {
+						QP = row_rate_control(row, targetBr, RCflag, width, height, FrameType, block, coeff_bitcount + mdiff_bitcount, QP, BITCOUNT_ROW, BITCOUNT_ROW_PERCENT, 1);
+					}
 					bitcount_row = 0;
-					if(RCflag==1)
-						QP = row_rate_control(row, targetBr, RCflag, width, height, FrameType, block, coeff_bitcount + mdiff_bitcount);
 				}
 			}
 		}//Encode
