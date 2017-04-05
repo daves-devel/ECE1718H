@@ -19,6 +19,95 @@
 #include <ctime>
 
 
+void Encode(int FrameType, int row, int col, int block, int nRefFrames, uint32_t INTERMODE, int frame, int i_period, int width, int height, int QP,
+	MDIFF **MDIFF_VECTOR, MDIFF **MDIFF_VECTOR_2, MDIFF **MDIFF_VECTOR_3, MDIFF **MDIFF_VECTOR_4, uint8_t **CUR_FRAME_2D,
+	uint8_t **REC_FRAME_2D, uint8_t **REC_FRAME_2D_2, uint8_t **REC_FRAME_2D_3, uint8_t **REC_FRAME_2D_4,
+	uint8_t **REF_FRAME_2D, uint8_t **REF_FRAME_2D_2, uint8_t **REF_FRAME_2D_3, uint8_t **REF_FRAME_2D_4,
+	int32_t **ENC_RES_FRAME_2D, int32_t **QTC_FRAME_2D, int32_t **QP_FRAME_2D, int32_t **ENC_TC_FRAME_2D, int32_t **DEC_RES_FRAME_2D, int32_t **DEC_TC_FRAME_2D,
+	int range, int RDOEnable)
+{
+	// PREDICTOR DATA GENERATION
+	if (FrameType == IFRAME) {
+		MDIFF_VECTOR[row / block][col / block] = IntraFramePrediction(CUR_FRAME_2D, REC_FRAME_2D, REF_FRAME_2D, row, col, block);
+	}
+
+	if (FrameType == PFRAME) {
+		MDIFF_VECTOR[row / block][col / block] = InterFramePrediction(INTERMODE, CUR_FRAME_2D, REC_FRAME_2D, REF_FRAME_2D, row, col, width, height, block, range, 1, MDIFF_VECTOR);
+		//Multireference code start Only activated if nRefFrames>=2
+		if (nRefFrames >= 2) {
+			MDIFF_VECTOR[row / block][col / block] = MultiRefInterPrediction(INTERMODE, CUR_FRAME_2D, REC_FRAME_2D_2, REC_FRAME_2D_3, REC_FRAME_2D_4,
+				REF_FRAME_2D, REF_FRAME_2D_2, REF_FRAME_2D_3, REF_FRAME_2D_4,
+				row, col, width, height, block, range, nRefFrames, frame, i_period,
+				MDIFF_VECTOR, MDIFF_VECTOR_2, MDIFF_VECTOR_3, MDIFF_VECTOR_4);
+		}
+	}
+
+	// RESIDUAL 
+	GenerateResidualBlock(ENC_RES_FRAME_2D, CUR_FRAME_2D, REF_FRAME_2D, row, col, block);
+
+	// DCT 
+	DCTBlock(ENC_TC_FRAME_2D, ENC_RES_FRAME_2D, row, col, block);
+
+	// QUANTIZE
+	QuantizeBlock(QTC_FRAME_2D, ENC_TC_FRAME_2D, QP_FRAME_2D, row, col, width, height, QP, block);
+
+	// SCALE
+	ScaleBlock(DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D, row, col, width, height, QP, block);
+
+	// IDCT
+	IDCTBlock(DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, row, col, block);
+
+	// RECONSTRUCT 
+	ReconstructBlock(REC_FRAME_2D, DEC_RES_FRAME_2D, REF_FRAME_2D, row, col, block);
+}
+void EncodeVBS(int FrameType, int row, int col, int block, int nRefFrames, uint32_t INTERMODE, int frame, int i_period, int width, int height, int QP,
+	MDIFF **MDIFF_VECTORS, MDIFF **MDIFF_VECTOR_2S, MDIFF **MDIFF_VECTOR_3S, MDIFF **MDIFF_VECTOR_4S, uint8_t **CUR_FRAME_2DS,
+	uint8_t **REC_FRAME_2DS, uint8_t **REC_FRAME_2D_2S, uint8_t **REC_FRAME_2D_3S, uint8_t **REC_FRAME_2D_4S,
+	uint8_t **REF_FRAME_2DS, uint8_t **REF_FRAME_2D_2S, uint8_t **REF_FRAME_2D_3S, uint8_t **REF_FRAME_2D_4S,
+	int32_t **ENC_RES_FRAME_2DS, int32_t **QTC_FRAME_2DS, int32_t **QP_FRAME_2DS, int32_t **ENC_TC_FRAME_2DS, int32_t **DEC_RES_FRAME_2DS, int32_t **DEC_TC_FRAME_2DS,
+	int block_split, int range, int RDOEnable)
+{
+	for (int row2 = row; row2 < row + block; row2 += block_split) {
+		for (int col2 = col; col2 < col + block; col2 += block_split) {
+
+			// IDEALLY THREAD EVERYTHING IN THIS FOR LOOP FOR PFRAMES
+
+			// PREDICTOR DATA GENERATION
+			if (FrameType == IFRAME) {
+				MDIFF_VECTORS[row2 / block_split][col2 / block_split] = IntraFramePrediction(CUR_FRAME_2DS, REC_FRAME_2DS, REF_FRAME_2DS, row2, col2, block_split);
+			}
+
+			if (FrameType == PFRAME) {
+				MDIFF_VECTORS[row2 / block_split][col2 / block_split] = InterFramePrediction(INTERMODE, CUR_FRAME_2DS, REC_FRAME_2DS, REF_FRAME_2DS, row2, col2, width, height, block_split, range, 1, MDIFF_VECTORS);
+				//Multireference code start Only activated if nRefFrames>=2
+				if (nRefFrames >= 2) {
+					MDIFF_VECTORS[row / block][col / block] = MultiRefInterPrediction(INTERMODE, CUR_FRAME_2DS, REC_FRAME_2D_2S, REC_FRAME_2D_3S, REC_FRAME_2D_4S,
+						REF_FRAME_2DS, REF_FRAME_2D_2S, REF_FRAME_2D_3S, REF_FRAME_2D_4S,
+						row, col, width, height, block, range, QP, RDOEnable, nRefFrames,
+						MDIFF_VECTORS, MDIFF_VECTOR_2S, MDIFF_VECTOR_3S, MDIFF_VECTOR_4S);
+				}
+			}
+
+			// RESIDUAL 
+			GenerateResidualBlock(ENC_RES_FRAME_2DS, CUR_FRAME_2DS, REF_FRAME_2DS, row2, col2, block_split);
+
+			// DCT 
+			DCTBlock(ENC_TC_FRAME_2DS, ENC_RES_FRAME_2DS, row2, col2, block_split);
+
+			// QUANTIZE
+			QuantizeBlock(QTC_FRAME_2DS, ENC_TC_FRAME_2DS, QP_FRAME_2DS, row2, col2, width, height, QP, block_split);
+
+			// SCALE
+			ScaleBlock(DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS, row2, col2, width, height, QP, block_split);
+
+			// IDCT
+			IDCTBlock(DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, row2, col2, block_split);
+
+			// RECONSTRUCT 
+			ReconstructBlock(REC_FRAME_2DS, DEC_RES_FRAME_2DS, REF_FRAME_2DS, row2, col2, block_split);
+		}
+	}
+}
 
 
 int main(int argCnt, char **args)
@@ -362,6 +451,7 @@ int main(int argCnt, char **args)
 		snprintf(mdiff_name, sizeof(mdiff_name), "testdata\\MDIFF_GOLOMB_%d", frame);
 		mdiff_golomb = fopen(mdiff_name, "wb");
 		golomb_file = fopen(golomb_name, "wb");
+		printf("testing");
 #ifdef TRACE_ON
 		char buf[0x100];
 		snprintf(buf, sizeof(buf), "testdata\\MDIFF_ORG_ENC%d.txt", frame);
@@ -463,84 +553,20 @@ int main(int argCnt, char **args)
 			if (row == 0 && RCflag == 1)
 				QP = row_rate_control(row-block, targetBr, RCflag, width, height, FrameType, block, 0);
 			for (int col = 0; col < width; col += block) {
-
-				// IDEALLY THREAD EVERYTHING IN THIS FOR LOOP FOR PFRAMES
-
-				// PREDICTOR DATA GENERATION
-				if (FrameType == IFRAME) {
-					MDIFF_VECTOR[row/block][col/block] = IntraFramePrediction (CUR_FRAME_2D,REC_FRAME_2D,REF_FRAME_2D,row,col,block);
-				}
-				
-				if (FrameType == PFRAME) {
-					MDIFF_VECTOR[row / block][col / block] = InterFramePrediction(INTERMODE,CUR_FRAME_2D, REC_FRAME_2D, REF_FRAME_2D, row, col, width, height, block, range, 1, MDIFF_VECTOR);
-					//Multireference code start Only activated if nRefFrames>=2
-					if (nRefFrames >= 2) {
-						MDIFF_VECTOR[row / block][col / block] = MultiRefInterPrediction(INTERMODE,CUR_FRAME_2D, REC_FRAME_2D_2, REC_FRAME_2D_3, REC_FRAME_2D_4,
-							REF_FRAME_2D, REF_FRAME_2D_2, REF_FRAME_2D_3, REF_FRAME_2D_4,
-							row, col, width, height, block, range, nRefFrames, frame, i_period,
-							MDIFF_VECTOR, MDIFF_VECTOR_2, MDIFF_VECTOR_3, MDIFF_VECTOR_4);
-					}
-				}
-
-				// RESIDUAL 
-				GenerateResidualBlock (ENC_RES_FRAME_2D, CUR_FRAME_2D, REF_FRAME_2D, row, col, block);
-
-				// DCT 
-				DCTBlock (ENC_TC_FRAME_2D, ENC_RES_FRAME_2D, row, col, block);
-
-				// QUANTIZE
-				QuantizeBlock (QTC_FRAME_2D, ENC_TC_FRAME_2D, QP_FRAME_2D,row, col, width, height, QP, block);
-
-				// SCALE
-				ScaleBlock (DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,row, col, width, height, QP, block);
-				
-				// IDCT
-				IDCTBlock (DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, row, col, block);
-
-				// RECONSTRUCT 
-				ReconstructBlock(REC_FRAME_2D, DEC_RES_FRAME_2D, REF_FRAME_2D, row, col, block);
+				Encode(FrameType, row, col, block, nRefFrames, INTERMODE, frame, i_period, width, height, QP,
+					MDIFF_VECTOR, MDIFF_VECTOR_2, MDIFF_VECTOR_3, MDIFF_VECTOR_4,
+					CUR_FRAME_2D, REC_FRAME_2D, REC_FRAME_2D_2, REC_FRAME_2D_3, REC_FRAME_2D_4,
+					REF_FRAME_2D, REF_FRAME_2D_2, REF_FRAME_2D_3, REF_FRAME_2D_4,
+					ENC_RES_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D,
+					range, RDOEnable);
 
 				if (VBSEnable) {//start VBSEnable code
-					for (int row2 = row; row2 < row + block; row2 += block_split) {
-						for (int col2 = col; col2 < col + block; col2 += block_split) {
-
-							// IDEALLY THREAD EVERYTHING IN THIS FOR LOOP FOR PFRAMES
-
-							// PREDICTOR DATA GENERATION
-							if (FrameType == IFRAME) {
-								MDIFF_VECTORS[row2 / block_split][col2 / block_split] = IntraFramePrediction(CUR_FRAME_2DS, REC_FRAME_2DS, REF_FRAME_2DS, row2, col2, block_split);
-							}
-
-							if (FrameType == PFRAME) {
-								MDIFF_VECTORS[row2 / block_split][col2 / block_split] = InterFramePrediction(INTERMODE,CUR_FRAME_2DS, REC_FRAME_2DS, REF_FRAME_2DS, row2, col2, width, height, block_split, range, 1, MDIFF_VECTORS);
-								//Multireference code start Only activated if nRefFrames>=2
-								if (nRefFrames >= 2) {
-									MDIFF_VECTORS[row / block][col / block] = MultiRefInterPrediction(INTERMODE,CUR_FRAME_2DS, REC_FRAME_2D_2S, REC_FRAME_2D_3S, REC_FRAME_2D_4S,
-										REF_FRAME_2DS, REF_FRAME_2D_2S, REF_FRAME_2D_3S, REF_FRAME_2D_4S,
-										row, col, width, height, block, range, QP, RDOEnable, nRefFrames,
-										MDIFF_VECTORS, MDIFF_VECTOR_2S, MDIFF_VECTOR_3S, MDIFF_VECTOR_4S);
-								}
-							}
-
-							// RESIDUAL 
-							GenerateResidualBlock(ENC_RES_FRAME_2DS, CUR_FRAME_2DS, REF_FRAME_2DS, row2, col2, block_split);
-
-							// DCT 
-							DCTBlock(ENC_TC_FRAME_2DS, ENC_RES_FRAME_2DS, row2, col2, block_split);
-
-							// QUANTIZE
-							QuantizeBlock(QTC_FRAME_2DS, ENC_TC_FRAME_2DS, QP_FRAME_2DS, row2, col2, width, height, QP, block_split);
-
-							// SCALE
-							ScaleBlock(DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS, row2, col2, width, height, QP, block_split);
-
-							// IDCT
-							IDCTBlock(DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, row2, col2, block_split);
-
-							// RECONSTRUCT 
-							ReconstructBlock(REC_FRAME_2DS, DEC_RES_FRAME_2DS, REF_FRAME_2DS, row2, col2, block_split);
-						}
-					}
+					EncodeVBS(FrameType, row, col, block, nRefFrames, INTERMODE, frame, i_period, width, height, QP,
+						MDIFF_VECTORS, MDIFF_VECTOR_2S, MDIFF_VECTOR_3S, MDIFF_VECTOR_4S, CUR_FRAME_2DS,
+						REC_FRAME_2DS, REC_FRAME_2D_2S, REC_FRAME_2D_3S, REC_FRAME_2D_4S,
+						REF_FRAME_2DS, REF_FRAME_2D_2S, REF_FRAME_2D_3S, REF_FRAME_2D_4S,
+						ENC_RES_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS,
+						block_split, range, RDOEnable);
 					//Pick Winner
 					VBSWinner(MDIFF_VECTOR, MDIFF_VECTORS, row, col, block, REC_FRAME_2D, REC_FRAME_2DS);
 				}//End of VBSenable code
@@ -560,11 +586,11 @@ int main(int argCnt, char **args)
 						QP = row_rate_control(row, targetBr, RCflag, width, height, FrameType, block, coeff_bitcount + mdiff_bitcount);
 				}
 			}
-		}
+		}//Encode
 		
-		write_mat(reffile, REF_FRAME_2D, height, width);
-		write_mat3(decresfile, DEC_RES_FRAME_2D, height, width);
-		write_mat2(dectcfile, DEC_TC_FRAME_2D, height, width);
+		//write_mat(reffile, REF_FRAME_2D, height, width);
+		//write_mat3(decresfile, DEC_RES_FRAME_2D, height, width);
+		//write_mat2(dectcfile, DEC_TC_FRAME_2D, height, width);
 
 		// File Dumps
 		//RECON
@@ -600,7 +626,7 @@ int main(int argCnt, char **args)
 		fclose(file_rle);
 #endif 
 
-	}
+	}//Frame
 	//Runtime
 	int stop_s = clock();
 	fprintf(runtime_file,"%.2f\n", (double)(clock() - start_s) / CLOCKS_PER_SEC);
@@ -668,242 +694,3 @@ int main(int argCnt, char **args)
 	return 0;
 
 }
-
-/*
-----------------------
-IRFAN TEST CODE START
-----------------------
-
-width		= 8;
-height		= 8;
-frames		= 1;
-range		= 1;
-block		= 2;
-i_period	= 1;
-QP			= 0;
-
-----------------------
-IRFAN TEST CODE END
-----------------------
-*/
-
-/*
-----------------------
-IRFAN TEST CODE START
-----------------------
-
-char temp = 0;
-for (int row = 0; row < 8; row++) {
-for (int col = 0; col < 8; col++) {
-CUR_FRAME_2D[row][col] = temp;
-temp++;
-temp = (temp % 32);
-}
-
-}
-
-
-----------------------
-IRFAN TEST CODE END
-----------------------
-*/
-
-/*
-----------------------
-IRFAN TEST CODE START
-----------------------
-
-
-FILE *fp = fopen("INTRA.csv", "w");
-fprintf(fp, "CUR FRAME\n");
-for (int i = 0; i< height; i++) {
-fprintf(fp, "%d", CUR_FRAME_2D[i][0]);
-for (int j = 1; j < width; j++) {
-fprintf(fp, ",%d", CUR_FRAME_2D[i][j]);
-}
-fprintf(fp, "\n");
-}
-fprintf(fp, "\n");
-fprintf(fp, "REF FRAME\n");
-for (int i = 0; i< height; i++) {
-fprintf(fp, "%d", REF_FRAME_2D[i][0]);
-for (int j = 1; j < width; j++) {
-fprintf(fp, ",%d", REF_FRAME_2D[i][j]);
-}
-fprintf(fp, "\n");
-}
-
-fprintf(fp, "\n");
-fprintf(fp, "ENC RES FRAME\n");
-for (int i = 0; i< height; i++) {
-fprintf(fp, "%d", ENC_RES_FRAME_2D[i][0]);
-for (int j = 1; j < width; j++) {
-fprintf(fp, ",%d", ENC_RES_FRAME_2D[i][j]);
-}
-fprintf(fp, "\n");
-}
-
-fprintf(fp, "\n");
-fprintf(fp, "ENC TC FRAME\n");
-for (int i = 0; i< height; i++) {
-fprintf(fp, "%d", ENC_TC_FRAME_2D[i][0]);
-for (int j = 1; j < width; j++) {
-fprintf(fp, ",%d", ENC_TC_FRAME_2D[i][j]);
-}
-fprintf(fp, "\n");
-}
-
-fprintf(fp, "\n");
-fprintf(fp, "QP FRAME\n");
-for (int i = 0; i< height; i++) {
-fprintf(fp, "%d", QP_FRAME_2D[i][0]);
-for (int j = 1; j < width; j++) {
-fprintf(fp, ",%d", QP_FRAME_2D[i][j]);
-}
-fprintf(fp, "\n");
-}
-
-
-fprintf(fp, "\n");
-fprintf(fp, "QUANTIZED FRAME\n");
-for (int i = 0; i< height; i++) {
-fprintf(fp, "%d", QTC_FRAME_2D[i][0]);
-for (int j = 1; j < width; j++) {
-fprintf(fp, ",%d", QTC_FRAME_2D[i][j]);
-}
-fprintf(fp, "\n");
-}
-
-fprintf(fp, "\n");
-fprintf(fp, "DEC TC FRAME\n");
-for (int i = 0; i< height; i++) {
-fprintf(fp, "%d", DEC_TC_FRAME_2D[i][0]);
-for (int j = 1; j < width; j++) {
-fprintf(fp, ",%d", DEC_TC_FRAME_2D[i][j]);
-}
-fprintf(fp, "\n");
-}
-
-fprintf(fp, "\n");
-fprintf(fp, "DEC RES FRAME\n");
-for (int i = 0; i< height; i++) {
-fprintf(fp, "%d", DEC_RES_FRAME_2D[i][0]);
-for (int j = 1; j < width; j++) {
-fprintf(fp, ",%d", DEC_RES_FRAME_2D[i][j]);
-}
-fprintf(fp, "\n");
-}
-
-fprintf(fp, "\n");
-fprintf(fp, "REC FRAME\n");
-for (int i = 0; i< height; i++) {
-fprintf(fp, "%d", REC_FRAME_2D[i][0]);
-for (int j = 1; j < width; j++) {
-fprintf(fp, ",%d", REC_FRAME_2D[i][j]);
-}
-fprintf(fp, "\n");
-}
-fprintf(fp, "\n");
-fclose(fp);
-
-
-
-----------------------
-IRFAN TEST CODE END
-----------------------
-*/
-
-/*
-int GMV_X = MDIFF_VECTOR[((row*width / block) / block) + (col / block)].X;
-int GMV_Y = MDIFF_VECTOR[((row*width / block) / block) + (col / block)].Y;
-
-// Fill the Match Frame with the best matching block
-for (int i = 0; i < block; i++) {
-for (int j = 0; j < block; j++) {
-MATCH_FRAME[row + i][col + j] = REC_FRAME[(row + GMV_Y + i) * width + (col + GMV_X + j)];
-}
-}
-*/
-/*
-----------------------
-IRFAN TEST CODE START
-----------------------
-
-for (int row = 0; row < height; row++) {
-for (int col = 0; col < width; col++) {
-ENC_TC_FRAME_2D[row][col] = ENC_RES_FRAME_2D[row][col];
-}
-}
-
-----------------------
-IRFAN TEST CODE END
-----------------------
-*/
-
-/*
-----------------------
-IRFAN TEST CODE START
-----------------------
-
-for (int row = 0; row < height; row++) {
-for (int col = 0; col < width; col++) {
-DEC_RES_FRAME_2D[row][col] = DEC_TC_FRAME_2D[row][col];
-}
-}
-
-----------------------
-IRFAN TEST CODE END
-----------------------
-*/
-/*
-int DATA_1 = MDIFF_VECTOR[((row*width / block) / block) + (col / block)].X;
-int DATA_2 = MDIFF_VECTOR[((row*width / block) / block) + (col / block)].Y;
-
-// MV FILE GENERATION (VECTOR DUMP)
-// =======================================
-fwrite(&DATA_1, sizeof(int), 1, gmvXfile);
-fwrite(&DATA_2, sizeof(int), 1, gmvYfile);
-if (FrameType == IFRAME) {
-fprintf(mvfile, "B(%d,%d)_M(%d,%d)\n", row / block, col / block, DATA_1, DATA_2);
-}
-if (FrameType == PFRAME) {
-fprintf(mvfile, "B(%d,%d)_V(%d,%d)\n", row / block, col / block, DATA_1, DATA_2);
-}
-*/
-
-//TEST JUAN
-/*	int size = 4;
-int index = 0;
-int8_t * out = new int8_t[size *size];
-int8_t * RLE = new int8_t[size*size + size*size];
-int8_t ** in = new int8_t*[size];
-for (int i = 0; i < size; i++)
-in[i] = new int8_t[size];
-for (int i = 0; i < size; i++){
-for (int j = 0; j < size; j++) {
-in[i][j] = index;
-index++;
-}
-}
-in[0][0] = -31;
-in[0][1] = 9;
-in[0][2] = 8;
-in[0][3] = 4;
-in[1][0] = -4;
-in[1][1] = 1;
-in[1][2] = 4;
-in[1][3] = 0;
-in[2][0] = -3;
-in[2][1] = 2;
-in[2][2] = 4;
-in[2][3] = 0;
-in[3][0] = 4;
-in[3][1] = 0;
-in[3][2] = -4;
-in[3][3] = 2;
-
-int total_counter=entropy(in, out, size, RLE);
-FILE* test = fopen("test.txt", "w");
-fprint_coeef(in, out, size, test, RLE, total_counter);
-fclose(test);
-*/
