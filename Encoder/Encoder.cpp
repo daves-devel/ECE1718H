@@ -141,6 +141,7 @@ int main(int argCnt, char **args)
 	int bitcount_row	 = 0;
 	int targetBr = 0;
 	int	RCflag = 0;
+	int SceneChange = 0;
 
 
 	//  Parse Input Arguments
@@ -422,6 +423,11 @@ int main(int argCnt, char **args)
 		MDIFF_VECTOR_DIFFS[row / block_split] = new struct MDIFF[width / block_split];
 	}
 
+	//Bitcount per row
+	uint32_t *BITCOUNT_ROW = new uint32_t[height / block];
+	double *BITCOUNT_ROW_PERCENT = new double[height / block];
+	int *QP_ROW = new int[height / block];
+
 	// PICK INTERFRAME ALGORITHM
 	uint32_t INTERMODE;
 	if ((RDOEnable) && (QP >= 8)) {
@@ -440,10 +446,7 @@ int main(int argCnt, char **args)
 	//Runtime
 	int start_s = clock();
 
-	//Bitcount per row
-	uint32_t *BITCOUNT_ROW = new uint32_t[height / block];
-	double *BITCOUNT_ROW_PERCENT = new double[height / block];
-
+	FILE* qp_file = fopen("testdata\\QP_FILE.csv", "w");
 	// Encode Each Frame
 	// =========================================
 	for (int frame = 0; frame < frames; frame++) {
@@ -549,46 +552,63 @@ int main(int argCnt, char **args)
 		}//end buffer curr_frame
 
 		// Apply Encode Operations on Each Block
-		for (int row = 0; row < height; row += block) {
-			if (row == 0 && RCflag >= 1)
-				QP = row_rate_control(row-block, targetBr, RCflag, width, height, FrameType, block, 0, QP, BITCOUNT_ROW, BITCOUNT_ROW_PERCENT, 0);//TODO
-			for (int col = 0; col < width; col += block) {
-				Encode(FrameType, row, col, block, nRefFrames, INTERMODE, frame, i_period, width, height, QP,
-					MDIFF_VECTOR, MDIFF_VECTOR_2, MDIFF_VECTOR_3, MDIFF_VECTOR_4,
-					CUR_FRAME_2D, REC_FRAME_2D, REC_FRAME_2D_2, REC_FRAME_2D_3, REC_FRAME_2D_4,
-					REF_FRAME_2D, REF_FRAME_2D_2, REF_FRAME_2D_3, REF_FRAME_2D_4,
-					ENC_RES_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D,
-					range, RDOEnable);
-
-				if (VBSEnable) {//start VBSEnable code
-					EncodeVBS(FrameType, row, col, block, nRefFrames, INTERMODE, frame, i_period, width, height, QP,
-						MDIFF_VECTORS, MDIFF_VECTOR_2S, MDIFF_VECTOR_3S, MDIFF_VECTOR_4S, CUR_FRAME_2DS,
-						REC_FRAME_2DS, REC_FRAME_2D_2S, REC_FRAME_2D_3S, REC_FRAME_2D_4S,
-						REF_FRAME_2DS, REF_FRAME_2D_2S, REF_FRAME_2D_3S, REF_FRAME_2D_4S,
-						ENC_RES_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS,
-						block_split, range, RDOEnable);
-					//Pick Winner
-					VBSWinner(MDIFF_VECTOR, MDIFF_VECTORS, row, col, block, REC_FRAME_2D, REC_FRAME_2DS);
-				}//End of VBSenable code
-				 // Differential and Entropy Encode steps 
-				int bitcount_temp=0;
-				bitcount_temp =entropy_wrapper(QTC_FRAME_2D, block, height, width, frame, row, col);
-				coeff_bitcount = coeff_bitcount + bitcount_temp;
-				bitcount_row = bitcount_row + bitcount_temp;
-				diff_enc_wrapper(MDIFF_VECTOR, MDIFF_VECTOR_DIFF, FrameType, height, width, block, frame, row, col);
-				bitcount_temp =encode_mdiff_wrapper(MDIFF_VECTOR_DIFF, MDIFF_VECTOR, height, width, block, frame, FrameType, row, col);
-				mdiff_bitcount = mdiff_bitcount + bitcount_temp;
-				bitcount_row = bitcount_row + bitcount_temp;
-				if (col + block == width) {//Collect bitcount per row
-					BITCOUNT_ROW[row / block] = bitcount_row;
-					if (RCflag >= 1) {
-						QP = row_rate_control(row, targetBr, RCflag, width, height, FrameType, block, coeff_bitcount + mdiff_bitcount, QP, BITCOUNT_ROW, BITCOUNT_ROW_PERCENT, 1);
-					}
-					bitcount_row = 0;
-				}
+		for (int pass = 0; pass < 2; pass++) {
+			if (pass == 1) {//Second pass set up
+				fclose(mdiff_golomb);
+				fclose(golomb_file);
+				mdiff_golomb = fopen(mdiff_name, "wb");
+				golomb_file = fopen(golomb_name, "wb");
+				coeff_bitcount = 0;
+				mdiff_bitcount = 0;
 			}
-		}//Encode
-		
+
+			for (int row = 0; row < height; row += block) {
+				if (row == 0 && RCflag == 1 || row == 0 && RCflag >= 2 && pass == 1) {
+					QP = row_rate_control(row - block, targetBr, RCflag, width, height, FrameType, block, 0, QP, BITCOUNT_ROW, BITCOUNT_ROW_PERCENT, pass);//TODO
+					QP_ROW[0] = QP;
+				}
+				for (int col = 0; col < width; col += block) {
+					Encode(FrameType, row, col, block, nRefFrames, INTERMODE, frame, i_period, width, height, QP,
+						MDIFF_VECTOR, MDIFF_VECTOR_2, MDIFF_VECTOR_3, MDIFF_VECTOR_4,
+						CUR_FRAME_2D, REC_FRAME_2D, REC_FRAME_2D_2, REC_FRAME_2D_3, REC_FRAME_2D_4,
+						REF_FRAME_2D, REF_FRAME_2D_2, REF_FRAME_2D_3, REF_FRAME_2D_4,
+						ENC_RES_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D,
+						range, RDOEnable);
+
+					if (VBSEnable) {//start VBSEnable code
+						EncodeVBS(FrameType, row, col, block, nRefFrames, INTERMODE, frame, i_period, width, height, QP,
+							MDIFF_VECTORS, MDIFF_VECTOR_2S, MDIFF_VECTOR_3S, MDIFF_VECTOR_4S, CUR_FRAME_2DS,
+							REC_FRAME_2DS, REC_FRAME_2D_2S, REC_FRAME_2D_3S, REC_FRAME_2D_4S,
+							REF_FRAME_2DS, REF_FRAME_2D_2S, REF_FRAME_2D_3S, REF_FRAME_2D_4S,
+							ENC_RES_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS,
+							block_split, range, RDOEnable);
+						//Pick Winner
+						VBSWinner(MDIFF_VECTOR, MDIFF_VECTORS, row, col, block, REC_FRAME_2D, REC_FRAME_2DS);
+					}//End of VBSenable code
+					 // Differential and Entropy Encode steps 
+					int bitcount_temp = 0;
+					bitcount_temp = entropy_wrapper(QTC_FRAME_2D, block, height, width, frame, row, col);
+					coeff_bitcount = coeff_bitcount + bitcount_temp;
+					bitcount_row = bitcount_row + bitcount_temp;
+					diff_enc_wrapper(MDIFF_VECTOR, MDIFF_VECTOR_DIFF, FrameType, height, width, block, frame, row, col);
+					bitcount_temp = encode_mdiff_wrapper(MDIFF_VECTOR_DIFF, MDIFF_VECTOR, height, width, block, frame, FrameType, row, col);
+					mdiff_bitcount = mdiff_bitcount + bitcount_temp;
+					bitcount_row = bitcount_row + bitcount_temp;
+					if (col + block == width) {//Collect bitcount per row
+						BITCOUNT_ROW[row / block] = bitcount_row;
+						if (RCflag >= 1) {
+							QP = row_rate_control(row, targetBr, RCflag, width, height, FrameType, block, coeff_bitcount + mdiff_bitcount, QP, BITCOUNT_ROW, BITCOUNT_ROW_PERCENT, pass);
+							if(row+block != height)
+								QP_ROW[(row +block) / block] = QP;
+						}
+						bitcount_row = 0;
+					}
+				}
+			}//Encode
+			if (RCflag <= 1) {
+				break;
+			}
+		}
 		//write_mat(reffile, REF_FRAME_2D, height, width);
 		//write_mat3(decresfile, DEC_RES_FRAME_2D, height, width);
 		//write_mat2(dectcfile, DEC_TC_FRAME_2D, height, width);
@@ -618,6 +638,13 @@ int main(int argCnt, char **args)
 			fprintf(bitcountrowfile, "I_FRAME,%d,%d\n",frame, average / (height / block));
 		else
 			fprintf(bitcountrowfile, "P_FRAME,%d,%d\n",frame, average / (height / block));
+		//Rate Control Dump
+		for (int i = 0; i < height / block; i++) {
+			if (i == 0)
+				fprintf(qp_file, "Frame: %d ", frame);
+			fprintf(qp_file, "%d ", QP_ROW[i]);
+		}
+		fprintf(qp_file, "\n");
 
 #ifdef TRACE_ON
 		fclose(file_vector_org);
