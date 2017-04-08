@@ -24,6 +24,7 @@ def main(argv):
 	VBSEnable		= 0
 	RDOEnable       = 0
 	FMEnable        = 0
+	ParallelMode    = 0
 
 	# Parse Input Arguments 
 	# ------------------------------
@@ -74,6 +75,9 @@ def main(argv):
 		if (argv[index] == "-RCflag"):
 			RCflag = int(argv[index+1])
 
+		if (argv[index] == "-ParallelMode"):
+			ParallelMode = int(argv[index+1])
+
   	# LumaExtractor
 	# ------------------------------
 	luma_extract_command  = "LumaExtractor\Debug\LumaExtractor.exe"
@@ -121,16 +125,13 @@ def main(argv):
 	encode_command += " -coeff_bitcount_name testdata\%s_COEFF_BITCOUNT.csv"	%(testname)
 	encode_command += " -qp %d" 							                    %(qp)
 	encode_command += " -i_period %d"						                    %(i_period)
-	encode_command += " -nRefFrames %d" 						                %(nRefFrames)
 	encode_command += " -VBSEnable %d"						                    %(VBSEnable)
 	encode_command += " -RDOEnable %d"						                    %(RDOEnable)
 	encode_command += " -frame_header testdata\%s_FRAME_HEADER.txt"             %(testname)
 	encode_command += " -FMEnable %d"						                    %(FMEnable)
 	encode_command += " -runtime_name testdata\%s_RUNTIME.csv"					%(testname)
-	encode_command += " -bitcount_row testdata\%s_BITCOUNT_ROW.csv"				%(testname)
 	encode_command += " -total_bitcount_name testdata\%s_TOTAL_BITCOUNT.csv"	%(testname)
-	encode_command += " -targetBr %d"						                    %(targetBr)
-	encode_command += " -RCflag %d"						                        %(RCflag)
+	encode_command += " -ParallelMode %d"						%(ParallelMode)
 	
 	print ("\nEncoder:\n" + encode_command)
 	os.system(encode_command)

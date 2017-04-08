@@ -1,3 +1,5 @@
+#ifndef __DIFFDEC_H__
+#define __DIFFDEC_H__
 #include <common.h>
 void diff_dec(MDIFF** MDIFF_VECTOR, MDIFF** MDIFF_VECTOR_DIFF, int FrameType, int row, int col);
 void diff_dec_wrapper(MDIFF** MDIFF_VECTOR, MDIFF** MDIFF_VECTOR_DIFF, int FrameType, int height, int width, int block, int frame);
@@ -15,13 +17,10 @@ void diff_dec(MDIFF** MDIFF_VECTOR, MDIFF** MDIFF_VECTOR_DIFF, int FrameType, in
 		if (col == 0) {
 			MDIFF_VECTOR[row][col].X = MDIFF_VECTOR_DIFF[row][col].X;
 			MDIFF_VECTOR[row][col].Y = MDIFF_VECTOR_DIFF[row][col].Y;
-			MDIFF_VECTOR[row][col].ref = MDIFF_VECTOR_DIFF[row][col].ref;
 		}
 		else {
 			MDIFF_VECTOR[row][col].X = MDIFF_VECTOR_DIFF[row][col].X + MDIFF_VECTOR[row][col - 1].X;
 			MDIFF_VECTOR[row][col].Y = MDIFF_VECTOR_DIFF[row][col].Y + MDIFF_VECTOR[row][col - 1].Y;
-			MDIFF_VECTOR[row][col].ref = MDIFF_VECTOR_DIFF[row][col].ref + MDIFF_VECTOR[row][col - 1].ref;
-
 		}
 	}
 }
@@ -51,3 +50,4 @@ void diff_dec_wrapper(MDIFF** MDIFF_VECTOR, MDIFF** MDIFF_VECTOR_DIFF, int Frame
 	fclose(file_vector_org);
 	fclose(file_vector_aft);
 }
+#endif

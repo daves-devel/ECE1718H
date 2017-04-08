@@ -1,18 +1,10 @@
 #include <common.h>
 
 struct MDIFF InterFramePrediction	(uint32_t INTERMODE, uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint8_t** REF_FRAME, int row, int col, int width, int height, int block, int range, int ref, MDIFF** MDIFF_PREVIOUS);
-
 struct MDIFF InterFrameDefault		(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint8_t** REF_FRAME, int row, int col, int width, int height, int block, int range);
 struct MDIFF InterFrameRDO			(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint8_t** REF_FRAME, int row, int col, int width, int height, int block, int range, int ref, MDIFF** MDIFF_PREVIOUS);
 struct MDIFF InterFrameThreeStep	(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint8_t** REF_FRAME, int row, int col, int width, int height, int block, int range);
-
 struct MDIFF MinSADMinNORM			(struct MDIFF BEST_GMV, struct MDIFF NEW_GMV);
-struct MDIFF SelectRefWinner		(struct MDIFF MDIFF_CUR, struct MDIFF MDIFFV_REF , uint8_t** REF_FRAME_CUR, uint8_t** REF_FRAME_REF, int block, int row, int col);
-struct MDIFF MultiRefInterPrediction(uint32_t INTERMODE, uint8_t **CUR_FRAME_2D, uint8_t **REC_FRAME_2D_2, uint8_t **REC_FRAME_2D_3, uint8_t **REC_FRAME_2D_4,
-									 uint8_t **REF_FRAME_2D, uint8_t **REF_FRAME_2D_2, uint8_t **REF_FRAME_2D_3, uint8_t **REF_FRAME_2D_4,
-									 int row, int col, int width, int height, int block, int range, int nRefFrames, int frame, int i_period,
-									 MDIFF **MDIFF_VECTOR, MDIFF **MDIFF_VECTOR_2, MDIFF **MDIFF_VECTOR_3, MDIFF **MDIFF_VECTOR_4);
-
 void VBSWinner(MDIFF** MDIFF_CUR, MDIFF** MDIFF_SLPIT, int row, int col, int block, uint8_t** CUR_FRAME_2D, uint8_t**CUR_FRAME_2DS);
 
 struct MDIFF InterFramePrediction(uint32_t INTERMODE, uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint8_t** REF_FRAME, int row, int col, int width, int height, int block, int range, int ref, MDIFF** MDIFF_PREVIOUS) {
@@ -92,9 +84,8 @@ struct MDIFF InterFrameRDO(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint8_t** R
 	if (col != 0) {
 		GMV_X_PREV	=	MDIFF_PREVIOUS[row/block][(col/block) - 1].X;
 		GMV_Y_PREV	=	MDIFF_PREVIOUS[row/block][(col/block) - 1].Y;
-		SAD_PREV	=		MDIFF_PREVIOUS[row / block][(col / block) - 1].SAD;
-		NORM_PREV	=		MDIFF_PREVIOUS[row/block][(col/block) - 1].NORM;
-		REF_PREV	=		MDIFF_PREVIOUS[row / block][(col / block) - 1].ref;
+		SAD_PREV	=	MDIFF_PREVIOUS[row / block][(col / block) - 1].SAD;
+		NORM_PREV	=	MDIFF_PREVIOUS[row/block][(col/block) - 1].NORM;
 
 		if (((GMV_X_PREV + col) < 0) || ((GMV_X_PREV + col + block) > width)) {
 			PREV_GVM_NOT_AVAILAIBLE=1;
@@ -114,17 +105,14 @@ struct MDIFF InterFrameRDO(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint8_t** R
 			}
 
 			if (col != 0 && !PREV_GVM_NOT_AVAILAIBLE) { 
-				BEST_GMV.ref = ref;
 				BEST_GMV.X = GMV_X_PREV;
 				BEST_GMV.Y = GMV_Y_PREV;
 				BEST_GMV.SAD = SAD_PREV;
 				BEST_GMV.NORM = NORM_PREV;
-				BEST_GMV.ref = REF_PREV;
 				break;
 			}
 
 			struct MDIFF NEW_GMV;
-			NEW_GMV.ref = ref;
 			NEW_GMV.X = GMV_X;
 			NEW_GMV.Y = GMV_Y;
 			NEW_GMV.SAD = 0;
@@ -222,8 +210,6 @@ struct MDIFF InterFrameThreeStep(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint8
 
 	} while (search_range > 0);
 
-	printf ("\n");
-
 	// Copy Best Matching Block to Reference Frame
 	for (int i = 0; i < block; i++) {
 		for (int j = 0; j < block; j++) {
@@ -263,41 +249,6 @@ struct MDIFF MinSADMinNORM(struct MDIFF BEST_GMV,struct MDIFF NEW_GMV) {
 	return BEST_GMV;
 }
 
-struct MDIFF SelectRefWinner(struct MDIFF CUR_MDIFF, struct MDIFF REF_MDIFF, uint8_t** REF_FRAME_CUR, uint8_t** REF_FRAME_REF, int block, int row, int col) {
-	struct MDIFF WINNER = CUR_MDIFF;
-	if (CUR_MDIFF.SAD > REF_MDIFF.SAD) {
-		WINNER = REF_MDIFF;
-		for (int i = 0; i < block; i++) {
-			for (int j = 0; j < block; j++) {
-				REF_FRAME_CUR[row + i][col + j] = REF_FRAME_REF[row + i][col + j];
-			}
-		}
-	}
-	return WINNER;
-}
-
-struct MDIFF MultiRefInterPrediction(uint32_t INTERMODE, uint8_t **CUR_FRAME_2D, uint8_t **REC_FRAME_2D_2, uint8_t **REC_FRAME_2D_3, uint8_t **REC_FRAME_2D_4,
-									 uint8_t **REF_FRAME_2D, uint8_t **REF_FRAME_2D_2, uint8_t **REF_FRAME_2D_3, uint8_t **REF_FRAME_2D_4,
-									 int row, int col, int width, int height, int block, int range, int nRefFrames, int frame, int i_period,
-									 MDIFF **MDIFF_VECTOR, MDIFF **MDIFF_VECTOR_2, MDIFF **MDIFF_VECTOR_3, MDIFF **MDIFF_VECTOR_4) {
-
-	if ((frame%i_period) >= 2 && nRefFrames >= 2) {
-		MDIFF_VECTOR_2[row / block][col / block] = InterFramePrediction(INTERMODE, CUR_FRAME_2D, REC_FRAME_2D_2, REF_FRAME_2D_2, row, col, width, height, block, range, 2, MDIFF_VECTOR);
-		MDIFF_VECTOR[row / block][col / block] = SelectRefWinner(MDIFF_VECTOR[row / block][col / block], MDIFF_VECTOR_2[row / block][col / block], REF_FRAME_2D, REF_FRAME_2D_2, block, row, col);
-	}
-	if ((frame%i_period) >= 3 && nRefFrames >= 3) {
-		MDIFF_VECTOR_3[row / block][col / block] = InterFramePrediction(INTERMODE, CUR_FRAME_2D, REC_FRAME_2D_3, REF_FRAME_2D_3, row, col, width, height, block, range, 3, MDIFF_VECTOR);
-		MDIFF_VECTOR[row / block][col / block] = SelectRefWinner(MDIFF_VECTOR[row / block][col / block], MDIFF_VECTOR_3[row / block][col / block], REF_FRAME_2D, REF_FRAME_2D_3, block, row, col);
-	}
-
-	if ((frame%i_period) >= 4 && nRefFrames >= 4) {
-		MDIFF_VECTOR_4[row / block][col / block] = InterFramePrediction(INTERMODE, CUR_FRAME_2D, REC_FRAME_2D_4, REF_FRAME_2D_4, row, col, width, height, block, range, 4, MDIFF_VECTOR);
-		MDIFF_VECTOR[row / block][col / block] = SelectRefWinner(MDIFF_VECTOR[row / block][col / block], MDIFF_VECTOR_4[row / block][col / block], REF_FRAME_2D, REF_FRAME_2D_4, block, row, col);
-	}
-	return MDIFF_VECTOR[row / block][col / block];
-}
-
-
 void VBSWinner(MDIFF** MDIFF_CUR, MDIFF** MDIFF_SPLIT, int row, int col, int block, uint8_t** CUR_FRAME_2D, uint8_t**CUR_FRAME_2DS) {
 	int row_split = row / (block / 2);
 	int col_split = col / (block / 2);
@@ -327,13 +278,6 @@ void VBSWinner(MDIFF** MDIFF_CUR, MDIFF** MDIFF_SPLIT, int row, int col, int blo
 		MDIFF_CUR[row_org][col_org].MODE4 = MDIFF_SPLIT[row_split + 1][col_split + 1].MODE;
 		//SAD
 		MDIFF_CUR[row_org][col_org].SAD = SPLIT_SAD;
-		//NORM TODO
-
-		//REF
-		MDIFF_CUR[row_org][col_org].ref = MDIFF_SPLIT[row_split][col_split].ref;
-		MDIFF_CUR[row_org][col_org].ref2 = MDIFF_SPLIT[row_split][col_split + 1].ref;
-		MDIFF_CUR[row_org][col_org].ref3 = MDIFF_SPLIT[row_split + 1][col_split].ref;
-		MDIFF_CUR[row_org][col_org].ref4 = MDIFF_SPLIT[row_split + 1][col_split + 1].ref;
 
 		//SPLIT
 		MDIFF_CUR[row_org][col_org].split = 1;

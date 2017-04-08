@@ -153,9 +153,6 @@ void encode_mdiff(MDIFF** MDIFF_VECTOR_DIFF, MDIFF** MDIFF_VECTOR, int row, int 
 			result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].Y, &count);
 			fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
 			*bitcount = count + *bitcount;
-			result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].ref, &count);
-			fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
-			*bitcount = count + *bitcount;
 		}
 	}
 	else {
@@ -207,19 +204,6 @@ void encode_mdiff(MDIFF** MDIFF_VECTOR_DIFF, MDIFF** MDIFF_VECTOR, int row, int 
 			fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
 			*bitcount = count + *bitcount;
 			result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].Y4, &count);
-			fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
-			*bitcount = count + *bitcount;
-			//REF
-			result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].ref, &count);
-			fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
-			*bitcount = count + *bitcount;
-			result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].ref2, &count);
-			fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
-			*bitcount = count + *bitcount;
-			result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].ref3, &count);
-			fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
-			*bitcount = count + *bitcount;
-			result = encode_signed_golomb_value(MDIFF_VECTOR_DIFF[row][col].ref4, &count);
 			fwrite(&result, sizeof(uint32_t), 1, mdiff_golomb);
 			*bitcount = count + *bitcount;
 		}

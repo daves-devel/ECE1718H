@@ -11,11 +11,13 @@
 #include <string.h>
 #include <math.h>
 #include <cmath>
+#include <assert.h>
+#include <ctime>
+#include <thread>         // std::thread
+#include <mutex>		  // std::mutex
+#include <conio.h>
+#include <windows.h>
 
-FILE* coeff_bitcount_file;
-FILE* mdiff_bitcount_file;
-FILE* total_bitcount_file;
-FILE* frame_header_file;
 FILE* golomb_file;
 FILE* mdiff_golomb;
 char golomb_name[500] = "";
@@ -42,16 +44,17 @@ enum INTERMODE {
 	FME	    = 2
 };
 
+enum THREAD {
+	SINGLETHREADED = 0,
+	BLOCKTHREADED  = 1,
+	FRAMETHREADED  = 2,
+};
 struct MDIFF {
 	int X, X2, X3, X4; // For Inter GMV
 	int Y, Y2, Y3, Y4; // For Inter GMV
 	int MODE, MODE2, MODE3, MODE4; // Intra Mode
 	unsigned int SAD;
 	unsigned int NORM;
-	int ref=1;
-	int ref2 = 1;
-	int ref3 = 1;
-	int ref4 = 1;
 	int split=0;
 };
 
@@ -166,17 +169,5 @@ void write_mat3(FILE *fp, int32_t**m, int N, int M) {
 	}
 	fprintf(fp, "\n");
 }
-int CIF_I_TABLE[12] = { 22089,	15756,	10715,	6911,	4224,	2634,	1675,	1181,	886,	673,	213,	68};
-int CIF_P_TABLE[12] = { 19697,	13690,	9348,	6043,	3653,	2330,	1694,	1467,	237,	183,	130,	126 };
-int QCIF_I_TABLE[12] = { 12449,	9309,	6788,	4726,	3073,	1877,	1090,	683,	526,	326,	125,	35 };
-int QCIF_P_TABLE[12] = { 9689,	6968,	4870,	3371,	2159,	1375,	864,	707,	153,	102,	71,		71 };
 
-#ifdef TRACE_ON
-FILE* file_vector_org;
-FILE* file_vector_aft;
-FILE* file_qtc;
-FILE* file_reorder;
-FILE* file_rle;
-#endif
-//Entropy
 #endif

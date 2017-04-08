@@ -1,3 +1,5 @@
+#ifndef __QUANTIZATION_H__
+#define __QUANTIZATION_H__
 #include <common.h>
 
 bool ValidQP(uint32_t  QP, uint32_t  block);
@@ -69,6 +71,8 @@ int QuantizeBlock(int32_t  ** QTC_FRAME, int32_t ** TC_FRAME, int32_t ** QP_FRAM
 		}
 	}
 
+	return 0; 
+
 }
 
 int ScaleBlock(int32_t  ** TC_FRAME, int32_t ** QTC_FRAME, int32_t** QP_FRAME,int32_t row, uint32_t col,uint32_t  width, uint32_t  height, uint32_t  QP, uint32_t  block) {
@@ -100,3 +104,5 @@ int ScaleBlock(int32_t  ** TC_FRAME, int32_t ** QTC_FRAME, int32_t** QP_FRAME,in
 		}
 	}
 }
+
+#endif

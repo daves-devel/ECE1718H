@@ -1,38 +1,25 @@
 // Authors:		Juan Fuentes
 //				Irfan Khan (khanirf1) 999207665
 //				David Chakkuthara 995435266
-// Date:		March 4th, 2016
+// Date:		April 7th, 2016
 // Description: Given a Y (LUMA) only File, it will be encoded 
 //				Outputs an encoded MDiff File
 //				Outputs an encoded QTC Coeff. File
 
 #include <common.h>
-#include <residual.h>
-#include <reconstructed.h>
-#include <quantization.h>
-#include <entropy.h>
-#include <InterFramePrediction.h>
-#include <IntraFramePrediction.h>
-#include <discrete_cosine_transform.h>
-#include <DiffEnc.h>
-#include <RateControl.h>
-#include <ctime>
+#include <blockthread.h>
 
-
-
-
-int main(int argCnt, char **args)
-{
+int main(int argCnt, char **args){
 
 	char curfile_name[500]			= "";
 	char mvfile_name[500]			= "";
 	char resfile_name[500]			= "";
 	char recfile_name[500]			= "";
 	char matchfile_name[500]		= "";
-	char bitcount_row_name[500] = "";
+	char bitcount_row_name[500]		= "";
 	char coeff_bitcount_name[500]	= "";
 	char mdiff_bitcount_name[500]	= "";
-	char total_bitcount_name[500] = "";
+	char total_bitcount_name[500]	= "";
 	char frame_header_name[500]		= "";
 	char runtime_name[500]			= "";
 
@@ -44,18 +31,14 @@ int main(int argCnt, char **args)
 	int i_period		= -1;
 	int FrameType		= -1;
 	int QP				= -1;
-	int nRefFrames		= 1;
-	int RDOEnable		= 0;
-	int FMEnable		= 0;
+	int RDOEnable		= -1;
+	int FMEnable		= -1;
+	int ParallelMode	= -1;
 	int coeff_bitcount	= 0;
 	int mdiff_bitcount	= 0;
-	int bitcount_row	 = 0;
-	int targetBr = 0;
-	int	RCflag = 0;
-
 
 	//  Parse Input Arguments
-	// =======================
+	// ================================================
 
 	args++;
 	int tmpArgCnt = 1;
@@ -116,12 +99,6 @@ int main(int argCnt, char **args)
 			args++;
 			tmpArgCnt += 2;
 		}
-		else if (!strcmp((*args) + 1, "bitcount_row")) {
-			args++;
-			sscanf(*args, "%s", bitcount_row_name);
-			args++;
-			tmpArgCnt += 2;
-		}
 		else if (!strcmp((*args) + 1, "frames")) {
 			args++;
 			frames = atoi(*args);
@@ -152,12 +129,6 @@ int main(int argCnt, char **args)
 			args++;
 			tmpArgCnt += 2;
 		}
-		else if (!strcmp((*args) + 1, "nRefFrames")) {
-			args++;
-			nRefFrames = atoi(*args);
-			args++;
-			tmpArgCnt += 2;
-		}
 		else if (!strcmp((*args) + 1, "VBSEnable")) {
 			args++;
 			VBSEnable = atoi(*args);
@@ -176,21 +147,15 @@ int main(int argCnt, char **args)
 			args++;
 			tmpArgCnt += 2;
 		}
+		else if (!strcmp((*args) + 1, "ParallelMode")) {
+			args++;
+			ParallelMode = atoi(*args);
+			args++;
+			tmpArgCnt += 2;
+		}
 		else if (!strcmp((*args) + 1, "runtime_name")) {
 			args++;
 			sscanf(*args, "%s", runtime_name);
-			args++;
-			tmpArgCnt += 2;
-		}
-		else if (!strcmp((*args) + 1, "targetBr")) {
-			args++;
-			targetBr = atoi(*args);
-			args++;
-			tmpArgCnt += 2;
-		}
-		else if (!strcmp((*args) + 1, "RCflag")) {
-			args++;
-			RCflag = atoi(*args);
 			args++;
 			tmpArgCnt += 2;
 		}
@@ -201,139 +166,96 @@ int main(int argCnt, char **args)
 		}
 	}
 
-	FILE* curfile = fopen(curfile_name, "rb");
-	coeff_bitcount_file = fopen(coeff_bitcount_name, "w");
-	mdiff_bitcount_file = fopen(mdiff_bitcount_name, "w");
-	total_bitcount_file = fopen(total_bitcount_name, "w");
-	frame_header_file = fopen(frame_header_name, "w+b");
-	FILE* recfile = fopen(recfile_name, "w+b");
-	FILE* runtime_file = fopen(runtime_name, "w");
+	// Files
+	// ================================================
+	FILE* curfile				= fopen(curfile_name, "rb");
+	FILE* coeff_bitcount_file	= fopen(coeff_bitcount_name, "w");
+	FILE* mdiff_bitcount_file	= fopen(mdiff_bitcount_name, "w");
+	FILE* total_bitcount_file	= fopen(total_bitcount_name, "w");
+	FILE* frame_header_file		= fopen(frame_header_name, "w+b");
+	FILE* recfile				= fopen(recfile_name, "w+b");
+	FILE* runtime_file			= fopen(runtime_name, "w");
+	FILE* bitcountrowfile		= fopen(bitcount_row_name, "w");
+	FILE* reffile				= fopen("ref_enc.csv", "w");
+	FILE* dectcfile				= fopen("dec_tc_enc.csv", "w");
+	FILE* decresfile			= fopen("dec_res_enc.csv", "w");
 
-	FILE* reffile = fopen("ref_enc.csv", "w");
-	FILE* dectcfile = fopen("dec_tc_enc.csv", "w");
-	FILE* decresfile = fopen("dec_res_enc.csv", "w");
-	FILE* bitcountrowfile = fopen(bitcount_row_name, "w");
-
-	// TODO Make these 2D buffers, and add the Encoder functions to the frame flow
 	unsigned int  FRAME_SIZE = width*height;
 	int block_split = block / 2;
+	int range_split = range / 2;
 
 	// Allocate Memory
-	uint8_t** CUR_FRAME_2D	 = new uint8_t*[height];
+	// ================================================
 
-	uint8_t** REC_FRAME_2D  = new uint8_t*[height];
-	uint8_t** REC_FRAME_2D_2 = new uint8_t*[height];
-	uint8_t** REC_FRAME_2D_3 = new uint8_t*[height];
-	uint8_t** REC_FRAME_2D_4 = new uint8_t*[height];
-
-	uint8_t** REF_FRAME_2D	 = new uint8_t*[height];
-	uint8_t** REF_FRAME_2D_2 = new uint8_t*[height];
-	uint8_t** REF_FRAME_2D_3 = new uint8_t*[height];
-	uint8_t** REF_FRAME_2D_4 = new uint8_t*[height];
-
-	 int32_t** ENC_RES_FRAME_2D	= new  int32_t*[height];
+	// Regular
+	uint8_t** CUR_FRAME_2D		= new uint8_t*[height];
+	uint8_t** CUR_REC_FRAME_2D	= new uint8_t*[height];
+	uint8_t** PREV_REC_FRAME_2D = new uint8_t*[height];
+	uint8_t** REF_FRAME_2D		= new uint8_t*[height];
+	int32_t** ENC_RES_FRAME_2D	= new int32_t*[height];
 	int32_t** ENC_TC_FRAME_2D	= new int32_t*[height];
-	 int32_t** DEC_RES_FRAME_2D	= new  int32_t*[height];
+	int32_t** DEC_RES_FRAME_2D	= new int32_t*[height];
 	int32_t** DEC_TC_FRAME_2D	= new int32_t*[height];
 	int32_t** QTC_FRAME_2D		= new int32_t*[height];
 	int32_t** QP_FRAME_2D		= new int32_t*[height];
 
-	for (unsigned int row = 0; row < height; row++) {
-		CUR_FRAME_2D[row] = new uint8_t[width];
-
-		REC_FRAME_2D[row] = new uint8_t[width];
-		REC_FRAME_2D_2[row] = new uint8_t[width];
-		REC_FRAME_2D_3[row] = new uint8_t[width];
-		REC_FRAME_2D_4[row] = new uint8_t[width];
-
-		REF_FRAME_2D[row] = new uint8_t[width];
-		REF_FRAME_2D_2[row] = new uint8_t[width];
-		REF_FRAME_2D_3[row] = new uint8_t[width];
-		REF_FRAME_2D_4[row] = new uint8_t[width];
-
-		ENC_RES_FRAME_2D[row] = new  int32_t[width];
-		ENC_TC_FRAME_2D[row] = new int32_t[width];
-		DEC_RES_FRAME_2D[row] = new  int32_t[width];
-		DEC_TC_FRAME_2D[row] = new int32_t[width];
-		QTC_FRAME_2D[row] = new int32_t[width];
-		QP_FRAME_2D[row] = new int32_t[width];
-	}
-
-	
-	// This 2D Buffer will Contain MDIFF data for each block 
-	struct MDIFF** MDIFF_VECTOR = new struct MDIFF*[(height / block)];
-	struct MDIFF** MDIFF_VECTOR_2 = new struct MDIFF*[(height / block)];
-	struct MDIFF** MDIFF_VECTOR_3 = new struct MDIFF*[(height / block)];
-	struct MDIFF** MDIFF_VECTOR_4 = new struct MDIFF*[(height / block)];
-
-	struct MDIFF** MDIFF_VECTOR_DIFF = new struct MDIFF*[(height / block)];
-
-	for (int row = 0; row < height; row = row + block) {
-		MDIFF_VECTOR[row / block] = new struct MDIFF[width / block];
-		MDIFF_VECTOR_2[row / block] = new struct MDIFF[width / block];
-		MDIFF_VECTOR_3[row / block] = new struct MDIFF[width / block];
-		MDIFF_VECTOR_4[row / block] = new struct MDIFF[width / block];
-		MDIFF_VECTOR_DIFF[row / block] = new struct MDIFF[width / block];
-	}
-
-	// Allocate Memory for split buffer
-	uint8_t** CUR_FRAME_2DS = new uint8_t*[height];
-
-	uint8_t** REC_FRAME_2DS = new uint8_t*[height];
-	uint8_t** REC_FRAME_2D_2S = new uint8_t*[height];
-	uint8_t** REC_FRAME_2D_3S = new uint8_t*[height];
-	uint8_t** REC_FRAME_2D_4S = new uint8_t*[height];
-
-	uint8_t** REF_FRAME_2DS = new uint8_t*[height];
-	uint8_t** REF_FRAME_2D_2S = new uint8_t*[height];
-	uint8_t** REF_FRAME_2D_3S = new uint8_t*[height];
-	uint8_t** REF_FRAME_2D_4S = new uint8_t*[height];
-
-	int32_t** ENC_RES_FRAME_2DS = new  int32_t*[height];
-	int32_t** ENC_TC_FRAME_2DS = new int32_t*[height];
-	int32_t** DEC_RES_FRAME_2DS = new  int32_t*[height];
-	int32_t** DEC_TC_FRAME_2DS = new int32_t*[height];
-	int32_t** QTC_FRAME_2DS = new int32_t*[height];
-	int32_t** QP_FRAME_2DS = new int32_t*[height];
+	// Split
+	uint8_t** CUR_FRAME_2DS		= new uint8_t*[height];
+	uint8_t** CUR_REC_FRAME_2DS = new uint8_t*[height];
+	uint8_t** PREV_REC_FRAME_2DS= new uint8_t*[height];
+	uint8_t** REF_FRAME_2DS		= new uint8_t*[height];
+	int32_t** ENC_RES_FRAME_2DS = new int32_t*[height];
+	int32_t** ENC_TC_FRAME_2DS	= new int32_t*[height];
+	int32_t** DEC_RES_FRAME_2DS = new int32_t*[height];
+	int32_t** DEC_TC_FRAME_2DS	= new int32_t*[height];
+	int32_t** QTC_FRAME_2DS		= new int32_t*[height];
+	int32_t** QP_FRAME_2DS		= new int32_t*[height];
 
 	for (unsigned int row = 0; row < height; row++) {
-		CUR_FRAME_2DS[row] = new uint8_t[width];
 
-		REC_FRAME_2DS[row] = new uint8_t[width];
-		REC_FRAME_2D_2S[row] = new uint8_t[width];
-		REC_FRAME_2D_3S[row] = new uint8_t[width];
-		REC_FRAME_2D_4S[row] = new uint8_t[width];
+		// Regular
+		CUR_FRAME_2D[row]		= new uint8_t[width];
+		CUR_REC_FRAME_2D[row]	= new uint8_t[width];
+		PREV_REC_FRAME_2D[row]  = new uint8_t[width];
+		REF_FRAME_2D[row]		= new uint8_t[width];
+		ENC_RES_FRAME_2D[row]	= new int32_t[width];
+		ENC_TC_FRAME_2D[row]	= new int32_t[width];
+		DEC_RES_FRAME_2D[row]	= new int32_t[width];
+		DEC_TC_FRAME_2D[row]	= new int32_t[width];
+		QTC_FRAME_2D[row]		= new int32_t[width];
+		QP_FRAME_2D[row]		= new int32_t[width];
 
-		REF_FRAME_2DS[row] = new uint8_t[width];
-		REF_FRAME_2D_2S[row] = new uint8_t[width];
-		REF_FRAME_2D_3S[row] = new uint8_t[width];
-		REF_FRAME_2D_4S[row] = new uint8_t[width];
-
-		ENC_RES_FRAME_2DS[row] = new  int32_t[width];
-		ENC_TC_FRAME_2DS[row] = new int32_t[width];
-		DEC_RES_FRAME_2DS[row] = new  int32_t[width];
-		DEC_TC_FRAME_2DS[row] = new int32_t[width];
-		QTC_FRAME_2DS[row] = new int32_t[width];
-		QP_FRAME_2DS[row] = new int32_t[width];
+		// Split
+		CUR_FRAME_2DS[row]		= new uint8_t[width];
+		CUR_REC_FRAME_2DS[row]	= new uint8_t[width];
+		PREV_REC_FRAME_2DS[row] = new uint8_t[width];
+		REF_FRAME_2DS[row]		= new uint8_t[width];
+		ENC_RES_FRAME_2DS[row]	= new int32_t[width];
+		ENC_TC_FRAME_2DS[row]	= new int32_t[width];
+		DEC_RES_FRAME_2DS[row]	= new int32_t[width];
+		DEC_TC_FRAME_2DS[row]	= new int32_t[width];
+		QTC_FRAME_2DS[row]		= new int32_t[width];
+		QP_FRAME_2DS[row]		= new int32_t[width];
 	}
 
-	// This 2D Buffer will Contain MDIFF data for each block 
-	struct MDIFF** MDIFF_VECTORS = new struct MDIFF*[(height / block_split)];
-	struct MDIFF** MDIFF_VECTOR_2S = new struct MDIFF*[(height / block_split)];
-	struct MDIFF** MDIFF_VECTOR_3S = new struct MDIFF*[(height / block_split)];
-	struct MDIFF** MDIFF_VECTOR_4S = new struct MDIFF*[(height / block_split)];
-
-	struct MDIFF** MDIFF_VECTOR_DIFFS = new struct MDIFF*[(height / block_split)];
-
-	for (int row = 0; row < height; row = row + block_split) {
-		MDIFF_VECTORS[row / block_split] = new struct MDIFF[width / block_split];
-		MDIFF_VECTOR_2S[row / block_split] = new struct MDIFF[width / block_split];
-		MDIFF_VECTOR_3S[row / block_split] = new struct MDIFF[width / block_split];
-		MDIFF_VECTOR_4S[row / block_split] = new struct MDIFF[width / block_split];
-		MDIFF_VECTOR_DIFFS[row / block_split] = new struct MDIFF[width / block_split];
+	// MDIFF Data for Regular Blocks 
+	struct MDIFF** MDIFF_VECTOR			= new struct MDIFF*[(height / block)];
+	struct MDIFF** MDIFF_VECTOR_DIFF	= new struct MDIFF*[(height / block)];
+	for (int row = 0; row < height; row += block) {
+		MDIFF_VECTOR[row / block]		= new struct MDIFF[width / block];
+		MDIFF_VECTOR_DIFF[row / block]	= new struct MDIFF[width / block];
 	}
 
-	// PICK INTERFRAME ALGORITHM
+	// MDIFF Data for Split Blocks
+	struct MDIFF** MDIFF_VECTORS				= new struct MDIFF*[(height / block_split)];
+	struct MDIFF** MDIFF_VECTOR_DIFFS			= new struct MDIFF*[(height / block_split)];
+	for (int row = 0; row < height; row += block_split) {
+		MDIFF_VECTORS[row / block_split]		= new struct MDIFF[width / block_split];
+		MDIFF_VECTOR_DIFFS[row / block_split]	= new struct MDIFF[width / block_split];
+	}
+
+	// Interframe Algorithm Selection
+	// ================================================
 	uint32_t INTERMODE;
 	if ((RDOEnable) && (QP >= 8)) {
 		INTERMODE = RDO;
@@ -348,11 +270,9 @@ int main(int argCnt, char **args)
 		printf("DEFAULT INTERMODE\n");
 	}
 
-	//Runtime
+	// Runtime Start
+	// =============================================
 	int start_s = clock();
-
-	//Bitcount per row
-	uint32_t *BITCOUNT_ROW = new uint32_t[height / block];
 
 	// Encode Each Frame
 	// =========================================
@@ -362,19 +282,6 @@ int main(int argCnt, char **args)
 		snprintf(mdiff_name, sizeof(mdiff_name), "testdata\\MDIFF_GOLOMB_%d", frame);
 		mdiff_golomb = fopen(mdiff_name, "wb");
 		golomb_file = fopen(golomb_name, "wb");
-#ifdef TRACE_ON
-		char buf[0x100];
-		snprintf(buf, sizeof(buf), "testdata\\MDIFF_ORG_ENC%d.txt", frame);
-		file_vector_org = fopen(buf, "w");
-		snprintf(buf, sizeof(buf), "testdata\\MDIFF_AFT_ENC%d.txt", frame);
-		file_vector_aft = fopen(buf, "w");
-		snprintf(buf, sizeof(buf), "testdata\\QTC_BLOCK_ENC_%d.txt", frame);
-		file_qtc = fopen(buf, "w");
-		snprintf(buf, sizeof(buf), "testdata\\REORDER_BLOCK_ENC_%d.txt", frame);
-		file_reorder = fopen(buf, "w");
-		snprintf(buf, sizeof(buf), "testdata\\RLE_BLOCK_ENC_%d.txt", frame);
-		file_rle = fopen(buf, "w");
-#endif // TRACE_ON
 
 		//Reset bitcounts
 		coeff_bitcount = 0;
@@ -395,58 +302,20 @@ int main(int argCnt, char **args)
 			fwrite(&height, sizeof(int32_t), 1, frame_header_file);
 		}
 
-		if (FrameType == PFRAME) {
-			// Go to the beginning of the previous reconstructed frame and copy it to buffer
+		if (FrameType == PFRAME) { // Go to the beginning of the previous reconstructed frame and copy it to buffer
 			fseek(recfile, (frame - 1)*FRAME_SIZE, SEEK_SET);
 			for (unsigned int row = 0; row++; row < height) {
-				fread(REC_FRAME_2D[row], sizeof(uint8_t), width, recfile);
-			}
-			if (frame > 2) {
-				fseek(recfile, (frame - 2)*FRAME_SIZE, SEEK_SET);
-				for (unsigned int row = 0; row++; row < height) {
-					fread(REC_FRAME_2D_2[row], sizeof(uint8_t), width, recfile);
-				}
-			}
-			if (frame > 3) {
-				fseek(recfile, (frame - 3)*FRAME_SIZE, SEEK_SET);
-				for (unsigned int row = 0; row++; row < height) {
-					fread(REC_FRAME_2D_3[row], sizeof(uint8_t), width, recfile);
-				}
-			}
-			if (frame > 4) {
-				fseek(recfile, (frame - 4)*FRAME_SIZE, SEEK_SET);
-				for (unsigned int row = 0; row++; row < height) {
-					fread(REC_FRAME_2D_4[row], sizeof(uint8_t), width, recfile);
-				}
+				fread(PREV_REC_FRAME_2D[row], sizeof(uint8_t), width, recfile);
 			}
 			if (VBSEnable) { //fill split buffers
 				fseek(recfile, (frame - 1)*FRAME_SIZE, SEEK_SET);
 				for (unsigned int row = 0; row++; row < height) {
-					fread(REC_FRAME_2DS[row], sizeof(uint8_t), width, recfile);
+					fread(PREV_REC_FRAME_2DS[row], sizeof(uint8_t), width, recfile);
 				}
-				if (frame > 2) {
-					fseek(recfile, (frame - 2)*FRAME_SIZE, SEEK_SET);
-					for (unsigned int row = 0; row++; row < height) {
-						fread(REC_FRAME_2D_2S[row], sizeof(uint8_t), width, recfile);
-					}
-				}
-				if (frame > 3) {
-					fseek(recfile, (frame - 3)*FRAME_SIZE, SEEK_SET);
-					for (unsigned int row = 0; row++; row < height) {
-						fread(REC_FRAME_2D_3S[row], sizeof(uint8_t), width, recfile);
-					}
-				}
-				if (frame > 4) {
-					fseek(recfile, (frame - 4)*FRAME_SIZE, SEEK_SET);
-					for (unsigned int row = 0; row++; row < height) {
-						fread(REC_FRAME_2D_4S[row], sizeof(uint8_t), width, recfile);
-					}
-				}
-			}
-		}//end split buffer
+			}//end split buffer
+		}
 
 		// Go to the beginning of the current frame and copy it to buffer
-
 		fseek(curfile, frame*FRAME_SIZE, SEEK_SET);
 		for (unsigned int row = 0; row < height; row++) {
 			fread(CUR_FRAME_2D[row], sizeof(uint8_t), width, curfile);
@@ -458,206 +327,201 @@ int main(int argCnt, char **args)
 			}
 		}//end buffer curr_frame
 
-		// Apply Encode Operations on Each Block
-		for (int row = 0; row < height; row += block) {
-			if (row == 0 && RCflag == 1)
-				QP = 4;
-			for (int col = 0; col < width; col += block) {
+		if (ParallelMode == SINGLETHREADED) {
+			for (int row = 0; row < height; row += block) {
+				for (int col = 0; col < width; col += block) {
 
-				// IDEALLY THREAD EVERYTHING IN THIS FOR LOOP FOR PFRAMES
-
-				// PREDICTOR DATA GENERATION
-				if (FrameType == IFRAME) {
-					MDIFF_VECTOR[row/block][col/block] = IntraFramePrediction (CUR_FRAME_2D,REC_FRAME_2D,REF_FRAME_2D,row,col,block);
-				}
-				
-				if (FrameType == PFRAME) {
-					MDIFF_VECTOR[row / block][col / block] = InterFramePrediction(INTERMODE,CUR_FRAME_2D, REC_FRAME_2D, REF_FRAME_2D, row, col, width, height, block, range, 1, MDIFF_VECTOR);
-					//Multireference code start Only activated if nRefFrames>=2
-					if (nRefFrames >= 2) {
-						MDIFF_VECTOR[row / block][col / block] = MultiRefInterPrediction(INTERMODE,CUR_FRAME_2D, REC_FRAME_2D_2, REC_FRAME_2D_3, REC_FRAME_2D_4,
-							REF_FRAME_2D, REF_FRAME_2D_2, REF_FRAME_2D_3, REF_FRAME_2D_4,
-							row, col, width, height, block, range, nRefFrames, frame, i_period,
-							MDIFF_VECTOR, MDIFF_VECTOR_2, MDIFF_VECTOR_3, MDIFF_VECTOR_4);
-					}
-				}
-
-				// RESIDUAL 
-				GenerateResidualBlock (ENC_RES_FRAME_2D, CUR_FRAME_2D, REF_FRAME_2D, row, col, block);
-
-				// DCT 
-				DCTBlock (ENC_TC_FRAME_2D, ENC_RES_FRAME_2D, row, col, block);
-
-				// QUANTIZE
-				QuantizeBlock (QTC_FRAME_2D, ENC_TC_FRAME_2D, QP_FRAME_2D,row, col, width, height, QP, block);
-
-				// SCALE
-				ScaleBlock (DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,row, col, width, height, QP, block);
-				
-				// IDCT
-				IDCTBlock (DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, row, col, block);
-
-				// RECONSTRUCT 
-				ReconstructBlock(REC_FRAME_2D, DEC_RES_FRAME_2D, REF_FRAME_2D, row, col, block);
-
-				if (VBSEnable) {//start VBSEnable code
-					for (int row2 = row; row2 < row + block; row2 += block_split) {
-						for (int col2 = col; col2 < col + block; col2 += block_split) {
-
-							// IDEALLY THREAD EVERYTHING IN THIS FOR LOOP FOR PFRAMES
-
-							// PREDICTOR DATA GENERATION
-							if (FrameType == IFRAME) {
-								MDIFF_VECTORS[row2 / block_split][col2 / block_split] = IntraFramePrediction(CUR_FRAME_2DS, REC_FRAME_2DS, REF_FRAME_2DS, row2, col2, block_split);
-							}
-
-							if (FrameType == PFRAME) {
-								MDIFF_VECTORS[row2 / block_split][col2 / block_split] = InterFramePrediction(INTERMODE,CUR_FRAME_2DS, REC_FRAME_2DS, REF_FRAME_2DS, row2, col2, width, height, block_split, range, 1, MDIFF_VECTORS);
-								//Multireference code start Only activated if nRefFrames>=2
-								if (nRefFrames >= 2) {
-									MDIFF_VECTORS[row / block][col / block] = MultiRefInterPrediction(INTERMODE,CUR_FRAME_2DS, REC_FRAME_2D_2S, REC_FRAME_2D_3S, REC_FRAME_2D_4S,
-										REF_FRAME_2DS, REF_FRAME_2D_2S, REF_FRAME_2D_3S, REF_FRAME_2D_4S,
-										row, col, width, height, block, range, QP, RDOEnable, nRefFrames,
-										MDIFF_VECTORS, MDIFF_VECTOR_2S, MDIFF_VECTOR_3S, MDIFF_VECTOR_4S);
-								}
-							}
-
-							// RESIDUAL 
-							GenerateResidualBlock(ENC_RES_FRAME_2DS, CUR_FRAME_2DS, REF_FRAME_2DS, row2, col2, block_split);
-
-							// DCT 
-							DCTBlock(ENC_TC_FRAME_2DS, ENC_RES_FRAME_2DS, row2, col2, block_split);
-
-							// QUANTIZE
-							QuantizeBlock(QTC_FRAME_2DS, ENC_TC_FRAME_2DS, QP_FRAME_2DS, row2, col2, width, height, QP, block_split);
-
-							// SCALE
-							ScaleBlock(DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS, row2, col2, width, height, QP, block_split);
-
-							// IDCT
-							IDCTBlock(DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, row2, col2, block_split);
-
-							// RECONSTRUCT 
-							ReconstructBlock(REC_FRAME_2DS, DEC_RES_FRAME_2DS, REF_FRAME_2DS, row2, col2, block_split);
-						}
-					}
-					//Pick Winner
-					VBSWinner(MDIFF_VECTOR, MDIFF_VECTORS, row, col, block, REC_FRAME_2D, REC_FRAME_2DS);
-				}//End of VBSenable code
-				 // Differential and Entropy Encode steps 
-				int bitcount_temp=0;
-				bitcount_temp =entropy_wrapper(QTC_FRAME_2D, block, height, width, frame, row, col);
-				coeff_bitcount = coeff_bitcount + bitcount_temp;
-				bitcount_row = bitcount_row + bitcount_temp;
-				diff_enc_wrapper(MDIFF_VECTOR, MDIFF_VECTOR_DIFF, FrameType, height, width, block, frame, row, col);
-				bitcount_temp =encode_mdiff_wrapper(MDIFF_VECTOR_DIFF, MDIFF_VECTOR, height, width, block, frame, FrameType, row, col);
-				mdiff_bitcount = mdiff_bitcount + bitcount_temp;
-				bitcount_row = bitcount_row + bitcount_temp;
-				if (col + block == width) {//Collect bitcount per row
-					BITCOUNT_ROW[row / block] = bitcount_row;
-					bitcount_row = 0;
-					if(RCflag==1)
-						QP = row_rate_control(row, targetBr, RCflag, width, height, FrameType, block, coeff_bitcount + mdiff_bitcount);
+					BlockThread(row, col,
+						width, height, FrameType, INTERMODE, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
+						CUR_FRAME_2D,CUR_REC_FRAME_2D,PREV_REC_FRAME_2D,REF_FRAME_2D,ENC_RES_FRAME_2D,ENC_TC_FRAME_2D,DEC_RES_FRAME_2D,DEC_TC_FRAME_2D,QTC_FRAME_2D,QP_FRAME_2D,
+						CUR_FRAME_2DS,CUR_REC_FRAME_2DS,PREV_REC_FRAME_2DS,REF_FRAME_2DS,ENC_RES_FRAME_2DS,ENC_TC_FRAME_2DS,DEC_RES_FRAME_2DS,DEC_TC_FRAME_2DS,QTC_FRAME_2DS,QP_FRAME_2DS,
+						MDIFF_VECTOR,MDIFF_VECTOR_DIFF,MDIFF_VECTORS,MDIFF_VECTOR_DIFFS
+					);
 				}
 			}
 		}
 		
-		write_mat(reffile, REF_FRAME_2D, height, width);
-		write_mat3(decresfile, DEC_RES_FRAME_2D, height, width);
-		write_mat2(dectcfile, DEC_TC_FRAME_2D, height, width);
+		if (ParallelMode == BLOCKTHREADED) {
+			if (FrameType == IFRAME) {
+				for (uint32_t row = 0; row < height; row += 2 * block) {
+
+					for (uint32_t col = 0; col <= width; col += block) {
+
+						if ((col == 0) && (row == 0)) { // Most Top Left Block
+							std::thread firstblock(BlockThread,row,col,
+								width, height, FrameType, INTERMODE, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
+								CUR_FRAME_2D, CUR_REC_FRAME_2D, PREV_REC_FRAME_2D, REF_FRAME_2D, ENC_RES_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,
+								CUR_FRAME_2DS, CUR_REC_FRAME_2DS, PREV_REC_FRAME_2DS, REF_FRAME_2DS, ENC_RES_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS,
+								MDIFF_VECTOR, MDIFF_VECTOR_DIFF, MDIFF_VECTORS, MDIFF_VECTOR_DIFFS
+							);
+
+							firstblock.join();
+						}
+						else if ((col == width) & (row == height - 2 * block)) { // Last Bottom Right Block
+							std::thread lastblock(BlockThread, row + block, col - block,
+								width, height, FrameType, INTERMODE, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
+								CUR_FRAME_2D, CUR_REC_FRAME_2D, PREV_REC_FRAME_2D, REF_FRAME_2D, ENC_RES_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,
+								CUR_FRAME_2DS, CUR_REC_FRAME_2DS, PREV_REC_FRAME_2DS, REF_FRAME_2DS, ENC_RES_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS,
+								MDIFF_VECTOR, MDIFF_VECTOR_DIFF, MDIFF_VECTORS, MDIFF_VECTOR_DIFFS
+							);
+							lastblock.join();
+						}
+						else if (col == width) { // First Block in Next Section, Last Block in Current Section
+							std::thread firstblock(BlockThread, row + 2 * block, 0,
+								width, height, FrameType, INTERMODE, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
+								CUR_FRAME_2D, CUR_REC_FRAME_2D, PREV_REC_FRAME_2D, REF_FRAME_2D, ENC_RES_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,
+								CUR_FRAME_2DS, CUR_REC_FRAME_2DS, PREV_REC_FRAME_2DS, REF_FRAME_2DS, ENC_RES_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS,
+								MDIFF_VECTOR, MDIFF_VECTOR_DIFF, MDIFF_VECTORS, MDIFF_VECTOR_DIFFS
+							);
+							std::thread lastblock(BlockThread, row + block, col - block,
+								width, height, FrameType, INTERMODE, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
+								CUR_FRAME_2D, CUR_REC_FRAME_2D, PREV_REC_FRAME_2D, REF_FRAME_2D, ENC_RES_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,
+								CUR_FRAME_2DS, CUR_REC_FRAME_2DS, PREV_REC_FRAME_2DS, REF_FRAME_2DS, ENC_RES_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS,
+								MDIFF_VECTOR, MDIFF_VECTOR_DIFF, MDIFF_VECTORS, MDIFF_VECTOR_DIFFS
+							);
+							firstblock.join();
+							lastblock.join();
+						}
+						else {// Two blocks in Current Section
+							std::thread rightblock(BlockThread, row, col,
+								width, height, FrameType, INTERMODE, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
+								CUR_FRAME_2D, CUR_REC_FRAME_2D, PREV_REC_FRAME_2D, REF_FRAME_2D, ENC_RES_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,
+								CUR_FRAME_2DS, CUR_REC_FRAME_2DS, PREV_REC_FRAME_2DS, REF_FRAME_2DS, ENC_RES_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS,
+								MDIFF_VECTOR, MDIFF_VECTOR_DIFF, MDIFF_VECTORS, MDIFF_VECTOR_DIFFS
+							);
+							std::thread bottomblock(BlockThread, row + block, col,
+								width, height, FrameType, INTERMODE, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
+								CUR_FRAME_2D, CUR_REC_FRAME_2D, PREV_REC_FRAME_2D, REF_FRAME_2D, ENC_RES_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,
+								CUR_FRAME_2DS, CUR_REC_FRAME_2DS, PREV_REC_FRAME_2DS, REF_FRAME_2DS, ENC_RES_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS,
+								MDIFF_VECTOR, MDIFF_VECTOR_DIFF, MDIFF_VECTORS, MDIFF_VECTOR_DIFFS
+							);
+							rightblock.join();
+							bottomblock.join();
+						}
+					}
+				}
+			}
+
+			if (FrameType == PFRAME) {
+				for (uint32_t row = 0; row < height; row += 2 * block) {
+
+					for (uint32_t col = 0; col <= width; col += block) {
+						std::thread firstrow(BlockThread, row, col,
+							width, height, FrameType, INTERMODE, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
+							CUR_FRAME_2D, CUR_REC_FRAME_2D, PREV_REC_FRAME_2D, REF_FRAME_2D, ENC_RES_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,
+							CUR_FRAME_2DS, CUR_REC_FRAME_2DS, PREV_REC_FRAME_2DS, REF_FRAME_2DS, ENC_RES_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS,
+							MDIFF_VECTOR, MDIFF_VECTOR_DIFF, MDIFF_VECTORS, MDIFF_VECTOR_DIFFS
+						);
+						std::thread secondrow(BlockThread, row + block, col,
+							width, height, FrameType, INTERMODE, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
+							CUR_FRAME_2D, CUR_REC_FRAME_2D, PREV_REC_FRAME_2D, REF_FRAME_2D, ENC_RES_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,
+							CUR_FRAME_2DS, CUR_REC_FRAME_2DS, PREV_REC_FRAME_2DS, REF_FRAME_2DS, ENC_RES_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS,
+							MDIFF_VECTOR, MDIFF_VECTOR_DIFF, MDIFF_VECTORS, MDIFF_VECTOR_DIFFS
+						);
+						firstrow.join();
+						secondrow.join();
+					}
+				}
+			}
+		}
+
+		// Differential and Entropy Encode steps 
+		// ================================================
+		for (int row = 0; row < height; row += block) {
+			for (int col = 0; col < width; col += block) {
+				int bitcount_temp = 0;
+				bitcount_temp = entropy_wrapper(QTC_FRAME_2D, block, height, width, frame, row, col);
+				coeff_bitcount = coeff_bitcount + bitcount_temp;
+				diff_enc_wrapper(MDIFF_VECTOR, MDIFF_VECTOR_DIFF, FrameType, height, width, block, frame, row, col);
+				bitcount_temp = encode_mdiff_wrapper(MDIFF_VECTOR_DIFF, MDIFF_VECTOR, height, width, block, frame, FrameType, row, col);
+				mdiff_bitcount = mdiff_bitcount + bitcount_temp;
+			}
+		}
 
 		// File Dumps
-		//RECON
+		// ================================================
+
+
+		// Reconstructed Frames
 		uint8_t *REC_FRAME = new uint8_t[FRAME_SIZE];
 		for (int row = 0; row < height; row++)
 			for (int col = 0; col < width; col++)
-				REC_FRAME[col + width*row] = REC_FRAME_2D[row][col];
-
+				REC_FRAME[col + width*row] = CUR_REC_FRAME_2D[row][col];
 		fclose(recfile);//Weird behavior need to close file
 		recfile = fopen(recfile_name, "a+b");
 		fwrite(REC_FRAME, sizeof(uint8_t), FRAME_SIZE, recfile);
-		//Bitcount Per frame
+
+		// Bitcount Per frame
 		fprintf(coeff_bitcount_file, "%d,%d\n", frame, coeff_bitcount);
 		fprintf(mdiff_bitcount_file, "%d,%d\n", frame, mdiff_bitcount);
 		fprintf(total_bitcount_file, "%d,%d\n", frame, coeff_bitcount + mdiff_bitcount);
 		fclose(mdiff_golomb);
 		fclose(golomb_file);
-		//Bitcount Per row
-		int average=0;
-		for (int i = 0; i < height; i = i + block) {
-			average += BITCOUNT_ROW[i / block];
-		}
-		if (FrameType == IFRAME)
-			fprintf(bitcountrowfile, "I_FRAME,%d,%d\n",frame, average / (height / block));
-		else
-			fprintf(bitcountrowfile, "P_FRAME,%d,%d\n",frame, average / (height / block));
 
-#ifdef TRACE_ON
-		fclose(file_vector_org);
-		fclose(file_vector_aft);
-		fclose(file_qtc);
-		fclose(file_reorder);
-		fclose(file_rle);
-#endif 
 
 	}
-	//Runtime
+
+	// Runtime Stop 
+	// =============================================
 	int stop_s = clock();
 	fprintf(runtime_file,"%.2f\n", (double)(clock() - start_s) / CLOCKS_PER_SEC);
 		
 	// Deallocate Memory
+	// =============================================
+
 	for (unsigned int row = 0; row < height; row++) {
-		delete		CUR_FRAME_2D[row];
-		delete		REC_FRAME_2D[row]; 
-		delete		REC_FRAME_2D_2[row];
-		delete		REC_FRAME_2D_3[row];
-		delete		REC_FRAME_2D_4[row];
-		delete		REF_FRAME_2D[row];
-		delete		REF_FRAME_2D_2[row];
-		delete		REF_FRAME_2D_3[row];
-		delete		REF_FRAME_2D_4[row];
 
-		delete	ENC_RES_FRAME_2D[row]; 
-		delete   ENC_TC_FRAME_2D[row];
-		delete	DEC_RES_FRAME_2D[row];
-		delete   DEC_TC_FRAME_2D[row];
-		delete		QTC_FRAME_2D[row];
-		delete		 QP_FRAME_2D[row];
+		// Regular
+		delete CUR_FRAME_2D[row];		
+		delete CUR_REC_FRAME_2D[row];		
+		delete PREV_REC_FRAME_2D[row];  
+		delete REF_FRAME_2D[row];	
+		delete ENC_RES_FRAME_2D[row];	
+		delete ENC_TC_FRAME_2D[row];	
+		delete DEC_RES_FRAME_2D[row];	
+		delete DEC_TC_FRAME_2D[row];	
+		delete QTC_FRAME_2D[row];		
+		delete QP_FRAME_2D[row];		
+
+		// Split
+		delete CUR_FRAME_2DS[row];		
+		delete CUR_REC_FRAME_2DS[row];		
+		delete PREV_REC_FRAME_2DS[row]; 
+		delete REF_FRAME_2DS[row];	
+		delete ENC_RES_FRAME_2DS[row];	
+		delete ENC_TC_FRAME_2DS[row];	
+		delete DEC_RES_FRAME_2DS[row];	
+		delete DEC_TC_FRAME_2DS[row];	
+		delete QTC_FRAME_2DS[row];		
+		delete QP_FRAME_2DS[row];		
 	}
 
-	delete CUR_FRAME_2D;
-	delete REC_FRAME_2D;
-	delete REC_FRAME_2D_2;
-	delete REC_FRAME_2D_3;
-	delete REC_FRAME_2D_4;
+	// Regular
+	delete CUR_FRAME_2D;		
+	delete CUR_REC_FRAME_2D;		
+	delete PREV_REC_FRAME_2D;
+	delete REF_FRAME_2D;		
+	delete ENC_RES_FRAME_2D;	
+	delete ENC_TC_FRAME_2D;	
+	delete DEC_RES_FRAME_2D;	
+	delete DEC_TC_FRAME_2D;	
+	delete QTC_FRAME_2D;		
+	delete QP_FRAME_2D;		
 
-	delete REF_FRAME_2D;
-	delete REF_FRAME_2D_2;
-	delete REF_FRAME_2D_3;
-	delete REF_FRAME_2D_4;
-
-	delete ENC_RES_FRAME_2D;
-	delete  ENC_TC_FRAME_2D;
-	delete DEC_RES_FRAME_2D;
-	delete  DEC_TC_FRAME_2D;
-	delete QTC_FRAME_2D;
-	delete  QP_FRAME_2D;
-	
-	for (unsigned int row = 0; row < (height / block); row++) {
-		delete MDIFF_VECTOR[row];
-		delete MDIFF_VECTOR_2[row];
-		delete MDIFF_VECTOR_3[row];
-		delete MDIFF_VECTOR_4[row];
-
-	}
-
-	delete MDIFF_VECTOR;
-	delete MDIFF_VECTOR_2;
-	delete MDIFF_VECTOR_3;
-	delete MDIFF_VECTOR_4;
-
+	// Split
+	delete CUR_FRAME_2DS;
+	delete CUR_REC_FRAME_2DS;
+	delete PREV_REC_FRAME_2DS;
+	delete REF_FRAME_2DS;	  
+	delete ENC_RES_FRAME_2DS;
+	delete ENC_TC_FRAME_2DS; 
+	delete DEC_RES_FRAME_2DS;
+	delete DEC_TC_FRAME_2DS; 
+	delete QTC_FRAME_2DS;		
+	delete QP_FRAME_2DS;
 
 	// Close Files
+	// =============================================
 	fclose(recfile);
 	fclose(mdiff_bitcount_file);
 	fclose(coeff_bitcount_file);
@@ -665,245 +529,7 @@ int main(int argCnt, char **args)
 	fclose(reffile);
 	fclose(decresfile);
 	fclose(dectcfile);
+	fclose(runtime_file);
 	return 0;
 
 }
-
-/*
-----------------------
-IRFAN TEST CODE START
-----------------------
-
-width		= 8;
-height		= 8;
-frames		= 1;
-range		= 1;
-block		= 2;
-i_period	= 1;
-QP			= 0;
-
-----------------------
-IRFAN TEST CODE END
-----------------------
-*/
-
-/*
-----------------------
-IRFAN TEST CODE START
-----------------------
-
-char temp = 0;
-for (int row = 0; row < 8; row++) {
-for (int col = 0; col < 8; col++) {
-CUR_FRAME_2D[row][col] = temp;
-temp++;
-temp = (temp % 32);
-}
-
-}
-
-
-----------------------
-IRFAN TEST CODE END
-----------------------
-*/
-
-/*
-----------------------
-IRFAN TEST CODE START
-----------------------
-
-
-FILE *fp = fopen("INTRA.csv", "w");
-fprintf(fp, "CUR FRAME\n");
-for (int i = 0; i< height; i++) {
-fprintf(fp, "%d", CUR_FRAME_2D[i][0]);
-for (int j = 1; j < width; j++) {
-fprintf(fp, ",%d", CUR_FRAME_2D[i][j]);
-}
-fprintf(fp, "\n");
-}
-fprintf(fp, "\n");
-fprintf(fp, "REF FRAME\n");
-for (int i = 0; i< height; i++) {
-fprintf(fp, "%d", REF_FRAME_2D[i][0]);
-for (int j = 1; j < width; j++) {
-fprintf(fp, ",%d", REF_FRAME_2D[i][j]);
-}
-fprintf(fp, "\n");
-}
-
-fprintf(fp, "\n");
-fprintf(fp, "ENC RES FRAME\n");
-for (int i = 0; i< height; i++) {
-fprintf(fp, "%d", ENC_RES_FRAME_2D[i][0]);
-for (int j = 1; j < width; j++) {
-fprintf(fp, ",%d", ENC_RES_FRAME_2D[i][j]);
-}
-fprintf(fp, "\n");
-}
-
-fprintf(fp, "\n");
-fprintf(fp, "ENC TC FRAME\n");
-for (int i = 0; i< height; i++) {
-fprintf(fp, "%d", ENC_TC_FRAME_2D[i][0]);
-for (int j = 1; j < width; j++) {
-fprintf(fp, ",%d", ENC_TC_FRAME_2D[i][j]);
-}
-fprintf(fp, "\n");
-}
-
-fprintf(fp, "\n");
-fprintf(fp, "QP FRAME\n");
-for (int i = 0; i< height; i++) {
-fprintf(fp, "%d", QP_FRAME_2D[i][0]);
-for (int j = 1; j < width; j++) {
-fprintf(fp, ",%d", QP_FRAME_2D[i][j]);
-}
-fprintf(fp, "\n");
-}
-
-
-fprintf(fp, "\n");
-fprintf(fp, "QUANTIZED FRAME\n");
-for (int i = 0; i< height; i++) {
-fprintf(fp, "%d", QTC_FRAME_2D[i][0]);
-for (int j = 1; j < width; j++) {
-fprintf(fp, ",%d", QTC_FRAME_2D[i][j]);
-}
-fprintf(fp, "\n");
-}
-
-fprintf(fp, "\n");
-fprintf(fp, "DEC TC FRAME\n");
-for (int i = 0; i< height; i++) {
-fprintf(fp, "%d", DEC_TC_FRAME_2D[i][0]);
-for (int j = 1; j < width; j++) {
-fprintf(fp, ",%d", DEC_TC_FRAME_2D[i][j]);
-}
-fprintf(fp, "\n");
-}
-
-fprintf(fp, "\n");
-fprintf(fp, "DEC RES FRAME\n");
-for (int i = 0; i< height; i++) {
-fprintf(fp, "%d", DEC_RES_FRAME_2D[i][0]);
-for (int j = 1; j < width; j++) {
-fprintf(fp, ",%d", DEC_RES_FRAME_2D[i][j]);
-}
-fprintf(fp, "\n");
-}
-
-fprintf(fp, "\n");
-fprintf(fp, "REC FRAME\n");
-for (int i = 0; i< height; i++) {
-fprintf(fp, "%d", REC_FRAME_2D[i][0]);
-for (int j = 1; j < width; j++) {
-fprintf(fp, ",%d", REC_FRAME_2D[i][j]);
-}
-fprintf(fp, "\n");
-}
-fprintf(fp, "\n");
-fclose(fp);
-
-
-
-----------------------
-IRFAN TEST CODE END
-----------------------
-*/
-
-/*
-int GMV_X = MDIFF_VECTOR[((row*width / block) / block) + (col / block)].X;
-int GMV_Y = MDIFF_VECTOR[((row*width / block) / block) + (col / block)].Y;
-
-// Fill the Match Frame with the best matching block
-for (int i = 0; i < block; i++) {
-for (int j = 0; j < block; j++) {
-MATCH_FRAME[row + i][col + j] = REC_FRAME[(row + GMV_Y + i) * width + (col + GMV_X + j)];
-}
-}
-*/
-/*
-----------------------
-IRFAN TEST CODE START
-----------------------
-
-for (int row = 0; row < height; row++) {
-for (int col = 0; col < width; col++) {
-ENC_TC_FRAME_2D[row][col] = ENC_RES_FRAME_2D[row][col];
-}
-}
-
-----------------------
-IRFAN TEST CODE END
-----------------------
-*/
-
-/*
-----------------------
-IRFAN TEST CODE START
-----------------------
-
-for (int row = 0; row < height; row++) {
-for (int col = 0; col < width; col++) {
-DEC_RES_FRAME_2D[row][col] = DEC_TC_FRAME_2D[row][col];
-}
-}
-
-----------------------
-IRFAN TEST CODE END
-----------------------
-*/
-/*
-int DATA_1 = MDIFF_VECTOR[((row*width / block) / block) + (col / block)].X;
-int DATA_2 = MDIFF_VECTOR[((row*width / block) / block) + (col / block)].Y;
-
-// MV FILE GENERATION (VECTOR DUMP)
-// =======================================
-fwrite(&DATA_1, sizeof(int), 1, gmvXfile);
-fwrite(&DATA_2, sizeof(int), 1, gmvYfile);
-if (FrameType == IFRAME) {
-fprintf(mvfile, "B(%d,%d)_M(%d,%d)\n", row / block, col / block, DATA_1, DATA_2);
-}
-if (FrameType == PFRAME) {
-fprintf(mvfile, "B(%d,%d)_V(%d,%d)\n", row / block, col / block, DATA_1, DATA_2);
-}
-*/
-
-//TEST JUAN
-/*	int size = 4;
-int index = 0;
-int8_t * out = new int8_t[size *size];
-int8_t * RLE = new int8_t[size*size + size*size];
-int8_t ** in = new int8_t*[size];
-for (int i = 0; i < size; i++)
-in[i] = new int8_t[size];
-for (int i = 0; i < size; i++){
-for (int j = 0; j < size; j++) {
-in[i][j] = index;
-index++;
-}
-}
-in[0][0] = -31;
-in[0][1] = 9;
-in[0][2] = 8;
-in[0][3] = 4;
-in[1][0] = -4;
-in[1][1] = 1;
-in[1][2] = 4;
-in[1][3] = 0;
-in[2][0] = -3;
-in[2][1] = 2;
-in[2][2] = 4;
-in[2][3] = 0;
-in[3][0] = 4;
-in[3][1] = 0;
-in[3][2] = -4;
-in[3][3] = 2;
-
-int total_counter=entropy(in, out, size, RLE);
-FILE* test = fopen("test.txt", "w");
-fprint_coeef(in, out, size, test, RLE, total_counter);
-fclose(test);
-*/

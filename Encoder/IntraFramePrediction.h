@@ -5,7 +5,7 @@ struct MDIFF IntraFramePrediction(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint
 struct MDIFF IntraFramePrediction(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint8_t** REF_FRAME,uint32_t row, uint32_t col, uint32_t block) {
 	
 	uint8_t* HorizontalModeArray	= new uint8_t[block];
-	uint8_t* VerticalModeArray	= new uint8_t[block];
+	uint8_t* VerticalModeArray		= new uint8_t[block];
 
 	// Mode 0 Horizontal 
 	// ==================================================

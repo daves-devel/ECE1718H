@@ -124,6 +124,7 @@
     <ClCompile Include="..\Encoder.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\ikhan1\Source\Repo_1\ECE1718H\Encoder</AdditionalIncludeDirectories>
     </ClCompile>
+    <ClCompile Include="Threadcpp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\common.h" />
@@ -138,6 +139,7 @@
     <ClInclude Include="..\residual.h" />
     <ClInclude Include="..\reverse_entropy.h" />
     <ClInclude Include="..\stdint.h" />
+    <ClInclude Include="blockthread.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

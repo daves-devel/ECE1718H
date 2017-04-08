@@ -30,10 +30,6 @@ void diff_enc(MDIFF** MDIFF_VECTOR, MDIFF** MDIFF_VECTOR_DIFF, int FrameType, in
 			MDIFF_VECTOR_DIFF[row][col].Y2 = MDIFF_VECTOR[row][col].Y2;
 			MDIFF_VECTOR_DIFF[row][col].Y3 = MDIFF_VECTOR[row][col].Y3;
 			MDIFF_VECTOR_DIFF[row][col].Y4 = MDIFF_VECTOR[row][col].Y4;
-			MDIFF_VECTOR_DIFF[row][col].ref = MDIFF_VECTOR[row][col].ref;
-			MDIFF_VECTOR_DIFF[row][col].ref2 = MDIFF_VECTOR[row][col].ref2;
-			MDIFF_VECTOR_DIFF[row][col].ref3 = MDIFF_VECTOR[row][col].ref3;
-			MDIFF_VECTOR_DIFF[row][col].ref4 = MDIFF_VECTOR[row][col].ref4;
 		}
 		else {
 			MDIFF_VECTOR_DIFF[row][col].split = MDIFF_VECTOR[row][col].split - MDIFF_VECTOR[row][col - 1].split;
@@ -45,10 +41,6 @@ void diff_enc(MDIFF** MDIFF_VECTOR, MDIFF** MDIFF_VECTOR_DIFF, int FrameType, in
 			MDIFF_VECTOR_DIFF[row][col].Y2 = MDIFF_VECTOR[row][col].Y2 - MDIFF_VECTOR[row][col - 1].Y2;
 			MDIFF_VECTOR_DIFF[row][col].Y3 = MDIFF_VECTOR[row][col].Y3 - MDIFF_VECTOR[row][col - 1].Y3;
 			MDIFF_VECTOR_DIFF[row][col].Y4 = MDIFF_VECTOR[row][col].Y4 - MDIFF_VECTOR[row][col - 1].Y4;
-			MDIFF_VECTOR_DIFF[row][col].ref = MDIFF_VECTOR[row][col].ref - MDIFF_VECTOR[row][col - 1].ref;
-			MDIFF_VECTOR_DIFF[row][col].ref2 = MDIFF_VECTOR[row][col].ref2 - MDIFF_VECTOR[row][col - 1].ref2;
-			MDIFF_VECTOR_DIFF[row][col].ref3 = MDIFF_VECTOR[row][col].ref3 - MDIFF_VECTOR[row][col - 1].ref3;
-			MDIFF_VECTOR_DIFF[row][col].ref4 = MDIFF_VECTOR[row][col].ref4 - MDIFF_VECTOR[row][col - 1].ref4;
 		}
 	}
 }
