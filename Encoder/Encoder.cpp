@@ -24,11 +24,11 @@ void Encode(int FrameType, int row, int col, int block, int nRefFrames, uint32_t
 	uint8_t **REC_FRAME_2D, uint8_t **REC_FRAME_2D_2, uint8_t **REC_FRAME_2D_3, uint8_t **REC_FRAME_2D_4,
 	uint8_t **REF_FRAME_2D, uint8_t **REF_FRAME_2D_2, uint8_t **REF_FRAME_2D_3, uint8_t **REF_FRAME_2D_4,
 	int32_t **ENC_RES_FRAME_2D, int32_t **QTC_FRAME_2D, int32_t **QP_FRAME_2D, int32_t **ENC_TC_FRAME_2D, int32_t **DEC_RES_FRAME_2D, int32_t **DEC_TC_FRAME_2D,
-	int range, int RDOEnable)
+	int range, int RDOEnable, uint8_t** REC_FINAL_FRAME_2D)
 {
 	// PREDICTOR DATA GENERATION
 	if (FrameType == IFRAME) {
-		MDIFF_VECTOR[row / block][col / block] = IntraFramePrediction(CUR_FRAME_2D, REC_FRAME_2D, REF_FRAME_2D, row, col, block);
+		MDIFF_VECTOR[row / block][col / block] = IntraFramePrediction(CUR_FRAME_2D, REC_FINAL_FRAME_2D, REF_FRAME_2D, row, col, block);
 	}
 
 	if (FrameType == PFRAME) {
@@ -58,14 +58,14 @@ void Encode(int FrameType, int row, int col, int block, int nRefFrames, uint32_t
 	IDCTBlock(DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, row, col, block);
 
 	// RECONSTRUCT 
-	ReconstructBlock(REC_FRAME_2D, DEC_RES_FRAME_2D, REF_FRAME_2D, row, col, block);
+	ReconstructBlock(REC_FINAL_FRAME_2D, DEC_RES_FRAME_2D, REF_FRAME_2D, row, col, block);
 }
 void EncodeVBS(int FrameType, int row, int col, int block, int nRefFrames, uint32_t INTERMODE, int frame, int i_period, int width, int height, int QP,
 	MDIFF **MDIFF_VECTORS, MDIFF **MDIFF_VECTOR_2S, MDIFF **MDIFF_VECTOR_3S, MDIFF **MDIFF_VECTOR_4S, uint8_t **CUR_FRAME_2DS,
 	uint8_t **REC_FRAME_2DS, uint8_t **REC_FRAME_2D_2S, uint8_t **REC_FRAME_2D_3S, uint8_t **REC_FRAME_2D_4S,
 	uint8_t **REF_FRAME_2DS, uint8_t **REF_FRAME_2D_2S, uint8_t **REF_FRAME_2D_3S, uint8_t **REF_FRAME_2D_4S,
 	int32_t **ENC_RES_FRAME_2DS, int32_t **QTC_FRAME_2DS, int32_t **QP_FRAME_2DS, int32_t **ENC_TC_FRAME_2DS, int32_t **DEC_RES_FRAME_2DS, int32_t **DEC_TC_FRAME_2DS,
-	int block_split, int range, int RDOEnable)
+	int block_split, int range, int RDOEnable, uint8_t** REC_FINAL_FRAME_2DS)
 {
 	for (int row2 = row; row2 < row + block; row2 += block_split) {
 		for (int col2 = col; col2 < col + block; col2 += block_split) {
@@ -74,7 +74,7 @@ void EncodeVBS(int FrameType, int row, int col, int block, int nRefFrames, uint3
 
 			// PREDICTOR DATA GENERATION
 			if (FrameType == IFRAME) {
-				MDIFF_VECTORS[row2 / block_split][col2 / block_split] = IntraFramePrediction(CUR_FRAME_2DS, REC_FRAME_2DS, REF_FRAME_2DS, row2, col2, block_split);
+				MDIFF_VECTORS[row2 / block_split][col2 / block_split] = IntraFramePrediction(REC_FINAL_FRAME_2DS, REC_FRAME_2DS, REF_FRAME_2DS, row2, col2, block_split);
 			}
 
 			if (FrameType == PFRAME) {
@@ -104,7 +104,7 @@ void EncodeVBS(int FrameType, int row, int col, int block, int nRefFrames, uint3
 			IDCTBlock(DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, row2, col2, block_split);
 
 			// RECONSTRUCT 
-			ReconstructBlock(REC_FRAME_2DS, DEC_RES_FRAME_2DS, REF_FRAME_2DS, row2, col2, block_split);
+			ReconstructBlock(REC_FINAL_FRAME_2DS, DEC_RES_FRAME_2DS, REF_FRAME_2DS, row2, col2, block_split);
 		}
 	}
 }
@@ -138,10 +138,12 @@ int main(int argCnt, char **args)
 	int FMEnable		= 0;
 	int coeff_bitcount	= 0;
 	int mdiff_bitcount	= 0;
+	int total_bitcount = 0;
 	int bitcount_row	 = 0;
 	int targetBr = 0;
 	int	RCflag = 0;
 	int SceneChange = 0;
+	
 
 
 	//  Parse Input Arguments
@@ -302,6 +304,13 @@ int main(int argCnt, char **args)
 	FILE* reffile = fopen("ref_enc.csv", "w");
 	FILE* dectcfile = fopen("dec_tc_enc.csv", "w");
 	FILE* decresfile = fopen("dec_res_enc.csv", "w");
+	FILE* encfile = fopen("enc_res_enc.csv", "w");
+	FILE* encresfile = fopen("encresfile.csv", "w");
+	FILE* reconfile = fopen("reconfile.csv", "w");
+	FILE* prevreconfile = fopen("prevreconfile.csv", "w");
+
+
+
 	FILE* bitcountrowfile = fopen(bitcount_row_name, "w");
 
 	// TODO Make these 2D buffers, and add the Encoder functions to the frame flow
@@ -315,6 +324,12 @@ int main(int argCnt, char **args)
 	uint8_t** REC_FRAME_2D_2 = new uint8_t*[height];
 	uint8_t** REC_FRAME_2D_3 = new uint8_t*[height];
 	uint8_t** REC_FRAME_2D_4 = new uint8_t*[height];
+
+	uint8_t** REC_FINAL_FRAME_2D = new uint8_t*[height];
+	uint8_t** REC_FINAL_FRAME_2D_2 = new uint8_t*[height];
+	uint8_t** REC_FINAL_FRAME_2D_3 = new uint8_t*[height];
+	uint8_t** REC_FINAL_FRAME_2D_4 = new uint8_t*[height];
+
 
 	uint8_t** REF_FRAME_2D	 = new uint8_t*[height];
 	uint8_t** REF_FRAME_2D_2 = new uint8_t*[height];
@@ -335,6 +350,10 @@ int main(int argCnt, char **args)
 		REC_FRAME_2D_2[row] = new uint8_t[width];
 		REC_FRAME_2D_3[row] = new uint8_t[width];
 		REC_FRAME_2D_4[row] = new uint8_t[width];
+		REC_FINAL_FRAME_2D[row] = new uint8_t[width];
+		REC_FINAL_FRAME_2D_2[row] = new uint8_t[width];
+		REC_FINAL_FRAME_2D_3[row] = new uint8_t[width];
+		REC_FINAL_FRAME_2D_4[row] = new uint8_t[width];
 
 		REF_FRAME_2D[row] = new uint8_t[width];
 		REF_FRAME_2D_2[row] = new uint8_t[width];
@@ -373,6 +392,10 @@ int main(int argCnt, char **args)
 	uint8_t** REC_FRAME_2D_2S = new uint8_t*[height];
 	uint8_t** REC_FRAME_2D_3S = new uint8_t*[height];
 	uint8_t** REC_FRAME_2D_4S = new uint8_t*[height];
+	uint8_t** REC_FINAL_FRAME_2DS = new uint8_t*[height];
+	uint8_t** REC_FINAL_FRAME_2D_2S = new uint8_t*[height];
+	uint8_t** REC_FINAL_FRAME_2D_3S = new uint8_t*[height];
+	uint8_t** REC_FINAL_FRAME_2D_4S = new uint8_t*[height];
 
 	uint8_t** REF_FRAME_2DS = new uint8_t*[height];
 	uint8_t** REF_FRAME_2D_2S = new uint8_t*[height];
@@ -393,6 +416,11 @@ int main(int argCnt, char **args)
 		REC_FRAME_2D_2S[row] = new uint8_t[width];
 		REC_FRAME_2D_3S[row] = new uint8_t[width];
 		REC_FRAME_2D_4S[row] = new uint8_t[width];
+
+		REC_FINAL_FRAME_2DS[row] = new uint8_t[width];
+		REC_FINAL_FRAME_2D_2S[row] = new uint8_t[width];
+		REC_FINAL_FRAME_2D_3S[row] = new uint8_t[width];
+		REC_FINAL_FRAME_2D_4S[row] = new uint8_t[width];
 
 		REF_FRAME_2DS[row] = new uint8_t[width];
 		REF_FRAME_2D_2S[row] = new uint8_t[width];
@@ -472,6 +500,8 @@ int main(int argCnt, char **args)
 		//Reset bitcounts
 		coeff_bitcount = 0;
 		mdiff_bitcount = 0;
+		total_bitcount = 0;
+		SceneChange = 0;
 		
 		if ((frame%i_period) == 0) { 
 			FrameType = IFRAME;
@@ -491,47 +521,47 @@ int main(int argCnt, char **args)
 		if (FrameType == PFRAME) {
 			// Go to the beginning of the previous reconstructed frame and copy it to buffer
 			fseek(recfile, (frame - 1)*FRAME_SIZE, SEEK_SET);
-			for (unsigned int row = 0; row++; row < height) {
+			for (int row = 0; row < height; row++) {
 				fread(REC_FRAME_2D[row], sizeof(uint8_t), width, recfile);
 			}
 			if (frame > 2) {
 				fseek(recfile, (frame - 2)*FRAME_SIZE, SEEK_SET);
-				for (unsigned int row = 0; row++; row < height) {
+				for (int row = 0; row < height; row++) {
 					fread(REC_FRAME_2D_2[row], sizeof(uint8_t), width, recfile);
 				}
 			}
 			if (frame > 3) {
 				fseek(recfile, (frame - 3)*FRAME_SIZE, SEEK_SET);
-				for (unsigned int row = 0; row++; row < height) {
+				for (int row = 0; row < height; row++) {
 					fread(REC_FRAME_2D_3[row], sizeof(uint8_t), width, recfile);
 				}
 			}
 			if (frame > 4) {
 				fseek(recfile, (frame - 4)*FRAME_SIZE, SEEK_SET);
-				for (unsigned int row = 0; row++; row < height) {
+				for (int row = 0; row < height; row++) {
 					fread(REC_FRAME_2D_4[row], sizeof(uint8_t), width, recfile);
 				}
 			}
 			if (VBSEnable) { //fill split buffers
 				fseek(recfile, (frame - 1)*FRAME_SIZE, SEEK_SET);
-				for (unsigned int row = 0; row++; row < height) {
+				for (int row = 0; row < height; row++) {
 					fread(REC_FRAME_2DS[row], sizeof(uint8_t), width, recfile);
 				}
 				if (frame > 2) {
 					fseek(recfile, (frame - 2)*FRAME_SIZE, SEEK_SET);
-					for (unsigned int row = 0; row++; row < height) {
+					for (int row = 0; row < height; row++) {
 						fread(REC_FRAME_2D_2S[row], sizeof(uint8_t), width, recfile);
 					}
 				}
 				if (frame > 3) {
 					fseek(recfile, (frame - 3)*FRAME_SIZE, SEEK_SET);
-					for (unsigned int row = 0; row++; row < height) {
+					for (int row = 0; row < height; row++) {
 						fread(REC_FRAME_2D_3S[row], sizeof(uint8_t), width, recfile);
 					}
 				}
 				if (frame > 4) {
 					fseek(recfile, (frame - 4)*FRAME_SIZE, SEEK_SET);
-					for (unsigned int row = 0; row++; row < height) {
+					for (int row = 0; row < height; row++) {
 						fread(REC_FRAME_2D_4S[row], sizeof(uint8_t), width, recfile);
 					}
 				}
@@ -552,39 +582,48 @@ int main(int argCnt, char **args)
 		}//end buffer curr_frame
 
 		// Apply Encode Operations on Each Block
-		for (int pass = 0; pass < 2; pass++) {
-			if (pass == 1) {//Second pass set up
+		for (int SecondPass = 0; SecondPass < 2; SecondPass++) {
+			if (SecondPass == 0 && RCflag >= 2 && frame!=0) {
+				int avg = 0;
+				for (int i = 0; i < height / block; i++)//calculate average QP for next frame
+					avg = QP_ROW[i] + avg;
+				QP = avg / (height / block);
+			}
+			if (SecondPass == 1 && RCflag >= 2) {//Second pass set up
 				fclose(mdiff_golomb);
 				fclose(golomb_file);
 				mdiff_golomb = fopen(mdiff_name, "wb");
 				golomb_file = fopen(golomb_name, "wb");
 				coeff_bitcount = 0;
 				mdiff_bitcount = 0;
+				total_bitcount = 0;
+				if (SceneChange)
+					FrameType = IFRAME;
 			}
-
 			for (int row = 0; row < height; row += block) {
-				if (row == 0 && RCflag == 1 || row == 0 && RCflag >= 2 && pass == 1) {
-					QP = row_rate_control(row - block, targetBr, RCflag, width, height, FrameType, block, 0, QP, BITCOUNT_ROW, BITCOUNT_ROW_PERCENT, pass);//TODO
-					QP_ROW[0] = QP;
-				}
+				//Rate control code
+				if (RCflag == 1 || RCflag >= 2 && SecondPass == 1) {
+					QP = row_rate_control(row, targetBr, RCflag, width, height, FrameType, block, total_bitcount, QP, BITCOUNT_ROW, BITCOUNT_ROW_PERCENT, SecondPass, SceneChange);//TODO
+					QP_ROW[row / block] = QP;
+				}//Rate control end
 				for (int col = 0; col < width; col += block) {
 					Encode(FrameType, row, col, block, nRefFrames, INTERMODE, frame, i_period, width, height, QP,
 						MDIFF_VECTOR, MDIFF_VECTOR_2, MDIFF_VECTOR_3, MDIFF_VECTOR_4,
 						CUR_FRAME_2D, REC_FRAME_2D, REC_FRAME_2D_2, REC_FRAME_2D_3, REC_FRAME_2D_4,
 						REF_FRAME_2D, REF_FRAME_2D_2, REF_FRAME_2D_3, REF_FRAME_2D_4,
 						ENC_RES_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D,
-						range, RDOEnable);
+						range, RDOEnable, REC_FINAL_FRAME_2D);
 
-					if (VBSEnable) {//start VBSEnable code
+					if (VBSEnable) {//VBSEnable code
 						EncodeVBS(FrameType, row, col, block, nRefFrames, INTERMODE, frame, i_period, width, height, QP,
 							MDIFF_VECTORS, MDIFF_VECTOR_2S, MDIFF_VECTOR_3S, MDIFF_VECTOR_4S, CUR_FRAME_2DS,
 							REC_FRAME_2DS, REC_FRAME_2D_2S, REC_FRAME_2D_3S, REC_FRAME_2D_4S,
 							REF_FRAME_2DS, REF_FRAME_2D_2S, REF_FRAME_2D_3S, REF_FRAME_2D_4S,
 							ENC_RES_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS,
-							block_split, range, RDOEnable);
+							block_split, range, RDOEnable, REC_FINAL_FRAME_2DS);
 						//Pick Winner
-						VBSWinner(MDIFF_VECTOR, MDIFF_VECTORS, row, col, block, REC_FRAME_2D, REC_FRAME_2DS);
-					}//End of VBSenable code
+						VBSWinner(MDIFF_VECTOR, MDIFF_VECTORS, row, col, block, REC_FINAL_FRAME_2D, REC_FINAL_FRAME_2DS, QTC_FRAME_2D, QTC_FRAME_2DS);
+					}//VBSEnable end
 					 // Differential and Entropy Encode steps 
 					int bitcount_temp = 0;
 					bitcount_temp = entropy_wrapper(QTC_FRAME_2D, block, height, width, frame, row, col);
@@ -594,12 +633,16 @@ int main(int argCnt, char **args)
 					bitcount_temp = encode_mdiff_wrapper(MDIFF_VECTOR_DIFF, MDIFF_VECTOR, height, width, block, frame, FrameType, row, col);
 					mdiff_bitcount = mdiff_bitcount + bitcount_temp;
 					bitcount_row = bitcount_row + bitcount_temp;
-					if (col + block == width) {//Collect bitcount per row
+					total_bitcount = mdiff_bitcount + coeff_bitcount;
+					if (col + block == width) {//Collect bitcount per row and percentage per row
 						BITCOUNT_ROW[row / block] = bitcount_row;
-						if (RCflag >= 1) {
-							QP = row_rate_control(row, targetBr, RCflag, width, height, FrameType, block, coeff_bitcount + mdiff_bitcount, QP, BITCOUNT_ROW, BITCOUNT_ROW_PERCENT, pass);
-							if(row+block != height)
-								QP_ROW[(row +block) / block] = QP;
+						double percentage = 0;
+						if (row + block == height && !SecondPass) {
+							for (int i = 0; i < height; i = i + block) {
+								double temp = (double(BITCOUNT_ROW[i / block]) / double(total_bitcount));
+								percentage = temp + percentage;
+								BITCOUNT_ROW_PERCENT[i / block] = (double(BITCOUNT_ROW[i / block]) / double(total_bitcount));
+							}
 						}
 						bitcount_row = 0;
 					}
@@ -608,17 +651,25 @@ int main(int argCnt, char **args)
 			if (RCflag <= 1) {
 				break;
 			}
+			else if (RCflag >= 2 &&FrameType == PFRAME && SecondPass ==0){
+				SceneChange = detectSceneChange(QP, total_bitcount);
+			}
 		}
-		//write_mat(reffile, REF_FRAME_2D, height, width);
-		//write_mat3(decresfile, DEC_RES_FRAME_2D, height, width);
-		//write_mat2(dectcfile, DEC_TC_FRAME_2D, height, width);
+	/*	write_mat(reffile, REF_FRAME_2D, height, width);
+		write_mat3(decresfile, DEC_RES_FRAME_2D, height, width);
+		write_mat2(dectcfile, DEC_TC_FRAME_2D, height, width);
+		write_mat2(encfile, ENC_TC_FRAME_2D, height, width);
+		write_mat2(encresfile, ENC_RES_FRAME_2D, height, width);
+		write_mat(reconfile, REC_FINAL_FRAME_2D, height, width);
+		write_mat(prevreconfile, REC_FINAL_FRAME_2D, height, width);
+		*/
 
 		// File Dumps
 		//RECON
 		uint8_t *REC_FRAME = new uint8_t[FRAME_SIZE];
 		for (int row = 0; row < height; row++)
 			for (int col = 0; col < width; col++)
-				REC_FRAME[col + width*row] = REC_FRAME_2D[row][col];
+				REC_FRAME[col + width*row] = REC_FINAL_FRAME_2D[row][col];
 
 		fclose(recfile);//Weird behavior need to close file
 		recfile = fopen(recfile_name, "a+b");
@@ -626,7 +677,7 @@ int main(int argCnt, char **args)
 		//Bitcount Per frame
 		fprintf(coeff_bitcount_file, "%d,%d\n", frame, coeff_bitcount);
 		fprintf(mdiff_bitcount_file, "%d,%d\n", frame, mdiff_bitcount);
-		fprintf(total_bitcount_file, "%d,%d\n", frame, coeff_bitcount + mdiff_bitcount);
+		fprintf(total_bitcount_file, "%d,%d\n", frame, total_bitcount);
 		fclose(mdiff_golomb);
 		fclose(golomb_file);
 		//Bitcount Per row
@@ -640,9 +691,15 @@ int main(int argCnt, char **args)
 			fprintf(bitcountrowfile, "P_FRAME,%d,%d\n",frame, average / (height / block));
 		//Rate Control Dump
 		for (int i = 0; i < height / block; i++) {
-			if (i == 0)
-				fprintf(qp_file, "Frame: %d ", frame);
-			fprintf(qp_file, "%d ", QP_ROW[i]);
+			if (i == 0) {
+				if(FrameType==IFRAME)
+					fprintf(qp_file, "I Frame: %d, ", frame);
+				else
+					fprintf(qp_file, "P Frame: %d, ", frame);
+
+			}
+			fprintf(qp_file, "%d, ", QP_ROW[i]);
+			fprintf(qp_file, "%f%, ", BITCOUNT_ROW_PERCENT[i]);
 		}
 		fprintf(qp_file, "\n");
 
