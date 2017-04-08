@@ -183,7 +183,8 @@ int main(int argCnt, char **args){
 	unsigned int  FRAME_SIZE = width*height;
 	int block_split = block / 2;
 	int range_split = range / 2;
-
+	time_t start_time;
+	time_t stop_time;
 	// Allocate Memory
 	// ================================================
 
@@ -270,6 +271,12 @@ int main(int argCnt, char **args){
 		printf("DEFAULT INTERMODE\n");
 	}
 
+	if (ParallelMode == SINGLETHREADED) {
+		printf("SINGLETHREADED\n");
+	}
+	if (ParallelMode == BLOCKTHREADED) {
+		printf("BLOCKTHREADED\n");
+	}
 	// Runtime Start
 	// =============================================
 	int start_s = clock();
@@ -328,6 +335,7 @@ int main(int argCnt, char **args){
 		}//end buffer curr_frame
 
 		if (ParallelMode == SINGLETHREADED) {
+			time(&start_time);
 			for (int row = 0; row < height; row += block) {
 				for (int col = 0; col < width; col += block) {
 
@@ -339,12 +347,14 @@ int main(int argCnt, char **args){
 					);
 				}
 			}
+			time(&stop_time);
+			printf("SINGLETHREAD TIME %.2f\n", (double)(stop_time - start_time));
 		}
 		
 		if (ParallelMode == BLOCKTHREADED) {
+			time(&start_time);
 			if (FrameType == IFRAME) {
 				for (uint32_t row = 0; row < height; row += 2 * block) {
-
 					for (uint32_t col = 0; col <= width; col += block) {
 
 						if ((col == 0) && (row == 0)) { // Most Top Left Block
@@ -400,12 +410,12 @@ int main(int argCnt, char **args){
 						}
 					}
 				}
+
 			}
 
 			if (FrameType == PFRAME) {
 				for (uint32_t row = 0; row < height; row += 2 * block) {
-
-					for (uint32_t col = 0; col <= width; col += block) {
+					for (uint32_t col = 0; col < width; col += block) {
 						std::thread firstrow(BlockThread, row, col,
 							width, height, FrameType, INTERMODE, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
 							CUR_FRAME_2D, CUR_REC_FRAME_2D, PREV_REC_FRAME_2D, REF_FRAME_2D, ENC_RES_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,
@@ -423,6 +433,9 @@ int main(int argCnt, char **args){
 					}
 				}
 			}
+
+			time(&stop_time);
+			printf("BLOCKTHREAD TIME %.2f\n", (double)(stop_time - start_time));
 		}
 
 		// Differential and Entropy Encode steps 

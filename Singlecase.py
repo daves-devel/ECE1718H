@@ -27,13 +27,13 @@ nRefFrames		= 1
 VBSEnable		= 0
 RDOEnable       	= 0
 FMEnable        	= 1
-ParallelMode		= 1
+ParallelMode		= 0
 block 			= 8
 qp 			= 1
 i_period 		= 3
 
 testname 		= "Block_%d_IP_%d_QP_%d_RDO_%d" %(block,i_period,qp,RDOEnable)
-command 		= "codec_engine.py -infile %s -testname %s -width %d -height %d -frames %d -searchrange %d -nRefFrames %d -VBSEnable %d -RDOEnable %d -FMEnable %d -block %d -qp %d -i_period %d" %(infile,testname,width,height,frames,searchrange,nRefFrames,VBSEnable,RDOEnable,FMEnable,block,qp,i_period)
+command 		= "codec_engine.py -infile %s -testname %s -width %d -height %d -frames %d -searchrange %d -nRefFrames %d -VBSEnable %d -RDOEnable %d -FMEnable %d -block %d -qp %d -i_period %d -ParallelMode %d" %(infile,testname,width,height,frames,searchrange,nRefFrames,VBSEnable,RDOEnable,FMEnable,block,qp,i_period,ParallelMode)
 print ("\n" + testname + "\n=======================\n" + command+"\n")
 os.system(command)
 
