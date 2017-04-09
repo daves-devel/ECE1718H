@@ -74,7 +74,7 @@ void EncodeVBS(int FrameType, int row, int col, int block, int nRefFrames, uint3
 
 			// PREDICTOR DATA GENERATION
 			if (FrameType == IFRAME) {
-				MDIFF_VECTORS[row2 / block_split][col2 / block_split] = IntraFramePrediction(REC_FINAL_FRAME_2DS, REC_FRAME_2DS, REF_FRAME_2DS, row2, col2, block_split);
+				MDIFF_VECTORS[row2 / block_split][col2 / block_split] = IntraFramePrediction(CUR_FRAME_2DS, REC_FINAL_FRAME_2DS, REF_FRAME_2DS, row2, col2, block_split);
 			}
 
 			if (FrameType == PFRAME) {
@@ -143,6 +143,8 @@ int main(int argCnt, char **args)
 	int targetBr = 0;
 	int	RCflag = 0;
 	int SceneChange = 0;
+	int ROW_AVERAGE = 0;
+
 	
 
 
@@ -590,6 +592,7 @@ int main(int argCnt, char **args)
 				QP = avg / (height / block);
 			}
 			if (SecondPass == 1 && RCflag >= 2) {//Second pass set up
+				QPMultiplier=GetMultiplier(QP, ROW_AVERAGE, width, FrameType);
 				fclose(mdiff_golomb);
 				fclose(golomb_file);
 				mdiff_golomb = fopen(mdiff_name, "wb");
@@ -654,6 +657,11 @@ int main(int argCnt, char **args)
 			else if (RCflag >= 2 &&FrameType == PFRAME && SecondPass ==0){
 				SceneChange = detectSceneChange(QP, total_bitcount);
 			}
+			ROW_AVERAGE = 0;
+			for (int i = 0; i < height; i = i + block) {
+				ROW_AVERAGE += BITCOUNT_ROW[i / block];
+			}
+			ROW_AVERAGE = ROW_AVERAGE / (height / block);
 		}
 	/*	write_mat(reffile, REF_FRAME_2D, height, width);
 		write_mat3(decresfile, DEC_RES_FRAME_2D, height, width);
@@ -681,14 +689,14 @@ int main(int argCnt, char **args)
 		fclose(mdiff_golomb);
 		fclose(golomb_file);
 		//Bitcount Per row
-		int average=0;
+		ROW_AVERAGE=0;
 		for (int i = 0; i < height; i = i + block) {
-			average += BITCOUNT_ROW[i / block];
+			ROW_AVERAGE += BITCOUNT_ROW[i / block];
 		}
 		if (FrameType == IFRAME)
-			fprintf(bitcountrowfile, "I_FRAME,%d,%d\n",frame, average / (height / block));
+			fprintf(bitcountrowfile, "I_FRAME,%d,%d\n",frame, ROW_AVERAGE / (height / block));
 		else
-			fprintf(bitcountrowfile, "P_FRAME,%d,%d\n",frame, average / (height / block));
+			fprintf(bitcountrowfile, "P_FRAME,%d,%d\n",frame, ROW_AVERAGE / (height / block));
 		//Rate Control Dump
 		for (int i = 0; i < height / block; i++) {
 			if (i == 0) {
