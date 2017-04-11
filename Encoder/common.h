@@ -167,6 +167,38 @@ void write_mat3(FILE *fp, int32_t**m, int N, int M) {
 	}
 	fprintf(fp, "\n");
 }
+
+void write_MV(FILE *fp, MDIFF**m, int N, int M, int block, int frame) {
+
+	int i, j;
+	fprintf(fp, "Frame:%d\n", frame);
+
+	for (i = 0; i*block< N; i++) {
+		for (j = 0; j*block < M; j++) {
+			fprintf(fp, "Block X %d Y %d\n", j, i);
+			if (m[i][j].split == 0)
+				fprintf(fp, "X0 %d Y0 %d\n", m[i][j].X, m[i][j].Y);
+			else {
+				fprintf(fp, "X0 %d Y0 %d X1 %d Y1 %d X2 %d Y2 %d X3 %d Y3 %d\n", m[i][j].X, m[i][j].Y, m[i][j].X2, m[i][j].Y2, m[i][j].X3, m[i][j].Y3, m[i][j].X4, m[i][j].Y4);
+			}
+		}
+	}
+	fprintf(fp, "\n");
+}
+
+void write_SPLIT(FILE *fp, MDIFF**m, int N, int M, int block, int SecondPass, int frame) {
+
+	int i, j;
+	fprintf(fp, "Frame:%d\n", frame);
+	for (i = 0; i< N; i = block + i) {
+		for (j = 0; j < M; j = j + block) {
+		//	fprintf(fp, "SecondPass %d Block X %d Y %d SPLIT %d\n", SecondPass, j, i, m[i/block][j/block].split);
+			fprintf(fp, "Block X %d Y %d SPLIT %d\n", j, i, m[i / block][j / block].split);
+
+		}
+	}
+	fprintf(fp, "\n");
+}
 int CIF_I_TABLE[12] = { 22089,	15756,	10715,	6911,	4224,	2634,	1675,	1181,	892,	678,	212,	68 };//Modify QP 0 1 2 * 1.19
 //int CIF_I_TABLE[12] = { 22089,	16756,	11715,	6911,	4224,	2634,	1675,	1181,	892,	678,	212,	68 };
 

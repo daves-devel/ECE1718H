@@ -24,7 +24,7 @@ void Encode(int FrameType, int row, int col, int block, int nRefFrames, uint32_t
 	uint8_t **REC_FRAME_2D, uint8_t **REC_FRAME_2D_2, uint8_t **REC_FRAME_2D_3, uint8_t **REC_FRAME_2D_4,
 	uint8_t **REF_FRAME_2D, uint8_t **REF_FRAME_2D_2, uint8_t **REF_FRAME_2D_3, uint8_t **REF_FRAME_2D_4,
 	int32_t **ENC_RES_FRAME_2D, int32_t **QTC_FRAME_2D, int32_t **QP_FRAME_2D, int32_t **ENC_TC_FRAME_2D, int32_t **DEC_RES_FRAME_2D, int32_t **DEC_TC_FRAME_2D,
-	int range, int RDOEnable, uint8_t** REC_FINAL_FRAME_2D)
+	int range, int RDOEnable, uint8_t** REC_FINAL_FRAME_2D, int RCflag, int SecondPass)
 {
 	// PREDICTOR DATA GENERATION
 	if (FrameType == IFRAME) {
@@ -32,13 +32,13 @@ void Encode(int FrameType, int row, int col, int block, int nRefFrames, uint32_t
 	}
 
 	if (FrameType == PFRAME) {
-		MDIFF_VECTOR[row / block][col / block] = InterFramePrediction(INTERMODE, CUR_FRAME_2D, REC_FRAME_2D, REF_FRAME_2D, row, col, width, height, block, range, 1, MDIFF_VECTOR);
+		MDIFF_VECTOR[row / block][col / block] = InterFramePrediction(INTERMODE, CUR_FRAME_2D, REC_FRAME_2D, REF_FRAME_2D, row, col, width, height, block, range, 1, MDIFF_VECTOR, RCflag, SecondPass);
 		//Multireference code start Only activated if nRefFrames>=2
 		if (nRefFrames >= 2) {
 			MDIFF_VECTOR[row / block][col / block] = MultiRefInterPrediction(INTERMODE, CUR_FRAME_2D, REC_FRAME_2D_2, REC_FRAME_2D_3, REC_FRAME_2D_4,
 				REF_FRAME_2D, REF_FRAME_2D_2, REF_FRAME_2D_3, REF_FRAME_2D_4,
 				row, col, width, height, block, range, nRefFrames, frame, i_period,
-				MDIFF_VECTOR, MDIFF_VECTOR_2, MDIFF_VECTOR_3, MDIFF_VECTOR_4);
+				MDIFF_VECTOR, MDIFF_VECTOR_2, MDIFF_VECTOR_3, MDIFF_VECTOR_4, RCflag, SecondPass);
 		}
 	}
 
@@ -65,7 +65,7 @@ void EncodeVBS(int FrameType, int row, int col, int block, int nRefFrames, uint3
 	uint8_t **REC_FRAME_2DS, uint8_t **REC_FRAME_2D_2S, uint8_t **REC_FRAME_2D_3S, uint8_t **REC_FRAME_2D_4S,
 	uint8_t **REF_FRAME_2DS, uint8_t **REF_FRAME_2D_2S, uint8_t **REF_FRAME_2D_3S, uint8_t **REF_FRAME_2D_4S,
 	int32_t **ENC_RES_FRAME_2DS, int32_t **QTC_FRAME_2DS, int32_t **QP_FRAME_2DS, int32_t **ENC_TC_FRAME_2DS, int32_t **DEC_RES_FRAME_2DS, int32_t **DEC_TC_FRAME_2DS,
-	int block_split, int range, int RDOEnable, uint8_t** REC_FINAL_FRAME_2DS)
+	int block_split, int range, int RDOEnable, uint8_t** REC_FINAL_FRAME_2DS, int RCflag, int SecondPass)
 {
 	for (int row2 = row; row2 < row + block; row2 += block_split) {
 		for (int col2 = col; col2 < col + block; col2 += block_split) {
@@ -78,13 +78,13 @@ void EncodeVBS(int FrameType, int row, int col, int block, int nRefFrames, uint3
 			}
 
 			if (FrameType == PFRAME) {
-				MDIFF_VECTORS[row2 / block_split][col2 / block_split] = InterFramePrediction(INTERMODE, CUR_FRAME_2DS, REC_FRAME_2DS, REF_FRAME_2DS, row2, col2, width, height, block_split, range, 1, MDIFF_VECTORS);
+				MDIFF_VECTORS[row2 / block_split][col2 / block_split] = InterFramePrediction(INTERMODE, CUR_FRAME_2DS, REC_FRAME_2DS, REF_FRAME_2DS, row2, col2, width, height, block_split, range, 1, MDIFF_VECTORS, RCflag, SecondPass);
 				//Multireference code start Only activated if nRefFrames>=2
 				if (nRefFrames >= 2) {
 					MDIFF_VECTORS[row / block][col / block] = MultiRefInterPrediction(INTERMODE, CUR_FRAME_2DS, REC_FRAME_2D_2S, REC_FRAME_2D_3S, REC_FRAME_2D_4S,
 						REF_FRAME_2DS, REF_FRAME_2D_2S, REF_FRAME_2D_3S, REF_FRAME_2D_4S,
 						row, col, width, height, block, range, QP, RDOEnable, nRefFrames,
-						MDIFF_VECTORS, MDIFF_VECTOR_2S, MDIFF_VECTOR_3S, MDIFF_VECTOR_4S);
+						MDIFF_VECTORS, MDIFF_VECTOR_2S, MDIFF_VECTOR_3S, MDIFF_VECTOR_4S, RCflag, SecondPass);
 				}
 			}
 
@@ -304,6 +304,12 @@ int main(int argCnt, char **args)
 	FILE* runtime_file = fopen(runtime_name, "w");
 
 	FILE* reffile = fopen("ref_enc.csv", "w");
+	FILE* splitFile1 = fopen("split_result1.txt", "w");
+	FILE* splitFile2 = fopen("split_result2.txt", "w");
+
+	FILE* mvFile1 = fopen("mv_result1.txt", "w");
+	FILE* mvFile2 = fopen("mv_result2.txt", "w");
+
 	FILE* dectcfile = fopen("dec_tc_enc.csv", "w");
 	FILE* decresfile = fopen("dec_res_enc.csv", "w");
 	FILE* encfile = fopen("enc_res_enc.csv", "w");
@@ -610,23 +616,49 @@ int main(int argCnt, char **args)
 					QP_ROW[row / block] = QP;
 				}//Rate control end
 				for (int col = 0; col < width; col += block) {
-					Encode(FrameType, row, col, block, nRefFrames, INTERMODE, frame, i_period, width, height, QP,
-						MDIFF_VECTOR, MDIFF_VECTOR_2, MDIFF_VECTOR_3, MDIFF_VECTOR_4,
-						CUR_FRAME_2D, REC_FRAME_2D, REC_FRAME_2D_2, REC_FRAME_2D_3, REC_FRAME_2D_4,
-						REF_FRAME_2D, REF_FRAME_2D_2, REF_FRAME_2D_3, REF_FRAME_2D_4,
-						ENC_RES_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D,
-						range, RDOEnable, REC_FINAL_FRAME_2D);
-
-					if (VBSEnable) {//VBSEnable code
-						EncodeVBS(FrameType, row, col, block, nRefFrames, INTERMODE, frame, i_period, width, height, QP,
-							MDIFF_VECTORS, MDIFF_VECTOR_2S, MDIFF_VECTOR_3S, MDIFF_VECTOR_4S, CUR_FRAME_2DS,
-							REC_FRAME_2DS, REC_FRAME_2D_2S, REC_FRAME_2D_3S, REC_FRAME_2D_4S,
-							REF_FRAME_2DS, REF_FRAME_2D_2S, REF_FRAME_2D_3S, REF_FRAME_2D_4S,
-							ENC_RES_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS,
-							block_split, range, RDOEnable, REC_FINAL_FRAME_2DS);
-						//Pick Winner
-						VBSWinner(MDIFF_VECTOR, MDIFF_VECTORS, row, col, block, REC_FINAL_FRAME_2D, REC_FINAL_FRAME_2DS, QTC_FRAME_2D, QTC_FRAME_2DS);
-					}//VBSEnable end
+					if (RCflag <= 2) {//Avoid breaking previous code
+						Encode(FrameType, row, col, block, nRefFrames, INTERMODE, frame, i_period, width, height, QP,
+							MDIFF_VECTOR, MDIFF_VECTOR_2, MDIFF_VECTOR_3, MDIFF_VECTOR_4,
+							CUR_FRAME_2D, REC_FRAME_2D, REC_FRAME_2D_2, REC_FRAME_2D_3, REC_FRAME_2D_4,
+							REF_FRAME_2D, REF_FRAME_2D_2, REF_FRAME_2D_3, REF_FRAME_2D_4,
+							ENC_RES_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D,
+							range, RDOEnable, REC_FINAL_FRAME_2D, RCflag, SecondPass);
+						if (VBSEnable) {//VBSEnable code
+							EncodeVBS(FrameType, row, col, block, nRefFrames, INTERMODE, frame, i_period, width, height, QP,
+								MDIFF_VECTORS, MDIFF_VECTOR_2S, MDIFF_VECTOR_3S, MDIFF_VECTOR_4S, CUR_FRAME_2DS,
+								REC_FRAME_2DS, REC_FRAME_2D_2S, REC_FRAME_2D_3S, REC_FRAME_2D_4S,
+								REF_FRAME_2DS, REF_FRAME_2D_2S, REF_FRAME_2D_3S, REF_FRAME_2D_4S,
+								ENC_RES_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS,
+								block_split, range, RDOEnable, REC_FINAL_FRAME_2DS, RCflag, SecondPass);
+							//Pick Winner
+							VBSWinner(MDIFF_VECTOR, MDIFF_VECTORS, row, col, block, REC_FINAL_FRAME_2D, REC_FINAL_FRAME_2DS, QTC_FRAME_2D, QTC_FRAME_2DS);
+						}//VBSEnable end
+					}
+					else {//RC 3
+						if (SceneChange == 1 || SecondPass == 0 || MDIFF_VECTOR[row / block][col / block].split == 0) {
+							Encode(FrameType, row, col, block, nRefFrames, INTERMODE, frame, i_period, width, height, QP,
+								MDIFF_VECTOR, MDIFF_VECTOR_2, MDIFF_VECTOR_3, MDIFF_VECTOR_4,
+								CUR_FRAME_2D, REC_FRAME_2D, REC_FRAME_2D_2, REC_FRAME_2D_3, REC_FRAME_2D_4,
+								REF_FRAME_2D, REF_FRAME_2D_2, REF_FRAME_2D_3, REF_FRAME_2D_4,
+								ENC_RES_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D,
+								range, RDOEnable, REC_FINAL_FRAME_2D, RCflag, SecondPass);
+						}
+						if (VBSEnable) {//VBSEnable code
+							if (SceneChange == 1 || SecondPass == 0 || MDIFF_VECTOR[row / block][col / block].split == 1) {
+								EncodeVBS(FrameType, row, col, block, nRefFrames, INTERMODE, frame, i_period, width, height, QP,
+									MDIFF_VECTORS, MDIFF_VECTOR_2S, MDIFF_VECTOR_3S, MDIFF_VECTOR_4S, CUR_FRAME_2DS,
+									REC_FRAME_2DS, REC_FRAME_2D_2S, REC_FRAME_2D_3S, REC_FRAME_2D_4S,
+									REF_FRAME_2DS, REF_FRAME_2D_2S, REF_FRAME_2D_3S, REF_FRAME_2D_4S,
+									ENC_RES_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS,
+									block_split, range, RDOEnable, REC_FINAL_FRAME_2DS, RCflag, SecondPass);
+								//Pick Winner
+								if(SceneChange == 0 && SecondPass == 1)
+									VBSCopy(MDIFF_VECTOR, MDIFF_VECTORS, row, col, block, REC_FINAL_FRAME_2D, REC_FINAL_FRAME_2DS, QTC_FRAME_2D, QTC_FRAME_2DS);
+								else
+									VBSWinner(MDIFF_VECTOR, MDIFF_VECTORS, row, col, block, REC_FINAL_FRAME_2D, REC_FINAL_FRAME_2DS, QTC_FRAME_2D, QTC_FRAME_2DS);
+							}
+						}//VBSEnable end
+					}
 					 // Differential and Entropy Encode steps 
 					int bitcount_temp = 0;
 					bitcount_temp = entropy_wrapper(QTC_FRAME_2D, block, height, width, frame, row, col);
@@ -662,6 +694,18 @@ int main(int argCnt, char **args)
 				ROW_AVERAGE += BITCOUNT_ROW[i / block];
 			}
 			ROW_AVERAGE = ROW_AVERAGE / (height / block);
+
+		/*	if (SecondPass == 0) {//DEBUG
+				//write_SPLIT(splitFile1, MDIFF_VECTOR, height, width, block, SecondPass, frame);
+				if(FrameType==PFRAME)
+				write_MV(mvFile1, MDIFF_VECTOR, height, width, block, frame);
+			}
+			else {
+				//write_SPLIT(splitFile2, MDIFF_VECTOR, height, width, block, SecondPass, frame);
+				if(FrameType==PFRAME)
+				write_MV(mvFile2, MDIFF_VECTOR, height, width, block, frame);
+
+			}*/
 		}
 	/*	write_mat(reffile, REF_FRAME_2D, height, width);
 		write_mat3(decresfile, DEC_RES_FRAME_2D, height, width);

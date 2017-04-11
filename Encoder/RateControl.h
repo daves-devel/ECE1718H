@@ -12,7 +12,7 @@ int row_rate_control(int row, int targetBr, int RCflag, int width, int height, i
 		QP = row_rate_control1(row, targetBr, RCflag, width, height, FrameType, block, current_bitcount);
 		return QP;
 	}
-	else if (RCflag == 2 && SecondPass) {
+	else if (RCflag >= 2 && SecondPass) {
 		QP=row_rate_control2(row, targetBr, RCflag, width, height, FrameType, block, current_bitcount, BITCOUNT_ROW, BITCOUNT_ROW_PERCENT, SecondPass);
 	}
 	return QP;
