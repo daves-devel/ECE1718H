@@ -24,6 +24,7 @@ char mdiff_name[500] = "";
 int VBSEnable = 0;
 int fps = 30;
 int QCIF_WIDTH = 176;
+double QPMultiplier = 0;
 
 
 enum FRAME {
@@ -166,12 +167,54 @@ void write_mat3(FILE *fp, int32_t**m, int N, int M) {
 	}
 	fprintf(fp, "\n");
 }
-int CIF_I_TABLE[12] = { 22089,	15756,	10715,	6911,	4224,	2634,	1675,	1181,	886,	673,	213,	68};
-int CIF_P_TABLE[12] = { 19697,	13690,	9348,	6043,	3653,	2330,	1694,	1467,	237,	183,	130,	126 };
-int QCIF_I_TABLE[12] = { 12449,	9309,	6788,	4726,	3073,	1877,	1090,	683,	526,	326,	125,	35 };
-int QCIF_P_TABLE[12] = { 9689,	6968,	4870,	3371,	2159,	1375,	864,	707,	153,	102,	71,		71 };
 
-int CIF_PFRAME_THRESHOLD[12] = { 417482,	297788,	202513,	130617,	79833,	49782,	31657,	22320,	16745,	12719,	4025,	1285};
+void write_MV(FILE *fp, MDIFF**m, int N, int M, int block, int frame) {
+
+	int i, j;
+	fprintf(fp, "Frame:%d\n", frame);
+
+	for (i = 0; i*block< N; i++) {
+		for (j = 0; j*block < M; j++) {
+			fprintf(fp, "Block X %d Y %d\n", j, i);
+			if (m[i][j].split == 0)
+				fprintf(fp, "X0 %d Y0 %d\n", m[i][j].X, m[i][j].Y);
+			else {
+				fprintf(fp, "X0 %d Y0 %d X1 %d Y1 %d X2 %d Y2 %d X3 %d Y3 %d\n", m[i][j].X, m[i][j].Y, m[i][j].X2, m[i][j].Y2, m[i][j].X3, m[i][j].Y3, m[i][j].X4, m[i][j].Y4);
+			}
+		}
+	}
+	fprintf(fp, "\n");
+}
+
+void write_SPLIT(FILE *fp, MDIFF**m, int N, int M, int block, int SecondPass, int frame) {
+
+	int i, j;
+	fprintf(fp, "Frame:%d\n", frame);
+	for (i = 0; i< N; i = block + i) {
+		for (j = 0; j < M; j = j + block) {
+		//	fprintf(fp, "SecondPass %d Block X %d Y %d SPLIT %d\n", SecondPass, j, i, m[i/block][j/block].split);
+			fprintf(fp, "Block X %d Y %d SPLIT %d\n", j, i, m[i / block][j / block].split);
+
+		}
+	}
+	fprintf(fp, "\n");
+}
+int CIF_I_TABLE[12] = { 22089,	15756,	10715,	6911,	4224,	2634,	1675,	1181,	892,	678,	212,	68 };//Modify QP 0 1 2 * 1.19
+//int CIF_I_TABLE[12] = { 22089,	16756,	11715,	6911,	4224,	2634,	1675,	1181,	892,	678,	212,	68 };
+
+int CIF_P_TABLE[12] = { 18582,	12991,	8739,	5497,	3267,	2102,	1623,	1507,	279,	238,	161,	125 };
+//int CIF_P_TABLE[12] = { 19582,	15459,	10100,	5497,	3267,	2102,	1623,	1507,	279,	238,	161,	125 }; //Modify QP0 1 2  *1.19
+
+int QCIF_I_TABLE[12] = { 12449,	9309,	6788,	4726,	3073,	1877,	1090,	683,	528,	326,	122,	35 };
+int QCIF_P_TABLE[12] = { 9264,	6628,	4658,	3108,	1988,	1218,	809,	708,	197,	147,	120,	72 };
+
+//int CIF_PFRAME_THRESHOLD[12] = { 351199,	245529,	165167,	103893,	61746,	39727,	30674,	28482,	5273,	4498,	3042,	2362};5% margin
+//int CIF_PFRAME_THRESHOLD[12] = { 384647,	268913,	180897,	113787,	67626,	43511,	33596,	31194,	5775,	4926,	3332,	2587 };//15% margin
+//int CIF_PFRAME_THRESHOLD[12] = { 97602,	283608,	192870,	124398,	76032,	47412,	30150,	21258,	16056,	12204,	3816,	1224 };//Use I-Frame as limit margin
+int CIF_PFRAME_THRESHOLD[12] = { 437362,	311968,	212157,	136837,	83635,	52153,	33165,	23383,	17661,	13424,	4197,	1346 };//Use I-Frame 10% margin
+
+
+
 
 #ifdef TRACE_ON
 FILE* file_vector_org;
