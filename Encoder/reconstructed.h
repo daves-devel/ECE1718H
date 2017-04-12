@@ -58,6 +58,12 @@ void ReconstructBlockDecodeI(uint8_t** REC_FRAME, int32_t** RES_FRAME, uint8_t**
 			else {
 				assert(mode == 0 || mode == 1);
 			}
+			int temp = RES_FRAME[row + i][col + j] + REF_FRAME[row + i][col + j];
+			if (temp <= 0)
+				REC_FRAME[row + i][col + j] = 0;
+			else if (temp >= 255)
+				REC_FRAME[row + i][col + j] = 255;
+			else
 			REC_FRAME[row + i][col + j] = RES_FRAME[row + i][col + j] + REF_FRAME[row + i][col + j];
 		}
 	}
@@ -70,6 +76,12 @@ void ReconstructBlockDecodeP(uint8_t** REC_FRAME, int32_t** RES_FRAME, uint8_t**
 			gmvx = MDIFF_VECTOR_DIFF[row / block][col / block].X;
 			gmvy = MDIFF_VECTOR_DIFF[row / block][col / block].Y;
 			REF_FRAME[row + i][ col + j] = PREV_DEC_FRAME[row + i + gmvy][col + j + gmvx];
+			int temp = RES_FRAME[row + i][col + j] + REF_FRAME[row + i][col + j];
+			if (temp <= 0)
+				REC_FRAME[row + i][col + j] = 0;
+			else if (temp >= 255)
+				REC_FRAME[row + i][col + j] = 255;
+			else
 			REC_FRAME[row + i][col + j] = RES_FRAME[row + i][col + j] + REF_FRAME[row + i][col + j];
 		}
 	}

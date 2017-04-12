@@ -134,9 +134,15 @@ void decode_mdiff(MDIFF** MDIFF_VECTOR_DIFF, int row, int col, int Frametype, FI
 	if (Frametype == IFRAME) {
 		fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
 		result = decode_signed_golomb_value(encoded_value, &count);
+		MDIFF_VECTOR_DIFF[row][col].split = result;
+		fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
+		result = decode_signed_golomb_value(encoded_value, &count);
 		MDIFF_VECTOR_DIFF[row][col].MODE = result;
 	}
 	else{
+		fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
+		result = decode_signed_golomb_value(encoded_value, &count);
+		MDIFF_VECTOR_DIFF[row][col].split = result;
 		fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
 		result = decode_signed_golomb_value(encoded_value, &count);
 		MDIFF_VECTOR_DIFF[row][col].X = result;

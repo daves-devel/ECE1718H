@@ -28,6 +28,5 @@ c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decod
 c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\quantization.h(72): warning C4715: 'QuantizeBlock': not all control paths return a value
 c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\quantization.h(102): warning C4715: 'ScaleBlock': not all control paths return a value
 c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\interframeprediction.h(30): warning C4715: 'InterFramePrediction': not all control paths return a value
-  LINK : C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\Debug\Decoder.exe not found or not built by the last incremental link; performing full link
   Decoder.vcxproj -> C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\Debug\Decoder.exe
   Decoder.vcxproj -> C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\Debug\Decoder.pdb (Full PDB)
