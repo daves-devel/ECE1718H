@@ -17,6 +17,7 @@
 #include <DiffEnc.h>
 #include <RateControl.h>
 #include <ctime>
+#include <deblocker.h>
 
 
 void Encode(int FrameType, int row, int col, int block, int nRefFrames, uint32_t INTERMODE, int frame, int i_period, int width, int height, int QP,
@@ -117,6 +118,7 @@ int main(int argCnt, char **args)
 	char mvfile_name[500]			= "";
 	char resfile_name[500]			= "";
 	char recfile_name[500]			= "";
+	char recfile_name_deblock[500] = "";
 	char matchfile_name[500]		= "";
 	char bitcount_row_name[500] = "";
 	char coeff_bitcount_name[500]	= "";
@@ -195,6 +197,8 @@ int main(int argCnt, char **args)
 		else if (!strcmp((*args) + 1, "recfile")) {
 			args++;
 			sscanf(*args, "%s", recfile_name);
+			sscanf(*args, "%s", recfile_name_deblock);
+			strcat(recfile_name_deblock, "deblock.yuv");
 			args++;
 			tmpArgCnt += 2;
 		}
@@ -301,6 +305,7 @@ int main(int argCnt, char **args)
 	total_bitcount_file = fopen(total_bitcount_name, "w");
 	frame_header_file = fopen(frame_header_name, "w+b");
 	FILE* recfile = fopen(recfile_name, "w+b");
+	FILE* recfile_deblock = fopen(recfile_name_deblock,  "w+b");
 	FILE* runtime_file = fopen(runtime_name, "w");
 
 	FILE* reffile = fopen("ref_enc.csv", "w");
@@ -719,12 +724,31 @@ int main(int argCnt, char **args)
 		// File Dumps
 		//RECON
 		uint8_t *REC_FRAME = new uint8_t[FRAME_SIZE];
-		for (int row = 0; row < height; row++)
-			for (int col = 0; col < width; col++)
+		uint8_t *REC_FRAME_DEBLOCK = new uint8_t[FRAME_SIZE];
+		for (int row = 0; row < height; row++){
+			for (int col = 0; col < width; col++) {
 				REC_FRAME[col + width*row] = REC_FINAL_FRAME_2D[row][col];
+				REC_FRAME_DEBLOCK[col + width*row] = REC_FINAL_FRAME_2D[row][col];
+			}
+		}
 
 		fclose(recfile);//Weird behavior need to close file
+		fclose(recfile_deblock);//Weird behavior need to close file
+
 		recfile = fopen(recfile_name, "a+b");
+		recfile_deblock = fopen(recfile_name_deblock, "a+b");
+		//Deblocker
+		int alpha_;
+		int beta_;
+		int c0_;
+		int index_a = clip(QP + 30, 0, MAX_QUANT);
+		int index_b = clip(QP + 70, 0, MAX_QUANT);
+		alpha_ = alphas[index_a];
+		beta_ = betas[index_b];
+		c0_ = cs[index_a];
+		deblock_c(REC_FRAME_DEBLOCK, width, width, height, alpha_, beta_, c0_);
+		fwrite(REC_FRAME_DEBLOCK, sizeof(uint8_t), FRAME_SIZE, recfile_deblock);
+		//Deblocker
 		fwrite(REC_FRAME, sizeof(uint8_t), FRAME_SIZE, recfile);
 		//Bitcount Per frame
 		fprintf(coeff_bitcount_file, "%d,%d\n", frame, coeff_bitcount);
@@ -822,6 +846,7 @@ int main(int argCnt, char **args)
 
 	// Close Files
 	fclose(recfile);
+	fclose(recfile_deblock);
 	fclose(mdiff_bitcount_file);
 	fclose(coeff_bitcount_file);
 	fclose(total_bitcount_file);
