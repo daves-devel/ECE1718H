@@ -24,6 +24,7 @@ def main(argv):
 	VBSEnable		= 0
 	RDOEnable       = 0
 	FMEnable        = 0
+	deblock_on      = 0
 
 	# Parse Input Arguments 
 	# ------------------------------
@@ -40,6 +41,9 @@ def main(argv):
 
 		if (argv[index] == "-height"):
 			height = int(argv[index+1])
+
+		if (argv[index] == "-deblock_on"):
+			deblock_on = int(argv[index+1])
 
 		if (argv[index] == "-frames"):
 			frames = int(argv[index+1])
@@ -131,6 +135,8 @@ def main(argv):
 	encode_command += " -total_bitcount_name testdata\%s_TOTAL_BITCOUNT.csv"	%(testname)
 	encode_command += " -targetBr %d"						                    %(targetBr)
 	encode_command += " -RCflag %d"						                        %(RCflag)
+	encode_command += " -deblock_on %d"						                    %(deblock_on)
+
 	
 	print ("\nEncoder:\n" + encode_command)
 	os.system(encode_command)

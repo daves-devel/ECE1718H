@@ -42,6 +42,34 @@ const int cs[] = {
 	19, 21, 23, 25, 27, 29, 31, 33, 35
 };
 
+static inline int offset(int QP) {
+	switch (QP){
+			case 0 :
+				return 0;
+			case 1:	
+				return 18;
+			case 2:
+				return 23;
+			case 3:
+				return 26;
+			case 4:
+				return 30;
+			case 5:
+				return 36;
+			case 6:
+				return 42;
+			case 7:
+				return 48;
+			case 8:
+				return 54;
+			default:
+				return 60;
+	}
+	return 60;
+}
+
+
+
 static inline int clip(int x, int min, int max)
 {
 	if (x < min) {
