@@ -350,6 +350,25 @@ void VBSWinner(MDIFF** MDIFF_CUR, MDIFF** MDIFF_SPLIT, int row, int col, int blo
 			}
 		}
 	}
+	else {//initialize modes to 0
+		  //Adding X and Y for Inter
+		MDIFF_CUR[row_org][col_org].X2 = 0;
+		MDIFF_CUR[row_org][col_org].X3 = 0;
+		MDIFF_CUR[row_org][col_org].X4 = 0; 
+
+		MDIFF_CUR[row_org][col_org].Y2 = 0; 
+		MDIFF_CUR[row_org][col_org].Y3 = 0;
+		MDIFF_CUR[row_org][col_org].Y4 = 0;
+		//Adding modes for Intra
+		MDIFF_CUR[row_org][col_org].MODE2 = 0;
+		MDIFF_CUR[row_org][col_org].MODE3 = 0;
+		MDIFF_CUR[row_org][col_org].MODE4 = 0;
+
+		//REF
+		MDIFF_CUR[row_org][col_org].ref2 = 0;
+		MDIFF_CUR[row_org][col_org].ref3 = 0;
+		MDIFF_CUR[row_org][col_org].ref4 = 0;
+	}
 
 }
 
