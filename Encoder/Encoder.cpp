@@ -183,8 +183,11 @@ int main(int argCnt, char **args){
 	unsigned int  FRAME_SIZE = width*height;
 	int block_split = block / 2;
 	int range_split = range / 2;
-	time_t start_time;
-	time_t stop_time;
+	//unsigned long start_time;
+	//unsigned long stop_time;
+	clock_t start_time;
+	clock_t stop_time;
+
 	// Allocate Memory
 	// ================================================
 
@@ -260,22 +263,26 @@ int main(int argCnt, char **args){
 	uint32_t INTERMODE;
 	if ((RDOEnable) && (QP >= 8)) {
 		INTERMODE = RDO;
-		printf("RDO ENABLED\n");
+		printf("RDO_ENABLED\n");
 	}
 	else if (FMEnable) {
 		INTERMODE = FME;
-		printf("FME ENABLED\n");
+		printf("FME_ENABLED\n");
 	}
 	else {
 		INTERMODE = DEFAULT;
-		printf("DEFAULT INTERMODE\n");
+		printf("DEFAULT_INTERMODE\n");
 	}
 
 	if (ParallelMode == SINGLETHREADED) {
-		printf("SINGLETHREADED\n");
+		printf("SINGLE_THREADED\n");
 	}
 	if (ParallelMode == BLOCKTHREADED) {
-		printf("BLOCKTHREADED\n");
+		printf("BLOCK_THREADED\n");
+	}
+
+	if (VBSEnable) {
+		printf("VARIABLE_BLOCKSIZE\n");
 	}
 	// Runtime Start
 	// =============================================
@@ -283,193 +290,199 @@ int main(int argCnt, char **args){
 
 	// Encode Each Frame
 	// =========================================
-	for (int frame = 0; frame < frames; frame++) {
-		//Open GOLOMB and MDIFF files
-		snprintf(golomb_name, sizeof(golomb_name), "testdata\\COEFF_GOLOMB_CODING_%d", frame);
-		snprintf(mdiff_name, sizeof(mdiff_name), "testdata\\MDIFF_GOLOMB_%d", frame);
-		mdiff_golomb = fopen(mdiff_name, "wb");
-		golomb_file = fopen(golomb_name, "wb");
 
-		//Reset bitcounts
-		coeff_bitcount = 0;
-		mdiff_bitcount = 0;
-		
-		if ((frame%i_period) == 0) { 
-			FrameType = IFRAME;
-			fwrite(&FrameType, sizeof(int32_t), 1, frame_header_file);
-			fwrite(&block, sizeof(int32_t), 1, frame_header_file);
-			fwrite(&width, sizeof(int32_t), 1, frame_header_file);
-			fwrite(&height, sizeof(int32_t), 1, frame_header_file);
-		}
-		else {
-			FrameType = PFRAME;
-			fwrite(&FrameType, sizeof(int32_t), 1, frame_header_file);
-			fwrite(&block, sizeof(int32_t), 1, frame_header_file);
-			fwrite(&width, sizeof(int32_t), 1, frame_header_file);
-			fwrite(&height, sizeof(int32_t), 1, frame_header_file);
-		}
+	if ((ParallelMode == SINGLETHREADED) || (ParallelMode == BLOCKTHREADED)) {
+		for (int frame = 0; frame < frames; frame++) {
+			//Open GOLOMB and MDIFF files
+			snprintf(golomb_name, sizeof(golomb_name), "testdata\\COEFF_GOLOMB_CODING_%d", frame);
+			snprintf(mdiff_name, sizeof(mdiff_name), "testdata\\MDIFF_GOLOMB_%d", frame);
+			mdiff_golomb = fopen(mdiff_name, "wb");
+			golomb_file = fopen(golomb_name, "wb");
 
-		if (FrameType == PFRAME) { // Go to the beginning of the previous reconstructed frame and copy it to buffer
-			fseek(recfile, (frame - 1)*FRAME_SIZE, SEEK_SET);
-			for (unsigned int row = 0; row++; row < height) {
-				fread(PREV_REC_FRAME_2D[row], sizeof(uint8_t), width, recfile);
+			//Reset bitcounts
+			coeff_bitcount = 0;
+			mdiff_bitcount = 0;
+
+			if ((frame%i_period) == 0) {
+				FrameType = IFRAME;
+				fwrite(&FrameType, sizeof(int32_t), 1, frame_header_file);
+				fwrite(&block, sizeof(int32_t), 1, frame_header_file);
+				fwrite(&width, sizeof(int32_t), 1, frame_header_file);
+				fwrite(&height, sizeof(int32_t), 1, frame_header_file);
 			}
-			if (VBSEnable) { //fill split buffers
+			else {
+				FrameType = PFRAME;
+				fwrite(&FrameType, sizeof(int32_t), 1, frame_header_file);
+				fwrite(&block, sizeof(int32_t), 1, frame_header_file);
+				fwrite(&width, sizeof(int32_t), 1, frame_header_file);
+				fwrite(&height, sizeof(int32_t), 1, frame_header_file);
+			}
+
+			if (FrameType == PFRAME) { // Go to the beginning of the previous reconstructed frame and copy it to buffer
 				fseek(recfile, (frame - 1)*FRAME_SIZE, SEEK_SET);
 				for (unsigned int row = 0; row++; row < height) {
-					fread(PREV_REC_FRAME_2DS[row], sizeof(uint8_t), width, recfile);
+					fread(PREV_REC_FRAME_2D[row], sizeof(uint8_t), width, recfile);
 				}
-			}//end split buffer
-		}
+				if (VBSEnable) { //fill split buffers
+					fseek(recfile, (frame - 1)*FRAME_SIZE, SEEK_SET);
+					for (unsigned int row = 0; row++; row < height) {
+						fread(PREV_REC_FRAME_2DS[row], sizeof(uint8_t), width, recfile);
+					}
+				}//end split buffer
+			}
 
-		// Go to the beginning of the current frame and copy it to buffer
-		fseek(curfile, frame*FRAME_SIZE, SEEK_SET);
-		for (unsigned int row = 0; row < height; row++) {
-			fread(CUR_FRAME_2D[row], sizeof(uint8_t), width, curfile);
-		}
-		if (VBSEnable) { //fill split buffer curr_frame
+			// Go to the beginning of the current frame and copy it to buffer
 			fseek(curfile, frame*FRAME_SIZE, SEEK_SET);
 			for (unsigned int row = 0; row < height; row++) {
-				fread(CUR_FRAME_2DS[row], sizeof(uint8_t), width, curfile);
+				fread(CUR_FRAME_2D[row], sizeof(uint8_t), width, curfile);
 			}
-		}//end buffer curr_frame
+			if (VBSEnable) { //fill split buffer curr_frame
+				fseek(curfile, frame*FRAME_SIZE, SEEK_SET);
+				for (unsigned int row = 0; row < height; row++) {
+					fread(CUR_FRAME_2DS[row], sizeof(uint8_t), width, curfile);
+				}
+			}//end buffer curr_frame
 
-		if (ParallelMode == SINGLETHREADED) {
-			time(&start_time);
+			if (ParallelMode == SINGLETHREADED) {
+				start_time = clock();// GetTickCount();
+				for (int row = 0; row < height; row += block) {
+					for (int col = 0; col < width; col += block) {
+
+						BlockThread(row, col,
+							width, height, FrameType, INTERMODE, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
+							CUR_FRAME_2D, CUR_REC_FRAME_2D, PREV_REC_FRAME_2D, REF_FRAME_2D, ENC_RES_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,
+							CUR_FRAME_2DS, CUR_REC_FRAME_2DS, PREV_REC_FRAME_2DS, REF_FRAME_2DS, ENC_RES_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS,
+							MDIFF_VECTOR, MDIFF_VECTOR_DIFF, MDIFF_VECTORS, MDIFF_VECTOR_DIFFS
+						);
+					}
+				}
+				stop_time = clock();// GetTickCount();
+				printf("SINGLETHREAD TIME %f\n", (double)(clock() - start_time) / CLOCKS_PER_SEC);
+			}
+
+			if (ParallelMode == BLOCKTHREADED) {
+				start_time = clock();// GetTickCount();
+				if (FrameType == IFRAME) {
+					for (uint32_t row = 0; row < height; row += 2 * block) {
+						for (uint32_t col = 0; col <= width; col += block) {
+
+							if ((col == 0) && (row == 0)) { // Most Top Left Block
+								std::thread firstblock(BlockThread, row, col,
+									width, height, FrameType, INTERMODE, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
+									CUR_FRAME_2D, CUR_REC_FRAME_2D, PREV_REC_FRAME_2D, REF_FRAME_2D, ENC_RES_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,
+									CUR_FRAME_2DS, CUR_REC_FRAME_2DS, PREV_REC_FRAME_2DS, REF_FRAME_2DS, ENC_RES_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS,
+									MDIFF_VECTOR, MDIFF_VECTOR_DIFF, MDIFF_VECTORS, MDIFF_VECTOR_DIFFS
+								);
+
+								firstblock.join();
+							}
+							else if ((col == width) & (row == height - 2 * block)) { // Last Bottom Right Block
+								std::thread lastblock(BlockThread, row + block, col - block,
+									width, height, FrameType, INTERMODE, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
+									CUR_FRAME_2D, CUR_REC_FRAME_2D, PREV_REC_FRAME_2D, REF_FRAME_2D, ENC_RES_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,
+									CUR_FRAME_2DS, CUR_REC_FRAME_2DS, PREV_REC_FRAME_2DS, REF_FRAME_2DS, ENC_RES_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS,
+									MDIFF_VECTOR, MDIFF_VECTOR_DIFF, MDIFF_VECTORS, MDIFF_VECTOR_DIFFS
+								);
+								lastblock.join();
+							}
+							else if (col == width) { // First Block in Next Section, Last Block in Current Section
+								std::thread firstblock(BlockThread, row + 2 * block, 0,
+									width, height, FrameType, INTERMODE, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
+									CUR_FRAME_2D, CUR_REC_FRAME_2D, PREV_REC_FRAME_2D, REF_FRAME_2D, ENC_RES_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,
+									CUR_FRAME_2DS, CUR_REC_FRAME_2DS, PREV_REC_FRAME_2DS, REF_FRAME_2DS, ENC_RES_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS,
+									MDIFF_VECTOR, MDIFF_VECTOR_DIFF, MDIFF_VECTORS, MDIFF_VECTOR_DIFFS
+								);
+								std::thread lastblock(BlockThread, row + block, col - block,
+									width, height, FrameType, INTERMODE, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
+									CUR_FRAME_2D, CUR_REC_FRAME_2D, PREV_REC_FRAME_2D, REF_FRAME_2D, ENC_RES_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,
+									CUR_FRAME_2DS, CUR_REC_FRAME_2DS, PREV_REC_FRAME_2DS, REF_FRAME_2DS, ENC_RES_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS,
+									MDIFF_VECTOR, MDIFF_VECTOR_DIFF, MDIFF_VECTORS, MDIFF_VECTOR_DIFFS
+								);
+								firstblock.join();
+								lastblock.join();
+							}
+							else {// Two blocks in Current Section
+								std::thread rightblock(BlockThread, row, col,
+									width, height, FrameType, INTERMODE, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
+									CUR_FRAME_2D, CUR_REC_FRAME_2D, PREV_REC_FRAME_2D, REF_FRAME_2D, ENC_RES_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,
+									CUR_FRAME_2DS, CUR_REC_FRAME_2DS, PREV_REC_FRAME_2DS, REF_FRAME_2DS, ENC_RES_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS,
+									MDIFF_VECTOR, MDIFF_VECTOR_DIFF, MDIFF_VECTORS, MDIFF_VECTOR_DIFFS
+								);
+								std::thread bottomblock(BlockThread, row + block, col,
+									width, height, FrameType, INTERMODE, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
+									CUR_FRAME_2D, CUR_REC_FRAME_2D, PREV_REC_FRAME_2D, REF_FRAME_2D, ENC_RES_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,
+									CUR_FRAME_2DS, CUR_REC_FRAME_2DS, PREV_REC_FRAME_2DS, REF_FRAME_2DS, ENC_RES_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS,
+									MDIFF_VECTOR, MDIFF_VECTOR_DIFF, MDIFF_VECTORS, MDIFF_VECTOR_DIFFS
+								);
+								rightblock.join();
+								bottomblock.join();
+							}
+						}
+					}
+
+				}
+
+				if (FrameType == PFRAME) {
+					for (uint32_t row = 0; row < height; row += 2 * block) {
+						for (uint32_t col = 0; col < width; col += block) {
+							std::thread firstrow(BlockThread, row, col,
+								width, height, FrameType, INTERMODE, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
+								CUR_FRAME_2D, CUR_REC_FRAME_2D, PREV_REC_FRAME_2D, REF_FRAME_2D, ENC_RES_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,
+								CUR_FRAME_2DS, CUR_REC_FRAME_2DS, PREV_REC_FRAME_2DS, REF_FRAME_2DS, ENC_RES_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS,
+								MDIFF_VECTOR, MDIFF_VECTOR_DIFF, MDIFF_VECTORS, MDIFF_VECTOR_DIFFS
+							);
+							std::thread secondrow(BlockThread, row + block, col,
+								width, height, FrameType, INTERMODE, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
+								CUR_FRAME_2D, CUR_REC_FRAME_2D, PREV_REC_FRAME_2D, REF_FRAME_2D, ENC_RES_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,
+								CUR_FRAME_2DS, CUR_REC_FRAME_2DS, PREV_REC_FRAME_2DS, REF_FRAME_2DS, ENC_RES_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS,
+								MDIFF_VECTOR, MDIFF_VECTOR_DIFF, MDIFF_VECTORS, MDIFF_VECTOR_DIFFS
+							);
+							firstrow.join();
+							secondrow.join();
+						}
+					}
+				}
+
+				stop_time = clock();// GetTickCount();
+				printf("BLOCKTHREAD TIME %f\n", (double)(clock() - start_time) / CLOCKS_PER_SEC);
+			}
+
+			// Differential and Entropy Encode steps 
+			// ================================================
 			for (int row = 0; row < height; row += block) {
 				for (int col = 0; col < width; col += block) {
-
-					BlockThread(row, col,
-						width, height, FrameType, INTERMODE, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
-						CUR_FRAME_2D,CUR_REC_FRAME_2D,PREV_REC_FRAME_2D,REF_FRAME_2D,ENC_RES_FRAME_2D,ENC_TC_FRAME_2D,DEC_RES_FRAME_2D,DEC_TC_FRAME_2D,QTC_FRAME_2D,QP_FRAME_2D,
-						CUR_FRAME_2DS,CUR_REC_FRAME_2DS,PREV_REC_FRAME_2DS,REF_FRAME_2DS,ENC_RES_FRAME_2DS,ENC_TC_FRAME_2DS,DEC_RES_FRAME_2DS,DEC_TC_FRAME_2DS,QTC_FRAME_2DS,QP_FRAME_2DS,
-						MDIFF_VECTOR,MDIFF_VECTOR_DIFF,MDIFF_VECTORS,MDIFF_VECTOR_DIFFS
-					);
-				}
-			}
-			time(&stop_time);
-			printf("SINGLETHREAD TIME %.2f\n", (double)(stop_time - start_time));
-		}
-		
-		if (ParallelMode == BLOCKTHREADED) {
-			time(&start_time);
-			if (FrameType == IFRAME) {
-				for (uint32_t row = 0; row < height; row += 2 * block) {
-					for (uint32_t col = 0; col <= width; col += block) {
-
-						if ((col == 0) && (row == 0)) { // Most Top Left Block
-							std::thread firstblock(BlockThread,row,col,
-								width, height, FrameType, INTERMODE, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
-								CUR_FRAME_2D, CUR_REC_FRAME_2D, PREV_REC_FRAME_2D, REF_FRAME_2D, ENC_RES_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,
-								CUR_FRAME_2DS, CUR_REC_FRAME_2DS, PREV_REC_FRAME_2DS, REF_FRAME_2DS, ENC_RES_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS,
-								MDIFF_VECTOR, MDIFF_VECTOR_DIFF, MDIFF_VECTORS, MDIFF_VECTOR_DIFFS
-							);
-
-							firstblock.join();
-						}
-						else if ((col == width) & (row == height - 2 * block)) { // Last Bottom Right Block
-							std::thread lastblock(BlockThread, row + block, col - block,
-								width, height, FrameType, INTERMODE, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
-								CUR_FRAME_2D, CUR_REC_FRAME_2D, PREV_REC_FRAME_2D, REF_FRAME_2D, ENC_RES_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,
-								CUR_FRAME_2DS, CUR_REC_FRAME_2DS, PREV_REC_FRAME_2DS, REF_FRAME_2DS, ENC_RES_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS,
-								MDIFF_VECTOR, MDIFF_VECTOR_DIFF, MDIFF_VECTORS, MDIFF_VECTOR_DIFFS
-							);
-							lastblock.join();
-						}
-						else if (col == width) { // First Block in Next Section, Last Block in Current Section
-							std::thread firstblock(BlockThread, row + 2 * block, 0,
-								width, height, FrameType, INTERMODE, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
-								CUR_FRAME_2D, CUR_REC_FRAME_2D, PREV_REC_FRAME_2D, REF_FRAME_2D, ENC_RES_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,
-								CUR_FRAME_2DS, CUR_REC_FRAME_2DS, PREV_REC_FRAME_2DS, REF_FRAME_2DS, ENC_RES_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS,
-								MDIFF_VECTOR, MDIFF_VECTOR_DIFF, MDIFF_VECTORS, MDIFF_VECTOR_DIFFS
-							);
-							std::thread lastblock(BlockThread, row + block, col - block,
-								width, height, FrameType, INTERMODE, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
-								CUR_FRAME_2D, CUR_REC_FRAME_2D, PREV_REC_FRAME_2D, REF_FRAME_2D, ENC_RES_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,
-								CUR_FRAME_2DS, CUR_REC_FRAME_2DS, PREV_REC_FRAME_2DS, REF_FRAME_2DS, ENC_RES_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS,
-								MDIFF_VECTOR, MDIFF_VECTOR_DIFF, MDIFF_VECTORS, MDIFF_VECTOR_DIFFS
-							);
-							firstblock.join();
-							lastblock.join();
-						}
-						else {// Two blocks in Current Section
-							std::thread rightblock(BlockThread, row, col,
-								width, height, FrameType, INTERMODE, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
-								CUR_FRAME_2D, CUR_REC_FRAME_2D, PREV_REC_FRAME_2D, REF_FRAME_2D, ENC_RES_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,
-								CUR_FRAME_2DS, CUR_REC_FRAME_2DS, PREV_REC_FRAME_2DS, REF_FRAME_2DS, ENC_RES_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS,
-								MDIFF_VECTOR, MDIFF_VECTOR_DIFF, MDIFF_VECTORS, MDIFF_VECTOR_DIFFS
-							);
-							std::thread bottomblock(BlockThread, row + block, col,
-								width, height, FrameType, INTERMODE, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
-								CUR_FRAME_2D, CUR_REC_FRAME_2D, PREV_REC_FRAME_2D, REF_FRAME_2D, ENC_RES_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,
-								CUR_FRAME_2DS, CUR_REC_FRAME_2DS, PREV_REC_FRAME_2DS, REF_FRAME_2DS, ENC_RES_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS,
-								MDIFF_VECTOR, MDIFF_VECTOR_DIFF, MDIFF_VECTORS, MDIFF_VECTOR_DIFFS
-							);
-							rightblock.join();
-							bottomblock.join();
-						}
-					}
-				}
-
-			}
-
-			if (FrameType == PFRAME) {
-				for (uint32_t row = 0; row < height; row += 2 * block) {
-					for (uint32_t col = 0; col < width; col += block) {
-						std::thread firstrow(BlockThread, row, col,
-							width, height, FrameType, INTERMODE, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
-							CUR_FRAME_2D, CUR_REC_FRAME_2D, PREV_REC_FRAME_2D, REF_FRAME_2D, ENC_RES_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,
-							CUR_FRAME_2DS, CUR_REC_FRAME_2DS, PREV_REC_FRAME_2DS, REF_FRAME_2DS, ENC_RES_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS,
-							MDIFF_VECTOR, MDIFF_VECTOR_DIFF, MDIFF_VECTORS, MDIFF_VECTOR_DIFFS
-						);
-						std::thread secondrow(BlockThread, row + block, col,
-							width, height, FrameType, INTERMODE, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
-							CUR_FRAME_2D, CUR_REC_FRAME_2D, PREV_REC_FRAME_2D, REF_FRAME_2D, ENC_RES_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,
-							CUR_FRAME_2DS, CUR_REC_FRAME_2DS, PREV_REC_FRAME_2DS, REF_FRAME_2DS, ENC_RES_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS,
-							MDIFF_VECTOR, MDIFF_VECTOR_DIFF, MDIFF_VECTORS, MDIFF_VECTOR_DIFFS
-						);
-						firstrow.join();
-						secondrow.join();
-					}
+					int bitcount_temp = 0;
+					bitcount_temp = entropy_wrapper(QTC_FRAME_2D, block, height, width, frame, row, col);
+					coeff_bitcount = coeff_bitcount + bitcount_temp;
+					diff_enc_wrapper(MDIFF_VECTOR, MDIFF_VECTOR_DIFF, FrameType, height, width, block, frame, row, col);
+					bitcount_temp = encode_mdiff_wrapper(MDIFF_VECTOR_DIFF, MDIFF_VECTOR, height, width, block, frame, FrameType, row, col);
+					mdiff_bitcount = mdiff_bitcount + bitcount_temp;
 				}
 			}
 
-			time(&stop_time);
-			printf("BLOCKTHREAD TIME %.2f\n", (double)(stop_time - start_time));
+			// File Dumps
+			// ================================================
+
+			// Reconstructed Frames
+			uint8_t *REC_FRAME = new uint8_t[FRAME_SIZE];
+			for (int row = 0; row < height; row++)
+				for (int col = 0; col < width; col++)
+					REC_FRAME[col + width*row] = CUR_REC_FRAME_2D[row][col];
+			fclose(recfile);//Weird behavior need to close file
+			recfile = fopen(recfile_name, "a+b");
+			fwrite(REC_FRAME, sizeof(uint8_t), FRAME_SIZE, recfile);
+
+			// Bitcount Per frame
+			fprintf(coeff_bitcount_file, "%d,%d\n", frame, coeff_bitcount);
+			fprintf(mdiff_bitcount_file, "%d,%d\n", frame, mdiff_bitcount);
+			fprintf(total_bitcount_file, "%d,%d\n", frame, coeff_bitcount + mdiff_bitcount);
+			fclose(mdiff_golomb);
+			fclose(golomb_file);
+
+
 		}
-
-		// Differential and Entropy Encode steps 
-		// ================================================
-		for (int row = 0; row < height; row += block) {
-			for (int col = 0; col < width; col += block) {
-				int bitcount_temp = 0;
-				bitcount_temp = entropy_wrapper(QTC_FRAME_2D, block, height, width, frame, row, col);
-				coeff_bitcount = coeff_bitcount + bitcount_temp;
-				diff_enc_wrapper(MDIFF_VECTOR, MDIFF_VECTOR_DIFF, FrameType, height, width, block, frame, row, col);
-				bitcount_temp = encode_mdiff_wrapper(MDIFF_VECTOR_DIFF, MDIFF_VECTOR, height, width, block, frame, FrameType, row, col);
-				mdiff_bitcount = mdiff_bitcount + bitcount_temp;
-			}
-		}
-
-		// File Dumps
-		// ================================================
-
-
-		// Reconstructed Frames
-		uint8_t *REC_FRAME = new uint8_t[FRAME_SIZE];
-		for (int row = 0; row < height; row++)
-			for (int col = 0; col < width; col++)
-				REC_FRAME[col + width*row] = CUR_REC_FRAME_2D[row][col];
-		fclose(recfile);//Weird behavior need to close file
-		recfile = fopen(recfile_name, "a+b");
-		fwrite(REC_FRAME, sizeof(uint8_t), FRAME_SIZE, recfile);
-
-		// Bitcount Per frame
-		fprintf(coeff_bitcount_file, "%d,%d\n", frame, coeff_bitcount);
-		fprintf(mdiff_bitcount_file, "%d,%d\n", frame, mdiff_bitcount);
-		fprintf(total_bitcount_file, "%d,%d\n", frame, coeff_bitcount + mdiff_bitcount);
-		fclose(mdiff_golomb);
-		fclose(golomb_file);
+	}
+	if ((ParallelMode == FRAMETHREADED)) {
 
 
 	}

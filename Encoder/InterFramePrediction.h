@@ -5,7 +5,7 @@ struct MDIFF InterFrameDefault		(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint8
 struct MDIFF InterFrameRDO			(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint8_t** REF_FRAME, int row, int col, int width, int height, int block, int range, int ref, MDIFF** MDIFF_PREVIOUS);
 struct MDIFF InterFrameThreeStep	(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint8_t** REF_FRAME, int row, int col, int width, int height, int block, int range);
 struct MDIFF MinSADMinNORM			(struct MDIFF BEST_GMV, struct MDIFF NEW_GMV);
-void VBSWinner(MDIFF** MDIFF_CUR, MDIFF** MDIFF_SLPIT, int row, int col, int block, uint8_t** CUR_FRAME_2D, uint8_t**CUR_FRAME_2DS);
+void VBSWinner(MDIFF** MDIFF_CUR, MDIFF** MDIFF_SLPIT, int row, int col, int block, uint8_t** CUR_FRAME_2D, uint8_t**CUR_FRAME_2DS, int **QTC_FRAME_2D, int **QTC_FRAME_2DS);
 
 struct MDIFF InterFramePrediction(uint32_t INTERMODE, uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint8_t** REF_FRAME, int row, int col, int width, int height, int block, int range, int ref, MDIFF** MDIFF_PREVIOUS) {
 
@@ -249,7 +249,7 @@ struct MDIFF MinSADMinNORM(struct MDIFF BEST_GMV,struct MDIFF NEW_GMV) {
 	return BEST_GMV;
 }
 
-void VBSWinner(MDIFF** MDIFF_CUR, MDIFF** MDIFF_SPLIT, int row, int col, int block, uint8_t** CUR_FRAME_2D, uint8_t**CUR_FRAME_2DS) {
+void VBSWinner(MDIFF** MDIFF_CUR, MDIFF** MDIFF_SPLIT, int row, int col, int block, uint8_t** CUR_FRAME_2D, uint8_t**CUR_FRAME_2DS, int **QTC_FRAME_2D, int **QTC_FRAME_2DS) {
 	int row_split = row / (block / 2);
 	int col_split = col / (block / 2);
 	int row_org = row / block;
@@ -284,6 +284,7 @@ void VBSWinner(MDIFF** MDIFF_CUR, MDIFF** MDIFF_SPLIT, int row, int col, int blo
 		for (int row = row_org; row < row_org + block; row++) {
 			for (int col = col_org; col < col_org + block; col++) {
 				CUR_FRAME_2D[row][col] = CUR_FRAME_2DS[row][col];
+				QTC_FRAME_2D[row][col] = QTC_FRAME_2DS[row][col];
 			}
 		}
 	}

@@ -111,7 +111,7 @@ void BlockThread(
 			}
 		}
 		//Pick Winner
-		VBSWinner(MDIFF_VECTOR, MDIFF_VECTORS, row, col, block, CUR_REC_FRAME_2D, CUR_REC_FRAME_2DS);
+		VBSWinner(MDIFF_VECTOR, MDIFF_VECTORS, row, col, block, CUR_REC_FRAME_2D, CUR_REC_FRAME_2DS,QTC_FRAME_2D,QTC_FRAME_2DS);
 	}//End of VBSenable code
 
 	return;

@@ -26,7 +26,6 @@ char mdiff_name[500] = "";
 int VBSEnable = 0;
 int fps = 30;
 int QCIF_WIDTH = 176;
-std::mutex INTERLOCK;
 
 enum FRAME {
 	IFRAME = 0,
