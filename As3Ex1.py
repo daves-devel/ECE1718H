@@ -27,7 +27,7 @@ VBSEnable		= 1
 RDOEnable       = 1
 FMEnable        = 1
 qp_list 		= [0,1,2,3,4,5,6,7,8,9,10,11]
-i_period_list 	= [21]
+i_period_list 	= [1,21]
 RCflag			= 0
 targetBr = 2400000
 

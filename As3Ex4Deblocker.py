@@ -39,7 +39,7 @@ infile = "resource\\TestCIF.yuv"
 width  = 352
 height = 288
 #qp_list = [0, 1 , 2, 3,4,5,6,7,8,9]
-qp_list = [0,3,6,9]
+qp_list = [3,6,9]
 deblock_on = 0
 #testcase 1
 for qp in qp_list:
@@ -51,7 +51,7 @@ infile = "resource\\TestCIF.yuv"
 width  = 352
 height = 288
 #qp_list = [0,1,2,3,4,5,6,7,8,9]
-qp_list = [0,3,6,9]
+qp_list = [3,6,9]
 deblock_on = 1
 for qp in qp_list:
 	testname 		= "TestCIF_Deblock_%d_QP_%d_Block_16_VBS_FME_CONSTANT_QP_E24" %(deblock_on,qp)
