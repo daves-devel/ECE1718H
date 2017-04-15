@@ -19,7 +19,7 @@ int reverse_signed_golomb_value(int *RLE, FILE * golomb_file, int block, int row
 			RLE[index] = result;
 			index++;
 			int run = abs(result);
-			for (int i = 0; i < run;i++) {
+			for (int i = 0; i < run; i++) {
 				fread(&encoded_value, sizeof(int), 1, golomb_file);
 				int32_t result = decode_signed_golomb_value(encoded_value, &count);
 				counter++;
@@ -30,7 +30,7 @@ int reverse_signed_golomb_value(int *RLE, FILE * golomb_file, int block, int row
 		else if (result > 0) {
 			RLE[index] = result;
 			index++;
-			for(int i =0; i< result; i++)
+			for (int i = 0; i< result; i++)
 				counter++;
 		}
 		else {
@@ -106,12 +106,12 @@ void reverse_entropy(int ** QTC_FRAME, int block, int height, int width, int fra
 		QTC_BLOCK[i] = new int[block];
 
 	while (!feof(golomb_file)) {
-		int total_counter=reverse_signed_golomb_value(RLE, golomb_file, block, row, col);
+		int total_counter = reverse_signed_golomb_value(RLE, golomb_file, block, row, col);
 		rle_decode(COEFF_REORDER, RLE, block);
 		diag_to_raster(QTC_BLOCK, COEFF_REORDER, block);
 		for (int j = 0; j < block; j++)//Copy block into QTC_FRAME
 			for (int i = 0; i < block; i++)
-				QTC_FRAME[row + j][col + i]= QTC_BLOCK[j][i];
+				QTC_FRAME[row + j][col + i] = QTC_BLOCK[j][i];
 #ifdef TRACE_ON
 		fprintf_RLE(file_re_rle, RLE, total_counter, row, col);
 		fprintf_REORDER_BLOCK(file_re_reorder, COEFF_REORDER, block, row, col);
@@ -131,27 +131,99 @@ void decode_mdiff(MDIFF** MDIFF_VECTOR_DIFF, int row, int col, int Frametype, FI
 	int encoded_value = 0;
 	uint8_t count;
 	int32_t result;
-	if (Frametype == IFRAME) {
-		fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
-		result = decode_signed_golomb_value(encoded_value, &count);
-		MDIFF_VECTOR_DIFF[row][col].split = result;
-		fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
-		result = decode_signed_golomb_value(encoded_value, &count);
-		MDIFF_VECTOR_DIFF[row][col].MODE = result;
+
+	//First item will always be the split variable 
+	fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
+	result = decode_signed_golomb_value(encoded_value, &count);
+	MDIFF_VECTOR_DIFF[row][col].split = result;
+
+	if (col == 0) {
+		if (result == 0)
+			split_switch = false;
+		else
+			split_switch = true;
 	}
-	else{
-		fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
-		result = decode_signed_golomb_value(encoded_value, &count);
-		MDIFF_VECTOR_DIFF[row][col].split = result;
-		fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
-		result = decode_signed_golomb_value(encoded_value, &count);
-		MDIFF_VECTOR_DIFF[row][col].X = result;
-		fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
-		result = decode_signed_golomb_value(encoded_value, &count);
-		MDIFF_VECTOR_DIFF[row][col].Y = result;
-		fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
-		result = decode_signed_golomb_value(encoded_value, &count);
-		MDIFF_VECTOR_DIFF[row][col].ref = result;
+	else {
+		if (result != 0)
+			split_switch = !split_switch; //flip the switch
+	}
+
+	if (Frametype == IFRAME) {
+
+		if (!split_switch) {
+			fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
+			result = decode_signed_golomb_value(encoded_value, &count);
+			MDIFF_VECTOR_DIFF[row][col].MODE = result;
+		}
+		else {
+			fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
+			result = decode_signed_golomb_value(encoded_value, &count);
+			MDIFF_VECTOR_DIFF[row][col].MODE = result;
+			fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
+			result = decode_signed_golomb_value(encoded_value, &count);
+			MDIFF_VECTOR_DIFF[row][col].MODE2 = result;
+			fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
+			result = decode_signed_golomb_value(encoded_value, &count);
+			MDIFF_VECTOR_DIFF[row][col].MODE3 = result;
+			fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
+			result = decode_signed_golomb_value(encoded_value, &count);
+			MDIFF_VECTOR_DIFF[row][col].MODE4 = result;
+		}
+	}
+	else {
+		//PFRAME
+		if (!split_switch) {
+			fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
+			result = decode_signed_golomb_value(encoded_value, &count);
+			MDIFF_VECTOR_DIFF[row][col].X = result;
+			fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
+			result = decode_signed_golomb_value(encoded_value, &count);
+			MDIFF_VECTOR_DIFF[row][col].Y = result;
+			fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
+			result = decode_signed_golomb_value(encoded_value, &count);
+			MDIFF_VECTOR_DIFF[row][col].ref = result;
+		}
+		else {
+			fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
+			result = decode_signed_golomb_value(encoded_value, &count);
+			MDIFF_VECTOR_DIFF[row][col].X = result;
+			fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
+			result = decode_signed_golomb_value(encoded_value, &count);
+			MDIFF_VECTOR_DIFF[row][col].X2 = result;
+			fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
+			result = decode_signed_golomb_value(encoded_value, &count);
+			MDIFF_VECTOR_DIFF[row][col].X3 = result;
+			fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
+			result = decode_signed_golomb_value(encoded_value, &count);
+			MDIFF_VECTOR_DIFF[row][col].X4 = result;
+
+			fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
+			result = decode_signed_golomb_value(encoded_value, &count);
+			MDIFF_VECTOR_DIFF[row][col].Y = result;
+			fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
+			result = decode_signed_golomb_value(encoded_value, &count);
+			MDIFF_VECTOR_DIFF[row][col].Y2 = result;
+			fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
+			result = decode_signed_golomb_value(encoded_value, &count);
+			MDIFF_VECTOR_DIFF[row][col].Y3 = result;
+			fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
+			result = decode_signed_golomb_value(encoded_value, &count);
+			MDIFF_VECTOR_DIFF[row][col].Y4 = result;
+
+			fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
+			result = decode_signed_golomb_value(encoded_value, &count);
+			MDIFF_VECTOR_DIFF[row][col].ref = result;
+			fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
+			result = decode_signed_golomb_value(encoded_value, &count);
+			MDIFF_VECTOR_DIFF[row][col].ref2 = result;
+			fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
+			result = decode_signed_golomb_value(encoded_value, &count);
+			MDIFF_VECTOR_DIFF[row][col].ref3 = result;
+			fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
+			result = decode_signed_golomb_value(encoded_value, &count);
+			MDIFF_VECTOR_DIFF[row][col].ref4 = result;
+		}
+
 	}
 
 }
@@ -162,10 +234,23 @@ void decode_mdiff_wrapper(MDIFF** MDIFF_VECTOR_DIFF, int height, int width, int 
 	char mdiff_golomb_name[0x100];
 	snprintf(mdiff_golomb_name, sizeof(mdiff_golomb_name), "%s\\MDIFF_GOLOMB_%d", filepath, frame);
 	file_mdiff_golomb = fopen(mdiff_golomb_name, "rb");
+	FILE* file_vector_aft;
+	char buf[0x100];
+	snprintf(buf, sizeof(buf), "testdata\\MDIFF_AFT_DEC%d.txt", frame);
+	file_vector_aft = fopen(buf, "w");
+
 	while (!feof(file_mdiff_golomb)) {
 		for (int row = 0; row < height; row = row + block) {
 			for (int col = 0; col < width; col = col + block) {
-				decode_mdiff(MDIFF_VECTOR_DIFF, row/block, col/block, Frametype, file_mdiff_golomb);
+				decode_mdiff(MDIFF_VECTOR_DIFF, row / block, col / block, Frametype, file_mdiff_golomb);
+				fclose(file_vector_aft);
+				file_vector_aft = fopen(buf, "a");
+				fprintf(file_vector_aft, "Block Y=%d X=%d\n", row / block, col / block);
+				fprintf(file_vector_aft, "FRAME_TYPE: %d SPLIT %d MODE: %d %d %d %d X: %d %d %d %d Y: %d %d %d %d ref %d %d %d %d\n", Frametype, MDIFF_VECTOR_DIFF[row / block][col / block].split,
+					MDIFF_VECTOR_DIFF[row / block][col / block].MODE, MDIFF_VECTOR_DIFF[row / block][col / block].MODE2, MDIFF_VECTOR_DIFF[row / block][col / block].MODE3, MDIFF_VECTOR_DIFF[row / block][col / block].MODE4,
+					MDIFF_VECTOR_DIFF[row / block][col / block].X, MDIFF_VECTOR_DIFF[row / block][col / block].X2, MDIFF_VECTOR_DIFF[row / block][col / block].X3, MDIFF_VECTOR_DIFF[row / block][col / block].X4,
+					MDIFF_VECTOR_DIFF[row / block][col / block].Y, MDIFF_VECTOR_DIFF[row / block][col / block].Y2, MDIFF_VECTOR_DIFF[row / block][col / block].Y3, MDIFF_VECTOR_DIFF[row / block][col / block].Y4,
+					MDIFF_VECTOR_DIFF[row / block][col / block].ref, MDIFF_VECTOR_DIFF[row / block][col / block].ref2, MDIFF_VECTOR_DIFF[row / block][col / block].ref3, MDIFF_VECTOR_DIFF[row / block][col / block].ref4);
 			}
 		}
 		break;
@@ -215,7 +300,7 @@ void diag_to_raster(int ** QTC_BLOCK, int * COEFF_REORDER, int block) {
 		if (diag < block) {
 			x = diag;
 			for (int y = 0; y < diag + 1; y++) {
-				QTC_BLOCK[y][x]= COEFF_REORDER[index];
+				QTC_BLOCK[y][x] = COEFF_REORDER[index];
 				index++;
 				x = x - 1;
 			}
@@ -223,7 +308,7 @@ void diag_to_raster(int ** QTC_BLOCK, int * COEFF_REORDER, int block) {
 		else {
 			x = block - 1;
 			for (int y = diag - block + 1; y < block; y++) {
-				QTC_BLOCK[y][x]= COEFF_REORDER[index];
+				QTC_BLOCK[y][x] = COEFF_REORDER[index];
 				index++;
 				x = x - 1;
 			}
