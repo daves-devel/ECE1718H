@@ -154,6 +154,13 @@ void decode_mdiff(MDIFF** MDIFF_VECTOR_DIFF, int row, int col, int Frametype, FI
 			fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
 			result = decode_signed_golomb_value(encoded_value, &count);
 			MDIFF_VECTOR_DIFF[row][col].MODE = result;
+			MDIFF_VECTOR_DIFF[row][col].MODE2 = 0;
+			MDIFF_VECTOR_DIFF[row][col].MODE3 = 0;
+			MDIFF_VECTOR_DIFF[row][col].MODE4 = 0;
+			MDIFF_VECTOR_DIFF[row][col].X = 0;
+			MDIFF_VECTOR_DIFF[row][col].X2 = 0;
+			MDIFF_VECTOR_DIFF[row][col].X3 = 0;
+			MDIFF_VECTOR_DIFF[row][col].X4 = 0;
 		}
 		else {
 			fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
@@ -176,12 +183,21 @@ void decode_mdiff(MDIFF** MDIFF_VECTOR_DIFF, int row, int col, int Frametype, FI
 			fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
 			result = decode_signed_golomb_value(encoded_value, &count);
 			MDIFF_VECTOR_DIFF[row][col].X = result;
+			MDIFF_VECTOR_DIFF[row][col].X2 = 0;
+			MDIFF_VECTOR_DIFF[row][col].X3 = 0;
+			MDIFF_VECTOR_DIFF[row][col].X4 = 0;
 			fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
 			result = decode_signed_golomb_value(encoded_value, &count);
 			MDIFF_VECTOR_DIFF[row][col].Y = result;
+			MDIFF_VECTOR_DIFF[row][col].Y2 = 0;
+			MDIFF_VECTOR_DIFF[row][col].Y3 = 0;
+			MDIFF_VECTOR_DIFF[row][col].Y4 = 0;
 			fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
 			result = decode_signed_golomb_value(encoded_value, &count);
 			MDIFF_VECTOR_DIFF[row][col].ref = result;
+			MDIFF_VECTOR_DIFF[row][col].ref2 = 0;
+			MDIFF_VECTOR_DIFF[row][col].ref3 = 0;
+			MDIFF_VECTOR_DIFF[row][col].ref4 = 0;
 		}
 		else {
 			fread(&encoded_value, sizeof(int), 1, mdiff_golomb);
