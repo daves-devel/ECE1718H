@@ -67,7 +67,7 @@ void diff_enc_wrapper(MDIFF** MDIFF_VECTOR, MDIFF** MDIFF_VECTOR_DIFF, int Frame
 					MDIFF_VECTOR_DIFF[row / block][col / block].X, MDIFF_VECTOR_DIFF[row / block][col / block].Y,
 					MDIFF_VECTOR_DIFF[row / block][col / block].ref);
 			}
-			else {*/
+			else {*//
 				fprintf(file_vector_org, "Block Y=%d X=%d\n", row / block, col / block);
 				fprintf(file_vector_org, "FRAME_TYPE: %d SPLIT %d MODE: %d %d %d %d X: %d %d %d %d Y: %d %d %d %d ref %d %d %d %d\n", FrameType, MDIFF_VECTOR[row / block][col / block].split,
 					MDIFF_VECTOR[row / block][col / block].MODE, MDIFF_VECTOR[row / block][col / block].MODE2, MDIFF_VECTOR[row / block][col / block].MODE3, MDIFF_VECTOR[row / block][col / block].MODE4,
