@@ -51,9 +51,11 @@ infile = "resource\\TestCIF.yuv"
 width  = 352
 height = 288
 targetBr_list = [7000000,2400000,360000]
-RCflag	 = 0
-rc_list = [1,2]
-		
+
+
+rc_list = [1,2, 3]
+qp=4		
+#qp=9
 #testcase 2
 for targetBr in targetBr_list:
 	for RCflag in rc_list:

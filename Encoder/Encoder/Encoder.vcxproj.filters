@@ -56,5 +56,11 @@
     <ClInclude Include="..\DiffDec.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\RateControl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\deblocker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
