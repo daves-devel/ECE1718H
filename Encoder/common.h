@@ -25,6 +25,7 @@ int VBSEnable = 0;
 int fps = 30;
 int QCIF_WIDTH = 176;
 double QPMultiplier = 0;
+bool split_switch;
 
 
 enum FRAME {
