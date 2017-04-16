@@ -1,5 +1,5 @@
 ﻿  Decoder.cpp
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\interframeprediction.h(319): warning C4018: '<': signed/unsigned mismatch
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\interframeprediction.h(321): warning C4018: '<': signed/unsigned mismatch
 c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\intraframeprediction.h(92): warning C4018: '<': signed/unsigned mismatch
 c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\intraframeprediction.h(93): warning C4018: '<': signed/unsigned mismatch
 c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\discrete_cosine_transform.h(93): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
@@ -21,14 +21,14 @@ c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\discr
 c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\discrete_cosine_transform.h(159): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
 c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\discrete_cosine_transform.h(162): warning C4244: '=': conversion from 'float' to 'int32_t', possible loss of data
 c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(52): warning C4101: 'iteration': unreferenced local variable
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(196): warning C4018: '<': signed/unsigned mismatch
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(244): warning C4018: '<': signed/unsigned mismatch
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(249): warning C4018: '<': signed/unsigned mismatch
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(307): warning C4018: '<': signed/unsigned mismatch
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(326): warning C4018: '<': signed/unsigned mismatch
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(164): warning C4101: 'sz': unreferenced local variable
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(199): warning C4018: '<': signed/unsigned mismatch
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(254): warning C4018: '<': signed/unsigned mismatch
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(259): warning C4018: '<': signed/unsigned mismatch
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(320): warning C4018: '<': signed/unsigned mismatch
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(339): warning C4018: '<': signed/unsigned mismatch
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\decoder\decoder.cpp(165): warning C4101: 'sz': unreferenced local variable
 c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\quantization.h(72): warning C4715: 'QuantizeBlock': not all control paths return a value
 c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\quantization.h(102): warning C4715: 'ScaleBlock': not all control paths return a value
-c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\interframeprediction.h(30): warning C4715: 'InterFramePrediction': not all control paths return a value
+c:\users\david.chakkuthara\documents\educational\ece1718h\ece1718h\encoder\interframeprediction.h(31): warning C4715: 'InterFramePrediction': not all control paths return a value
   Decoder.vcxproj -> C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\Debug\Decoder.exe
   Decoder.vcxproj -> C:\Users\david.chakkuthara\Documents\Educational\ECE1718H\ECE1718H\Decoder\Debug\Decoder.pdb (Full PDB)
