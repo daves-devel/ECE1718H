@@ -16,6 +16,72 @@
 #include <discrete_cosine_transform.h>
 #include <DiffDec.h>
 
+void VBSMDIFFcopy( MDIFF** MDIFF_SPLIT, MDIFF** MDIFF_CUR, int row, int col, int block) {
+	int row_split = row / (block / 2);
+	int col_split = col / (block / 2);
+	int row_org = row / block;
+	int col_org = col / block;
+	int SPLIT_SAD = 0;
+	
+	//Adding X and Y for Inter
+	MDIFF_SPLIT[row_split][col_split].X = MDIFF_CUR[row_org][col_org].X;
+	MDIFF_SPLIT[row_split][col_split + 1].X = MDIFF_CUR[row_org][col_org].X2;
+	MDIFF_SPLIT[row_split + 1][col_split].X = MDIFF_CUR[row_org][col_org].X3;
+	MDIFF_SPLIT[row_split + 1][col_split + 1].X = MDIFF_CUR[row_org][col_org].X4;
+	MDIFF_SPLIT[row_split][col_split].Y = MDIFF_CUR[row_org][col_org].Y;
+	MDIFF_SPLIT[row_split][col_split + 1].Y = MDIFF_CUR[row_org][col_org].Y2;
+	MDIFF_SPLIT[row_split + 1][col_split].Y = MDIFF_CUR[row_org][col_org].Y3;
+	MDIFF_SPLIT[row_split + 1][col_split + 1].Y = MDIFF_CUR[row_org][col_org].Y4;
+	//Adding modes for Intra;
+	MDIFF_SPLIT[row_split][col_split].MODE = MDIFF_CUR[row_org][col_org].MODE;
+	MDIFF_SPLIT[row_split][col_split + 1].MODE = MDIFF_CUR[row_org][col_org].MODE2;
+	MDIFF_SPLIT[row_split + 1][col_split].MODE = MDIFF_CUR[row_org][col_org].MODE3;
+	MDIFF_SPLIT[row_split + 1][col_split + 1].MODE = MDIFF_CUR[row_org][col_org].MODE4;
+	//REF;
+	MDIFF_SPLIT[row_split][col_split].ref = MDIFF_CUR[row_org][col_org].ref;
+	MDIFF_SPLIT[row_split][col_split + 1].ref = MDIFF_CUR[row_org][col_org].ref2;
+	MDIFF_SPLIT[row_split + 1][col_split].ref = MDIFF_CUR[row_org][col_org].ref3;
+	MDIFF_SPLIT[row_split + 1][col_split + 1].ref = MDIFF_CUR[row_org][col_org].ref4;
+
+}
+
+void DecodeVBS(int FrameType, int row, int col, int block, int width, int height, int QP, 
+	MDIFF **MDIFF_VECTORS, uint8_t **DEC_FRAME_2DS, uint8_t **REF_FRAME_2DS, uint8_t **PREV_DEC_FRAME, 
+	int32_t **QTC_FRAME_2DS, int32_t **QP_FRAME_2DS, int32_t **DEC_RES_FRAME_2DS, int32_t **DEC_TC_FRAME_2DS,
+	int block_split)
+{
+	for (int row2 = row; row2 < row + block; row2 += block_split) {
+		for (int col2 = col; col2 < col + block; col2 += block_split) {
+
+			// SCALE
+			ScaleBlock(DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS, row2, col2, width, height, QP, block_split);
+
+			// IDCT
+			IDCTBlock(DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, row2, col2, block_split);
+
+			if (FrameType == PFRAME) {
+				// RECONSTRUCT 
+				ReconstructBlockDecodeP(DEC_FRAME_2DS, DEC_RES_FRAME_2DS, PREV_DEC_FRAME, REF_FRAME_2DS, row2, col2, block_split, MDIFF_VECTORS);
+			}
+			else if (FrameType == IFRAME) {
+				// RECONSTRUCT 
+				ReconstructBlockDecodeI(DEC_FRAME_2DS, DEC_RES_FRAME_2DS, REF_FRAME_2DS, row, col, block, MDIFF_VECTORS);
+			} 
+		}
+	}
+}
+
+void VBSDecodeCopy(uint8_t **DEC_FRAME_2D, uint8_t **DEC_FRAME_2DS, int row, int col, int block, int32_t **QTC_FRAME_2D, int32_t **QTC_FRAME_2DS)
+{
+	int row_org = row / block;
+	int col_org = col / block;
+	for (int row = row_org; row < row_org + block; row++) {
+		for (int col = col_org; col < col_org + block; col++) {
+			DEC_FRAME_2D[row][col] = DEC_FRAME_2DS[row][col];
+			QTC_FRAME_2D[row][col] = QTC_FRAME_2DS[row][col];
+		}
+	}
+}
 
 int main(int argCnt, char **args)
 {
@@ -66,6 +132,12 @@ int main(int argCnt, char **args)
 			args++;
 			tmpArgCnt += 2;
 		}
+		else if (!strcmp((*args) + 1, "VBSEnable")) {
+			args++;
+			VBSEnable = atoi(*args);
+			args++;
+			tmpArgCnt += 2;
+		}
 		else if (!strcmp((*args) + 1, "qp")) {
 			args++;
 			QP = atoi(*args);
@@ -94,31 +166,47 @@ int main(int argCnt, char **args)
 	fread(&width, sizeof(int32_t), 1, frame_header_file);
 	fread(&height, sizeof(int32_t), 1, frame_header_file);
 
+	int block_split = block / 2;
+
 	unsigned int  FRAME_SIZE = width*height;
 	//reset to begining of file
 	fseek(frame_header_file, 0, SEEK_SET);
 
 	// Allocate Memory
 	uint8_t** DEC_FRAME_2D = new uint8_t*[height];
+	uint8_t** DEC_FRAME_2DS = new uint8_t*[height];
 	uint8_t** REF_FRAME_2D = new uint8_t*[height];
+	uint8_t** REF_FRAME_2DS = new uint8_t*[height];
 	uint8_t** PREV_DEC_FRAME = new uint8_t*[height];
+	uint8_t** PREV_DEC_FRAME_2DS = new uint8_t*[height];
 	int32_t** ENC_RES_FRAME_2D = new  int32_t*[height];
 	int32_t** ENC_TC_FRAME_2D = new int32_t*[height];
 	int32_t** DEC_RES_FRAME_2D = new  int32_t*[height];
+	int32_t** DEC_RES_FRAME_2DS = new  int32_t*[height];
 	int32_t** DEC_TC_FRAME_2D = new int32_t*[height];
-	int32_t** QTC_FRAME_2D = new int32_t*[height];
+	int32_t** DEC_TC_FRAME_2DS = new int32_t*[height];
+	int32_t** QTC_FRAME_2D = new int32_t*[height];	
+	int32_t** QTC_FRAME_2DS = new int32_t*[height];
 	int32_t** QP_FRAME_2D = new int32_t*[height];
+	int32_t** QP_FRAME_2DS = new int32_t*[height];
 
 	for (unsigned int row = 0; row < height; row++) {
 		DEC_FRAME_2D[row] = new uint8_t[width];
+		DEC_FRAME_2DS[row] = new uint8_t[width];
 		REF_FRAME_2D[row] = new uint8_t[width];
+		REF_FRAME_2DS[row] = new uint8_t[width];
 		PREV_DEC_FRAME[row] = new uint8_t[width];
+		PREV_DEC_FRAME_2DS[row] = new uint8_t[width];
 		ENC_RES_FRAME_2D[row] = new  int32_t[width];
 		ENC_TC_FRAME_2D[row] = new int32_t[width];
 		DEC_RES_FRAME_2D[row] = new  int32_t[width];
+		DEC_RES_FRAME_2DS[row] = new  int32_t[width];
 		DEC_TC_FRAME_2D[row] = new int32_t[width];
+		DEC_TC_FRAME_2DS[row] = new int32_t[width];
 		QTC_FRAME_2D[row] = new int32_t[width];
+		QTC_FRAME_2DS[row] = new int32_t[width];
 		QP_FRAME_2D[row] = new int32_t[width];
+		QP_FRAME_2DS[row] = new int32_t[width];
 	}
 
 
@@ -129,6 +217,13 @@ int main(int argCnt, char **args)
 	for (int row = 0; row < height; row = row + block) {
 		MDIFF_VECTOR[row / block] = new struct MDIFF[width / block];
 		MDIFF_VECTOR_DIFF[row / block] = new struct MDIFF[width / block];
+	}
+
+	struct MDIFF** MDIFF_VECTORS = new struct MDIFF*[(height / block_split)];
+	struct MDIFF** MDIFF_VECTOR_DIFFS = new struct MDIFF*[(height / block_split)];
+	for (int row = 0; row < height; row = row + block_split) {
+		MDIFF_VECTORS[row / block_split] = new struct MDIFF[width / block_split];
+		MDIFF_VECTOR_DIFFS[row / block_split] = new struct MDIFF[width / block_split];
 	}
 
 	// Decode Each Frame
@@ -146,46 +241,16 @@ int main(int argCnt, char **args)
 			for (unsigned int row = 0; row < height; row++) {
 				fread(PREV_DEC_FRAME[row], sizeof(uint8_t), width, decfile);
 			}
-			// Create a intermediate frame from the previous decoded frame and the motion vectors for the frame
-	/*		for (int row = 0; row < height; row += block) {
-				for (int col = 0; col < width; col += block) {
-					for (int i = 0; i < block; i++) {
-						for (int j = 0; j < block; j++) {
-							PREV_DEC_FRAME[row + i][col + j] = DEC_FRAME_2D[row + i][col + j];
-						}
-					}
-				}
-			}*/
-		}
-		/*
-		snprintf(mdiff_name, sizeof(mdiff_name), "%s/MDIFF_GOLOMB_%d", filepath, frame);
-		mdiff_file = fopen(mdiff_name, "rb");
-
-		for (int row = 0; row < height; row += block) {
-			for (int col = 0; col < width; col += block) {
-				if (FrameType == PFRAME) {
-					 fread(&MDIFF_VECTOR_DIFF[row / block][col / block].X, sizeof(uint32_t), 1, mdiff_file);
-					 fread(&MDIFF_VECTOR_DIFF[row / block][col / block].Y, sizeof(uint32_t), 1, mdiff_file);
-					 fread(&MDIFF_VECTOR_DIFF[row / block][col / block].ref, sizeof(uint32_t), 1, mdiff_file);
-				}
-				else if (FrameType == IFRAME)
-				{
-					fread(&MDIFF_VECTOR_DIFF[row / block][col / block].MODE, sizeof(uint32_t), 1, mdiff_file);
+			if (VBSEnable) {
+				fseek(decfile, (frame - 1)*FRAME_SIZE, SEEK_SET);
+				for (unsigned int row = 0; row < height; row++) {
+					fread(PREV_DEC_FRAME_2DS[row], sizeof(uint8_t), width, decfile);
 				}
 			}
+
 		}
-
-		fclose(mdiff_file);
-
-		snprintf(coeff_name, sizeof(coeff_name), "%s/COEFF_GOLOMB_CODING_%d", filepath, frame);
-		coeff_file = fopen(coeff_name, "rb");
-		fseek(coeff_file, 0L, SEEK_END);
-		sz = ftell(coeff_file);
-		rewind(coeff_file);
-		fread(QTC_FRAME_2D, sizeof(uint32_t), sz, coeff_file);
-
-		fclose(coeff_file);
-		*/
+		
+		
 		reverse_entropy(QTC_FRAME_2D, block, height, width, frame);
 		decode_mdiff_wrapper(MDIFF_VECTOR_DIFF, height, width, block, frame, FrameType); //x,y or intramode
 		diff_dec_wrapper(MDIFF_VECTOR, MDIFF_VECTOR_DIFF, FrameType, height, width, block, frame);
@@ -194,20 +259,28 @@ int main(int argCnt, char **args)
 		for (int row = 0; row < height; row += block) {
 			for (int col = 0; col < width; col += block) {
 				// IDEALLY THREAD EVERYTHING IN THIS FOR LOOP FOR PFRAMES
+				if (!VBSEnable) {
+					// SCALE
+					ScaleBlock(DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D, row, col, width, height, QP, block);
 
-				// SCALE
-				ScaleBlock(DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D, row, col, width, height, QP, block);
+					// IDCT
+					IDCTBlock(DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, row, col, block);
 
-				// IDCT
-				IDCTBlock(DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, row, col, block);
-
-				if (FrameType == PFRAME) {
-					// RECONSTRUCT 
-					ReconstructBlockDecodeP(DEC_FRAME_2D, DEC_RES_FRAME_2D, PREV_DEC_FRAME, REF_FRAME_2D, row, col, block, MDIFF_VECTOR);
+					if (FrameType == PFRAME) {
+						// RECONSTRUCT 
+						ReconstructBlockDecodeP(DEC_FRAME_2D, DEC_RES_FRAME_2D, PREV_DEC_FRAME, REF_FRAME_2D, row, col, block, MDIFF_VECTOR);
+					}
+					else if (FrameType == IFRAME) {
+						// RECONSTRUCT 
+						ReconstructBlockDecodeI(DEC_FRAME_2D, DEC_RES_FRAME_2D, REF_FRAME_2D, row, col, block, MDIFF_VECTOR);
+					}
 				}
-				else if (FrameType == IFRAME) {
-					// RECONSTRUCT 
-					ReconstructBlockDecodeI(DEC_FRAME_2D, DEC_RES_FRAME_2D, REF_FRAME_2D, row, col, block, MDIFF_VECTOR);
+				else {
+					VBSMDIFFcopy(MDIFF_VECTORS, MDIFF_VECTOR, row, col, block);
+					DecodeVBS(FrameType, row, col, block, width, height, QP, MDIFF_VECTORS, DEC_FRAME_2DS, REF_FRAME_2DS, PREV_DEC_FRAME_2DS,
+						QTC_FRAME_2DS, QP_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS,
+						block_split);
+					VBSDecodeCopy(DEC_FRAME_2D, DEC_FRAME_2DS, row, col, block, QTC_FRAME_2D, QTC_FRAME_2DS);
 				}
 			}
 		}
