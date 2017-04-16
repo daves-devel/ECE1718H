@@ -101,6 +101,7 @@ int main(int argCnt, char **args)
 	int i_period = -1;
 	int FrameType = -1;
 	int QP = -1;
+	
 
 	args++;
 	int tmpArgCnt = 1;
@@ -162,14 +163,16 @@ int main(int argCnt, char **args)
 	//coeff_bitcount_file = fopen(coeff_bitcount_name, "r");
 	//mdiff_bitcount_file = fopen(mdiff_bitcount_name, "r");
 	uint32_t sz;
-
+	
 	//Read the frame header once to get frame paramters
 	fread(&FrameType, sizeof(int32_t), 1, frame_header_file);
 	fread(&block, sizeof(int32_t), 1, frame_header_file);
 	fread(&width, sizeof(int32_t), 1, frame_header_file);
 	fread(&height, sizeof(int32_t), 1, frame_header_file);
+	
 
 	int block_split = block / 2;
+	int *QP_ROW = new int[height / block];
 
 	unsigned int  FRAME_SIZE = width*height;
 	//reset to begining of file
@@ -229,14 +232,21 @@ int main(int argCnt, char **args)
 		MDIFF_VECTOR_DIFFS[row / block_split] = new struct MDIFF[width / block_split];
 	}
 
+
+	fclose(frame_header_file);
+	frame_header_file = fopen(frame_header_name, "rb");
 	// Decode Each Frame
 	// =========================================
 	for (int frame = 0; frame < frames; frame++) {
 		//Read the paratemters for the frame
+		
 		fread(&FrameType, sizeof(int32_t), 1, frame_header_file);
 		fread(&block, sizeof(int32_t), 1, frame_header_file);
 		fread(&width, sizeof(int32_t), 1, frame_header_file);
 		fread(&height, sizeof(int32_t), 1, frame_header_file);
+		for (int i = 0; i < height / block; i++) {
+			fread(&QP_ROW[i], sizeof(int32_t), 1, frame_header_file);
+		}
 
 		if (FrameType == PFRAME) {
 			// Go to the beginning of the previous reconstructed frame and copy it to buffer
@@ -262,6 +272,9 @@ int main(int argCnt, char **args)
 		// Apply Decode Operations on Each Block
 		for (int row = 0; row < height; row += block) {
 			for (int col = 0; col < width; col += block) {
+				if (col == 0) {
+					QP = QP_ROW[row / block];
+				}
 				// IDEALLY THREAD EVERYTHING IN THIS FOR LOOP FOR PFRAMES
 				if (MDIFF_VECTOR[row / block][col / block].split == 0) {
 					// SCALE
