@@ -715,23 +715,12 @@ int main(int argCnt, char **args)
 
 			}*/
 		}
-	/*	write_mat(reffile, REF_FRAME_2D, height, width);
-		write_mat3(decresfile, DEC_RES_FRAME_2D, height, width);
-		write_mat2(dectcfile, DEC_TC_FRAME_2D, height, width);
-		write_mat2(encfile, ENC_TC_FRAME_2D, height, width);
-		write_mat2(encresfile, ENC_RES_FRAME_2D, height, width);
-		write_mat(reconfile, REC_FINAL_FRAME_2D, height, width);
-		write_mat(prevreconfile, REC_FINAL_FRAME_2D, height, width);
-		*/
-
 		// File Dumps
 		//RECON
 		uint8_t *REC_FRAME = new uint8_t[FRAME_SIZE];
-//		uint8_t *REC_FRAME_DEBLOCK = new uint8_t[FRAME_SIZE];
 		for (int row = 0; row < height; row++){
 			for (int col = 0; col < width; col++) {
 				REC_FRAME[col + width*row] = REC_FINAL_FRAME_2D[row][col];
-//				REC_FRAME_DEBLOCK[col + width*row] = REC_FINAL_FRAME_2D[row][col];
 			}
 		}
 
