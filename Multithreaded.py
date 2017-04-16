@@ -31,7 +31,7 @@ qp 			= 5
 i_period 		= 10
 
 # Different Test Cases
-ParallelModes	=	[0]
+ParallelModes	=	[2]
 VBSModes	= 	[1]
 
 for ParallelMode in ParallelModes:
