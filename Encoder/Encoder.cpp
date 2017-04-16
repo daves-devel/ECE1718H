@@ -639,7 +639,7 @@ int main(int argCnt, char **args)
 								ENC_RES_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS,
 								block_split, range, RDOEnable, REC_FINAL_FRAME_2DS, RCflag, SecondPass);
 							//Pick Winner
-							VBSWinner(MDIFF_VECTOR, MDIFF_VECTORS, row, col, block, REC_FINAL_FRAME_2D, REC_FINAL_FRAME_2DS, QTC_FRAME_2D, QTC_FRAME_2DS);
+							VBSWinner(MDIFF_VECTOR, MDIFF_VECTORS, row, col, block, REC_FINAL_FRAME_2D, REC_FINAL_FRAME_2DS, QTC_FRAME_2D, QTC_FRAME_2DS, ENC_TC_FRAME_2D, ENC_RES_FRAME_2DS, DEC_RES_FRAME_2D, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2D, DEC_TC_FRAME_2DS);
 						}//VBSEnable end
 					}
 					else {//RC 3
@@ -663,7 +663,7 @@ int main(int argCnt, char **args)
 								if(SceneChange == 0 && SecondPass == 1)
 									VBSCopy(MDIFF_VECTOR, MDIFF_VECTORS, row, col, block, REC_FINAL_FRAME_2D, REC_FINAL_FRAME_2DS, QTC_FRAME_2D, QTC_FRAME_2DS);
 								else
-									VBSWinner(MDIFF_VECTOR, MDIFF_VECTORS, row, col, block, REC_FINAL_FRAME_2D, REC_FINAL_FRAME_2DS, QTC_FRAME_2D, QTC_FRAME_2DS);
+									VBSWinner(MDIFF_VECTOR, MDIFF_VECTORS, row, col, block, REC_FINAL_FRAME_2D, REC_FINAL_FRAME_2DS, QTC_FRAME_2D, QTC_FRAME_2DS, ENC_TC_FRAME_2D, ENC_RES_FRAME_2DS, DEC_RES_FRAME_2D, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2D, DEC_TC_FRAME_2DS);
 							}
 						}//VBSEnable end
 					}
@@ -755,7 +755,12 @@ int main(int argCnt, char **args)
 			fprintf(bitcountrowfile, "I_FRAME,%d,%d\n",frame, ROW_AVERAGE / (height / block));
 		else
 			fprintf(bitcountrowfile, "P_FRAME,%d,%d\n",frame, ROW_AVERAGE / (height / block));
+
+		for (int i = 0; i < height / block; i++) {
+			//fwrite(&QP_ROW[i], sizeof(int32_t), 1, frame_header_file); Enable after
+		}
 		//Rate Control Dump
+		
 		for (int i = 0; i < height / block; i++) {
 			if (i == 0) {
 				if(FrameType==IFRAME)
@@ -842,6 +847,7 @@ int main(int argCnt, char **args)
 	fclose(reffile);
 	fclose(decresfile);
 	fclose(dectcfile);
+	fclose(frame_header_file);
 	return 0;
 
 }
