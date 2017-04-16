@@ -1,3 +1,5 @@
+#ifndef __INTERFRAMEPREDICTION_H__
+#define __INTERFRAMEPREDICTION_H__
 #include <common.h>
 
 struct MDIFF InterFramePrediction	(uint32_t INTERMODE, uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint8_t** REF_FRAME, int row, int col, int width, int height, int block, int range, int ref, MDIFF** MDIFF_PREVIOUS);
@@ -291,3 +293,4 @@ void VBSWinner(MDIFF** MDIFF_CUR, MDIFF** MDIFF_SPLIT, int row, int col, int blo
 
 }
 
+#endif 

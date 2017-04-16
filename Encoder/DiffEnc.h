@@ -1,3 +1,5 @@
+#ifndef __DIFFENC_H__
+#define __DIFFENC_H__
 #include <common.h>
 void diff_enc(MDIFF** MDIFF_VECTOR, MDIFF** MDIFF_VECTOR_DIFF, int FrameType, int row, int col);
 void diff_enc_wrapper(MDIFF** MDIFF_VECTOR, MDIFF** MDIFF_VECTOR_DIFF, int FrameType, int height, int width, int block, int frame);
@@ -69,3 +71,4 @@ void diff_enc_wrapper(MDIFF** MDIFF_VECTOR, MDIFF** MDIFF_VECTOR_DIFF, int Frame
 				MDIFF_VECTOR_DIFF[row / block][col / block].ref);
 #endif // TRACE_ON
 }
+#endif

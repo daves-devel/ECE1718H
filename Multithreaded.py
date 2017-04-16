@@ -27,11 +27,11 @@ nRefFrames		= 1
 RDOEnable       	= 0
 FMEnable        	= 1
 block 			= 16
-qp 			= 5
+qp 			= 0
 i_period 		= 10
 
 # Different Test Cases
-ParallelModes	=	[0,1]
+ParallelModes	=	[0,1,2,3]
 VBSModes	= 	[0,1]
 
 for ParallelMode in ParallelModes:

@@ -1,3 +1,5 @@
+#ifndef __INTRAFRAMEPREDICTION_H__
+#define __INTRAFRAMEPREDICTION_H__
 #include <common.h>
 
 struct MDIFF IntraFramePrediction(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint8_t** REF_FRAME,uint32_t row, uint32_t col, uint32_t block);
@@ -79,5 +81,5 @@ struct MDIFF IntraFramePrediction(uint8_t** CUR_FRAME, uint8_t** REC_FRAME, uint
 
 	return INTRA_MODE;
 
-
 }
+#endif

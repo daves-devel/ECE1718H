@@ -1,3 +1,5 @@
+#ifndef __ENTROPY_H__
+#define __ENTROPY_H__
 #include <common.h>
 #define EVX_MAX_INT64           (0x7FFFFFFFFFFFFFFF)
 #define EVX_MAX_INT32           (0x7FFFFFFF)
@@ -360,3 +362,5 @@ void fprintf_RLE(FILE* file, int * in, int total_counter, int row, int col) {
 			fprintf(file, "%04d ", in[i]);
 	fprintf(file, "\n");
 }
+
+#endif

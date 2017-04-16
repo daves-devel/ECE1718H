@@ -1,3 +1,5 @@
+#ifndef __RESIDUAL_H__
+#define __RESIDUAL_H__
 #include <common.h>
 void residual(int8_t * residual_mem, uint8_t * frame_mem, int block_size, int frame_width, int frame_height, uint8_t rounding_n, unsigned char** MOTION_FRAME);
 void generate_residual(int8_t* residual_mem, uint8_t* frame_mem, int x, int y, int block_size, int frame_width, uint8_t rounding_n, unsigned char** MOTION_FRAME);
@@ -35,3 +37,4 @@ void GenerateResidualBlock(int32_t ** RES_FRAME, uint8_t** CUR_FRAME, uint8_t** 
 		}
 	}
 }
+#endif

@@ -47,6 +47,7 @@ enum THREAD {
 	SINGLETHREADED = 0,
 	BLOCKTHREADED  = 1,
 	FRAMETHREADED  = 2,
+	SUPERTHREADED  = 3
 };
 struct MDIFF {
 	int X, X2, X3, X4; // For Inter GMV

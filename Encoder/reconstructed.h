@@ -1,3 +1,5 @@
+#ifndef __RECONSTRUCTED_H__
+#define __RECONSTRUCTED_H__
 #include <common.h>
 
 void ReconstructBlock(uint8_t** REC_FRAME,int32_t** RES_FRAME, uint8_t** REF_FRAME,int row, int col, int block);
@@ -15,3 +17,4 @@ void ReconstructBlock(uint8_t** REC_FRAME, int32_t** RES_FRAME, uint8_t** REF_FR
 		}
 	}
 }
+#endif 

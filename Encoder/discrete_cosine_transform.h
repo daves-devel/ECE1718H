@@ -1,3 +1,6 @@
+#ifndef __DCT_H__
+#define __DCT_H__
+
 #include <common.h>
 
 void DCTBlock(int32_t** TC_FRAME, int32_t** RES_FRAME, int row, int col, int block_size);
@@ -42,3 +45,4 @@ void IDCTBlock(int32_t **RES_FRAME, int32_t ** TC_FRAME,int row, int col, int bl
 	}
 }
 
+#endif

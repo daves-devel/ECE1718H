@@ -18,9 +18,6 @@
     <ClCompile Include="..\Encoder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Threadcpp.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\reconstructed.h">
@@ -59,7 +56,13 @@
     <ClInclude Include="..\DiffDec.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="blockthread.h">
+    <ClInclude Include="framethread.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\blockthread.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rowthread.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
