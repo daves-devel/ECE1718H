@@ -757,7 +757,10 @@ int main(int argCnt, char **args)
 			fprintf(bitcountrowfile, "P_FRAME,%d,%d\n",frame, ROW_AVERAGE / (height / block));
 
 		for (int i = 0; i < height / block; i++) {
-			//fwrite(&QP_ROW[i], sizeof(int32_t), 1, frame_header_file); Enable after
+			if(RCflag ==0)
+				fwrite(&QP, sizeof(int32_t), 1, frame_header_file);
+			else
+				fwrite(&QP_ROW[i], sizeof(int32_t), 1, frame_header_file); 
 		}
 		//Rate Control Dump
 		
