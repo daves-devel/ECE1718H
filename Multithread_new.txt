@@ -1,0 +1,284 @@
+FME_ENABLED
+SINGLE_THREADED
+SINGLETHREAD TIME 6.335000
+SINGLETHREAD TIME 7.511000
+SINGLETHREAD TIME 6.317000
+SINGLETHREAD TIME 6.105000
+SINGLETHREAD TIME 6.173000
+SINGLETHREAD TIME 6.091000
+SINGLETHREAD TIME 6.209000
+SINGLETHREAD TIME 6.212000
+SINGLETHREAD TIME 6.307000
+SINGLETHREAD TIME 6.457000
+SINGLETHREAD TIME 6.277000
+SINGLETHREAD TIME 6.169000
+SINGLETHREAD TIME 6.225000
+SINGLETHREAD TIME 6.221000
+SINGLETHREAD TIME 6.181000
+SINGLETHREAD TIME 6.183000
+SINGLETHREAD TIME 6.312000
+SINGLETHREAD TIME 6.154000
+SINGLETHREAD TIME 6.068000
+SINGLETHREAD TIME 6.270000
+SINGLETHREAD TIME 6.071000
+
+LumaExtractor:
+LumaExtractor\Debug\LumaExtractor.exe -frames 21 -filein resource\TestCIF.yuv -width 352 -height 288 -fileout testdata\TestCIF_PMode_0_VBS_0_LumaExtracted_352x288@21f.yuv
+
+LumaPadder:
+LumaPad\Debug\LumaPad.exe -frames 21 -width 352 -height 288 -block 16 -filein testdata\TestCIF_PMode_0_VBS_0_LumaExtracted_352x288@21f.yuv -fileout testdata\TestCIF_PMode_0_VBS_0_LumaPadded_352x288@21f.yuv
+
+Encoder:
+Encoder\Debug\Encoder.exe -width 352 -height 288 -curfile testdata\TestCIF_PMode_0_VBS_0_LumaPadded_352x288@21f.yuv -recfile testdata\TestCIF_PMode_0_VBS_0_Reconstructed_352x288@21f.yuv -mdiff_bitcount_name testdata\TestCIF_PMode_0_VBS_0_MDIFF_BITCOUNT.csv -frames 21 -block 16 -range 16 -coeff_bitcount_name testdata\TestCIF_PMode_0_VBS_0_COEFF_BITCOUNT.csv -qp 5 -i_period 10 -VBSEnable 0 -RDOEnable 0 -frame_header testdata\TestCIF_PMode_0_VBS_0_FRAME_HEADER.txt -FMEnable 1 -runtime_name testdata\TestCIF_PMode_0_VBS_0_RUNTIME.csv -total_bitcount_name testdata\TestCIF_PMode_0_VBS_0_TOTAL_BITCOUNT.csv -ParallelMode 0
+
+Analyze Frames:
+AnalyzeFrame\Debug\AnalyzeFrame.exe -frames 21 -width 352 -height 288 -reffile testdata\TestCIF_PMode_0_VBS_0_LumaPadded_352x288@21f.yuv -decfile testdata\TestCIF_PMode_0_VBS_0_Reconstructed_352x288@21f.yuv -SAD testdata\TestCIF_PMode_0_VBS_0_SAD.csv -PSNR testdata\TestCIF_PMode_0_VBS_0_PSNR.csv
+FME_ENABLED
+SINGLE_THREADED
+VARIABLE_BLOCKSIZE
+SINGLETHREAD TIME 7.923000
+SINGLETHREAD TIME 7.650000
+SINGLETHREAD TIME 7.753000
+SINGLETHREAD TIME 7.797000
+SINGLETHREAD TIME 7.670000
+SINGLETHREAD TIME 7.776000
+SINGLETHREAD TIME 7.788000
+SINGLETHREAD TIME 7.799000
+SINGLETHREAD TIME 7.549000
+SINGLETHREAD TIME 8.873000
+SINGLETHREAD TIME 7.659000
+SINGLETHREAD TIME 7.663000
+SINGLETHREAD TIME 7.586000
+SINGLETHREAD TIME 7.679000
+SINGLETHREAD TIME 8.137000
+SINGLETHREAD TIME 8.134000
+SINGLETHREAD TIME 7.615000
+SINGLETHREAD TIME 7.876000
+SINGLETHREAD TIME 7.885000
+SINGLETHREAD TIME 7.927000
+SINGLETHREAD TIME 7.930000
+
+LumaExtractor:
+LumaExtractor\Debug\LumaExtractor.exe -frames 21 -filein resource\TestCIF.yuv -width 352 -height 288 -fileout testdata\TestCIF_PMode_0_VBS_1_LumaExtracted_352x288@21f.yuv
+
+LumaPadder:
+LumaPad\Debug\LumaPad.exe -frames 21 -width 352 -height 288 -block 16 -filein testdata\TestCIF_PMode_0_VBS_1_LumaExtracted_352x288@21f.yuv -fileout testdata\TestCIF_PMode_0_VBS_1_LumaPadded_352x288@21f.yuv
+
+Encoder:
+Encoder\Debug\Encoder.exe -width 352 -height 288 -curfile testdata\TestCIF_PMode_0_VBS_1_LumaPadded_352x288@21f.yuv -recfile testdata\TestCIF_PMode_0_VBS_1_Reconstructed_352x288@21f.yuv -mdiff_bitcount_name testdata\TestCIF_PMode_0_VBS_1_MDIFF_BITCOUNT.csv -frames 21 -block 16 -range 16 -coeff_bitcount_name testdata\TestCIF_PMode_0_VBS_1_COEFF_BITCOUNT.csv -qp 5 -i_period 10 -VBSEnable 1 -RDOEnable 0 -frame_header testdata\TestCIF_PMode_0_VBS_1_FRAME_HEADER.txt -FMEnable 1 -runtime_name testdata\TestCIF_PMode_0_VBS_1_RUNTIME.csv -total_bitcount_name testdata\TestCIF_PMode_0_VBS_1_TOTAL_BITCOUNT.csv -ParallelMode 0
+
+Analyze Frames:
+AnalyzeFrame\Debug\AnalyzeFrame.exe -frames 21 -width 352 -height 288 -reffile testdata\TestCIF_PMode_0_VBS_1_LumaPadded_352x288@21f.yuv -decfile testdata\TestCIF_PMode_0_VBS_1_Reconstructed_352x288@21f.yuv -SAD testdata\TestCIF_PMode_0_VBS_1_SAD.csv -PSNR testdata\TestCIF_PMode_0_VBS_1_PSNR.csv
+FME_ENABLED
+BLOCK_THREADED
+BLOCKTHREAD TIME 4.281000
+BLOCKTHREAD TIME 4.194000
+BLOCKTHREAD TIME 4.142000
+BLOCKTHREAD TIME 4.099000
+BLOCKTHREAD TIME 4.083000
+BLOCKTHREAD TIME 4.041000
+BLOCKTHREAD TIME 4.145000
+BLOCKTHREAD TIME 4.158000
+BLOCKTHREAD TIME 4.153000
+BLOCKTHREAD TIME 4.080000
+BLOCKTHREAD TIME 4.026000
+BLOCKTHREAD TIME 4.037000
+BLOCKTHREAD TIME 4.089000
+BLOCKTHREAD TIME 4.185000
+BLOCKTHREAD TIME 4.123000
+BLOCKTHREAD TIME 4.104000
+BLOCKTHREAD TIME 4.087000
+BLOCKTHREAD TIME 4.085000
+BLOCKTHREAD TIME 4.072000
+BLOCKTHREAD TIME 4.070000
+BLOCKTHREAD TIME 4.090000
+
+LumaExtractor:
+LumaExtractor\Debug\LumaExtractor.exe -frames 21 -filein resource\TestCIF.yuv -width 352 -height 288 -fileout testdata\TestCIF_PMode_1_VBS_0_LumaExtracted_352x288@21f.yuv
+
+LumaPadder:
+LumaPad\Debug\LumaPad.exe -frames 21 -width 352 -height 288 -block 16 -filein testdata\TestCIF_PMode_1_VBS_0_LumaExtracted_352x288@21f.yuv -fileout testdata\TestCIF_PMode_1_VBS_0_LumaPadded_352x288@21f.yuv
+
+Encoder:
+Encoder\Debug\Encoder.exe -width 352 -height 288 -curfile testdata\TestCIF_PMode_1_VBS_0_LumaPadded_352x288@21f.yuv -recfile testdata\TestCIF_PMode_1_VBS_0_Reconstructed_352x288@21f.yuv -mdiff_bitcount_name testdata\TestCIF_PMode_1_VBS_0_MDIFF_BITCOUNT.csv -frames 21 -block 16 -range 16 -coeff_bitcount_name testdata\TestCIF_PMode_1_VBS_0_COEFF_BITCOUNT.csv -qp 5 -i_period 10 -VBSEnable 0 -RDOEnable 0 -frame_header testdata\TestCIF_PMode_1_VBS_0_FRAME_HEADER.txt -FMEnable 1 -runtime_name testdata\TestCIF_PMode_1_VBS_0_RUNTIME.csv -total_bitcount_name testdata\TestCIF_PMode_1_VBS_0_TOTAL_BITCOUNT.csv -ParallelMode 1
+
+Analyze Frames:
+AnalyzeFrame\Debug\AnalyzeFrame.exe -frames 21 -width 352 -height 288 -reffile testdata\TestCIF_PMode_1_VBS_0_LumaPadded_352x288@21f.yuv -decfile testdata\TestCIF_PMode_1_VBS_0_Reconstructed_352x288@21f.yuv -SAD testdata\TestCIF_PMode_1_VBS_0_SAD.csv -PSNR testdata\TestCIF_PMode_1_VBS_0_PSNR.csv
+FME_ENABLED
+BLOCK_THREADED
+VARIABLE_BLOCKSIZE
+BLOCKTHREAD TIME 4.997000
+BLOCKTHREAD TIME 4.919000
+BLOCKTHREAD TIME 4.782000
+BLOCKTHREAD TIME 4.809000
+BLOCKTHREAD TIME 4.806000
+BLOCKTHREAD TIME 5.068000
+BLOCKTHREAD TIME 4.922000
+BLOCKTHREAD TIME 4.930000
+BLOCKTHREAD TIME 4.812000
+BLOCKTHREAD TIME 4.809000
+BLOCKTHREAD TIME 4.757000
+BLOCKTHREAD TIME 4.860000
+BLOCKTHREAD TIME 4.896000
+BLOCKTHREAD TIME 4.859000
+BLOCKTHREAD TIME 4.913000
+BLOCKTHREAD TIME 4.920000
+BLOCKTHREAD TIME 4.895000
+BLOCKTHREAD TIME 5.067000
+BLOCKTHREAD TIME 4.980000
+BLOCKTHREAD TIME 4.872000
+BLOCKTHREAD TIME 4.863000
+
+LumaExtractor:
+LumaExtractor\Debug\LumaExtractor.exe -frames 21 -filein resource\TestCIF.yuv -width 352 -height 288 -fileout testdata\TestCIF_PMode_1_VBS_1_LumaExtracted_352x288@21f.yuv
+
+LumaPadder:
+LumaPad\Debug\LumaPad.exe -frames 21 -width 352 -height 288 -block 16 -filein testdata\TestCIF_PMode_1_VBS_1_LumaExtracted_352x288@21f.yuv -fileout testdata\TestCIF_PMode_1_VBS_1_LumaPadded_352x288@21f.yuv
+
+Encoder:
+Encoder\Debug\Encoder.exe -width 352 -height 288 -curfile testdata\TestCIF_PMode_1_VBS_1_LumaPadded_352x288@21f.yuv -recfile testdata\TestCIF_PMode_1_VBS_1_Reconstructed_352x288@21f.yuv -mdiff_bitcount_name testdata\TestCIF_PMode_1_VBS_1_MDIFF_BITCOUNT.csv -frames 21 -block 16 -range 16 -coeff_bitcount_name testdata\TestCIF_PMode_1_VBS_1_COEFF_BITCOUNT.csv -qp 5 -i_period 10 -VBSEnable 1 -RDOEnable 0 -frame_header testdata\TestCIF_PMode_1_VBS_1_FRAME_HEADER.txt -FMEnable 1 -runtime_name testdata\TestCIF_PMode_1_VBS_1_RUNTIME.csv -total_bitcount_name testdata\TestCIF_PMode_1_VBS_1_TOTAL_BITCOUNT.csv -ParallelMode 1
+
+Analyze Frames:
+AnalyzeFrame\Debug\AnalyzeFrame.exe -frames 21 -width 352 -height 288 -reffile testdata\TestCIF_PMode_1_VBS_1_LumaPadded_352x288@21f.yuv -decfile testdata\TestCIF_PMode_1_VBS_1_Reconstructed_352x288@21f.yuv -SAD testdata\TestCIF_PMode_1_VBS_1_SAD.csv -PSNR testdata\TestCIF_PMode_1_VBS_1_PSNR.csv
+FME_ENABLED
+FRAME_THREADED
+FRAMETHREAD TIME 9.064000
+FRAMETHREAD TIME 8.758000
+FRAMETHREAD TIME 8.783000
+FRAMETHREAD TIME 8.683000
+FRAMETHREAD TIME 8.851000
+FRAMETHREAD TIME 8.905000
+FRAMETHREAD TIME 8.749000
+FRAMETHREAD TIME 8.737000
+FRAMETHREAD TIME 8.894000
+FRAMETHREAD TIME 8.997000
+FRAMETHREAD TIME 6.142000
+
+LumaExtractor:
+LumaExtractor\Debug\LumaExtractor.exe -frames 21 -filein resource\TestCIF.yuv -width 352 -height 288 -fileout testdata\TestCIF_PMode_2_VBS_0_LumaExtracted_352x288@21f.yuv
+
+LumaPadder:
+LumaPad\Debug\LumaPad.exe -frames 21 -width 352 -height 288 -block 16 -filein testdata\TestCIF_PMode_2_VBS_0_LumaExtracted_352x288@21f.yuv -fileout testdata\TestCIF_PMode_2_VBS_0_LumaPadded_352x288@21f.yuv
+
+Encoder:
+Encoder\Debug\Encoder.exe -width 352 -height 288 -curfile testdata\TestCIF_PMode_2_VBS_0_LumaPadded_352x288@21f.yuv -recfile testdata\TestCIF_PMode_2_VBS_0_Reconstructed_352x288@21f.yuv -mdiff_bitcount_name testdata\TestCIF_PMode_2_VBS_0_MDIFF_BITCOUNT.csv -frames 21 -block 16 -range 16 -coeff_bitcount_name testdata\TestCIF_PMode_2_VBS_0_COEFF_BITCOUNT.csv -qp 5 -i_period 10 -VBSEnable 0 -RDOEnable 0 -frame_header testdata\TestCIF_PMode_2_VBS_0_FRAME_HEADER.txt -FMEnable 1 -runtime_name testdata\TestCIF_PMode_2_VBS_0_RUNTIME.csv -total_bitcount_name testdata\TestCIF_PMode_2_VBS_0_TOTAL_BITCOUNT.csv -ParallelMode 2
+
+Analyze Frames:
+AnalyzeFrame\Debug\AnalyzeFrame.exe -frames 21 -width 352 -height 288 -reffile testdata\TestCIF_PMode_2_VBS_0_LumaPadded_352x288@21f.yuv -decfile testdata\TestCIF_PMode_2_VBS_0_Reconstructed_352x288@21f.yuv -SAD testdata\TestCIF_PMode_2_VBS_0_SAD.csv -PSNR testdata\TestCIF_PMode_2_VBS_0_PSNR.csv
+FME_ENABLED
+FRAME_THREADED
+VARIABLE_BLOCKSIZE
+FRAMETHREAD TIME 11.290000
+FRAMETHREAD TIME 11.044000
+FRAMETHREAD TIME 11.129000
+FRAMETHREAD TIME 11.218000
+FRAMETHREAD TIME 11.069000
+FRAMETHREAD TIME 10.969000
+FRAMETHREAD TIME 11.823000
+FRAMETHREAD TIME 11.430000
+FRAMETHREAD TIME 11.097000
+FRAMETHREAD TIME 10.977000
+FRAMETHREAD TIME 7.638000
+
+LumaExtractor:
+LumaExtractor\Debug\LumaExtractor.exe -frames 21 -filein resource\TestCIF.yuv -width 352 -height 288 -fileout testdata\TestCIF_PMode_2_VBS_1_LumaExtracted_352x288@21f.yuv
+
+LumaPadder:
+LumaPad\Debug\LumaPad.exe -frames 21 -width 352 -height 288 -block 16 -filein testdata\TestCIF_PMode_2_VBS_1_LumaExtracted_352x288@21f.yuv -fileout testdata\TestCIF_PMode_2_VBS_1_LumaPadded_352x288@21f.yuv
+
+Encoder:
+Encoder\Debug\Encoder.exe -width 352 -height 288 -curfile testdata\TestCIF_PMode_2_VBS_1_LumaPadded_352x288@21f.yuv -recfile testdata\TestCIF_PMode_2_VBS_1_Reconstructed_352x288@21f.yuv -mdiff_bitcount_name testdata\TestCIF_PMode_2_VBS_1_MDIFF_BITCOUNT.csv -frames 21 -block 16 -range 16 -coeff_bitcount_name testdata\TestCIF_PMode_2_VBS_1_COEFF_BITCOUNT.csv -qp 5 -i_period 10 -VBSEnable 1 -RDOEnable 0 -frame_header testdata\TestCIF_PMode_2_VBS_1_FRAME_HEADER.txt -FMEnable 1 -runtime_name testdata\TestCIF_PMode_2_VBS_1_RUNTIME.csv -total_bitcount_name testdata\TestCIF_PMode_2_VBS_1_TOTAL_BITCOUNT.csv -ParallelMode 2
+
+Analyze Frames:
+AnalyzeFrame\Debug\AnalyzeFrame.exe -frames 21 -width 352 -height 288 -reffile testdata\TestCIF_PMode_2_VBS_1_LumaPadded_352x288@21f.yuv -decfile testdata\TestCIF_PMode_2_VBS_1_Reconstructed_352x288@21f.yuv -SAD testdata\TestCIF_PMode_2_VBS_1_SAD.csv -PSNR testdata\TestCIF_PMode_2_VBS_1_PSNR.csv
+FME_ENABLED
+SUPER_THREADED
+SUPERTHREAD TIME 5.987000
+SUPERTHREAD TIME 5.708000
+SUPERTHREAD TIME 5.738000
+SUPERTHREAD TIME 5.810000
+SUPERTHREAD TIME 5.639000
+SUPERTHREAD TIME 5.645000
+SUPERTHREAD TIME 5.678000
+SUPERTHREAD TIME 5.687000
+SUPERTHREAD TIME 5.814000
+SUPERTHREAD TIME 5.669000
+SUPERTHREAD TIME 4.121000
+
+LumaExtractor:
+LumaExtractor\Debug\LumaExtractor.exe -frames 21 -filein resource\TestCIF.yuv -width 352 -height 288 -fileout testdata\TestCIF_PMode_3_VBS_0_LumaExtracted_352x288@21f.yuv
+
+LumaPadder:
+LumaPad\Debug\LumaPad.exe -frames 21 -width 352 -height 288 -block 16 -filein testdata\TestCIF_PMode_3_VBS_0_LumaExtracted_352x288@21f.yuv -fileout testdata\TestCIF_PMode_3_VBS_0_LumaPadded_352x288@21f.yuv
+
+Encoder:
+Encoder\Debug\Encoder.exe -width 352 -height 288 -curfile testdata\TestCIF_PMode_3_VBS_0_LumaPadded_352x288@21f.yuv -recfile testdata\TestCIF_PMode_3_VBS_0_Reconstructed_352x288@21f.yuv -mdiff_bitcount_name testdata\TestCIF_PMode_3_VBS_0_MDIFF_BITCOUNT.csv -frames 21 -block 16 -range 16 -coeff_bitcount_name testdata\TestCIF_PMode_3_VBS_0_COEFF_BITCOUNT.csv -qp 5 -i_period 10 -VBSEnable 0 -RDOEnable 0 -frame_header testdata\TestCIF_PMode_3_VBS_0_FRAME_HEADER.txt -FMEnable 1 -runtime_name testdata\TestCIF_PMode_3_VBS_0_RUNTIME.csv -total_bitcount_name testdata\TestCIF_PMode_3_VBS_0_TOTAL_BITCOUNT.csv -ParallelMode 3
+
+Analyze Frames:
+AnalyzeFrame\Debug\AnalyzeFrame.exe -frames 21 -width 352 -height 288 -reffile testdata\TestCIF_PMode_3_VBS_0_LumaPadded_352x288@21f.yuv -decfile testdata\TestCIF_PMode_3_VBS_0_Reconstructed_352x288@21f.yuv -SAD testdata\TestCIF_PMode_3_VBS_0_SAD.csv -PSNR testdata\TestCIF_PMode_3_VBS_0_PSNR.csv
+FME_ENABLED
+SUPER_THREADED
+VARIABLE_BLOCKSIZE
+SUPERTHREAD TIME 7.361000
+SUPERTHREAD TIME 7.131000
+SUPERTHREAD TIME 7.177000
+SUPERTHREAD TIME 7.004000
+SUPERTHREAD TIME 7.023000
+SUPERTHREAD TIME 7.257000
+SUPERTHREAD TIME 7.205000
+SUPERTHREAD TIME 7.074000
+SUPERTHREAD TIME 7.102000
+SUPERTHREAD TIME 7.115000
+SUPERTHREAD TIME 5.085000
+
+LumaExtractor:
+LumaExtractor\Debug\LumaExtractor.exe -frames 21 -filein resource\TestCIF.yuv -width 352 -height 288 -fileout testdata\TestCIF_PMode_3_VBS_1_LumaExtracted_352x288@21f.yuv
+
+LumaPadder:
+LumaPad\Debug\LumaPad.exe -frames 21 -width 352 -height 288 -block 16 -filein testdata\TestCIF_PMode_3_VBS_1_LumaExtracted_352x288@21f.yuv -fileout testdata\TestCIF_PMode_3_VBS_1_LumaPadded_352x288@21f.yuv
+
+Encoder:
+Encoder\Debug\Encoder.exe -width 352 -height 288 -curfile testdata\TestCIF_PMode_3_VBS_1_LumaPadded_352x288@21f.yuv -recfile testdata\TestCIF_PMode_3_VBS_1_Reconstructed_352x288@21f.yuv -mdiff_bitcount_name testdata\TestCIF_PMode_3_VBS_1_MDIFF_BITCOUNT.csv -frames 21 -block 16 -range 16 -coeff_bitcount_name testdata\TestCIF_PMode_3_VBS_1_COEFF_BITCOUNT.csv -qp 5 -i_period 10 -VBSEnable 1 -RDOEnable 0 -frame_header testdata\TestCIF_PMode_3_VBS_1_FRAME_HEADER.txt -FMEnable 1 -runtime_name testdata\TestCIF_PMode_3_VBS_1_RUNTIME.csv -total_bitcount_name testdata\TestCIF_PMode_3_VBS_1_TOTAL_BITCOUNT.csv -ParallelMode 3
+
+Analyze Frames:
+AnalyzeFrame\Debug\AnalyzeFrame.exe -frames 21 -width 352 -height 288 -reffile testdata\TestCIF_PMode_3_VBS_1_LumaPadded_352x288@21f.yuv -decfile testdata\TestCIF_PMode_3_VBS_1_Reconstructed_352x288@21f.yuv -SAD testdata\TestCIF_PMode_3_VBS_1_SAD.csv -PSNR testdata\TestCIF_PMode_3_VBS_1_PSNR.csv
+
+TestCIF_PMode_0_VBS_0
+=======================
+codec_engine.py -infile resource\TestCIF.yuv -testname TestCIF_PMode_0_VBS_0 -width 352 -height 288 -frames 21 -searchrange 16 -nRefFrames 1 -VBSEnable 0 -RDOEnable 0 -FMEnable 1 -block 16 -qp 5 -i_period 10 -ParallelMode 0
+
+
+TestCIF_PMode_0_VBS_1
+=======================
+codec_engine.py -infile resource\TestCIF.yuv -testname TestCIF_PMode_0_VBS_1 -width 352 -height 288 -frames 21 -searchrange 16 -nRefFrames 1 -VBSEnable 1 -RDOEnable 0 -FMEnable 1 -block 16 -qp 5 -i_period 10 -ParallelMode 0
+
+
+TestCIF_PMode_1_VBS_0
+=======================
+codec_engine.py -infile resource\TestCIF.yuv -testname TestCIF_PMode_1_VBS_0 -width 352 -height 288 -frames 21 -searchrange 16 -nRefFrames 1 -VBSEnable 0 -RDOEnable 0 -FMEnable 1 -block 16 -qp 5 -i_period 10 -ParallelMode 1
+
+
+TestCIF_PMode_1_VBS_1
+=======================
+codec_engine.py -infile resource\TestCIF.yuv -testname TestCIF_PMode_1_VBS_1 -width 352 -height 288 -frames 21 -searchrange 16 -nRefFrames 1 -VBSEnable 1 -RDOEnable 0 -FMEnable 1 -block 16 -qp 5 -i_period 10 -ParallelMode 1
+
+
+TestCIF_PMode_2_VBS_0
+=======================
+codec_engine.py -infile resource\TestCIF.yuv -testname TestCIF_PMode_2_VBS_0 -width 352 -height 288 -frames 21 -searchrange 16 -nRefFrames 1 -VBSEnable 0 -RDOEnable 0 -FMEnable 1 -block 16 -qp 5 -i_period 10 -ParallelMode 2
+
+
+TestCIF_PMode_2_VBS_1
+=======================
+codec_engine.py -infile resource\TestCIF.yuv -testname TestCIF_PMode_2_VBS_1 -width 352 -height 288 -frames 21 -searchrange 16 -nRefFrames 1 -VBSEnable 1 -RDOEnable 0 -FMEnable 1 -block 16 -qp 5 -i_period 10 -ParallelMode 2
+
+
+TestCIF_PMode_3_VBS_0
+=======================
+codec_engine.py -infile resource\TestCIF.yuv -testname TestCIF_PMode_3_VBS_0 -width 352 -height 288 -frames 21 -searchrange 16 -nRefFrames 1 -VBSEnable 0 -RDOEnable 0 -FMEnable 1 -block 16 -qp 5 -i_period 10 -ParallelMode 3
+
+
+TestCIF_PMode_3_VBS_1
+=======================
+codec_engine.py -infile resource\TestCIF.yuv -testname TestCIF_PMode_3_VBS_1 -width 352 -height 288 -frames 21 -searchrange 16 -nRefFrames 1 -VBSEnable 1 -RDOEnable 0 -FMEnable 1 -block 16 -qp 5 -i_period 10 -ParallelMode 3
+

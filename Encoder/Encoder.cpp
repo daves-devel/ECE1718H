@@ -177,7 +177,6 @@ int main(int argCnt, char **args){
 	FILE* frame_header_file		= fopen(frame_header_name, "w+b");
 	FILE* recfile				= fopen(recfile_name, "w+b");
 	FILE* runtime_file			= fopen(runtime_name, "w");
-	FILE* bitcountrowfile		= fopen(bitcount_row_name, "w");
 	FILE* reffile				= fopen("ref_enc.csv", "w");
 	FILE* dectcfile				= fopen("dec_tc_enc.csv", "w");
 	FILE* decresfile			= fopen("dec_res_enc.csv", "w");
@@ -208,7 +207,6 @@ int main(int argCnt, char **args){
 	// Regular Block Size 2ND FRAME
 	uint8_t** CUR_FRAME_2D_2ND		= new uint8_t*[height];
 	uint8_t** CUR_REC_FRAME_2D_2ND	= new uint8_t*[height];
-	uint8_t** PREV_REC_FRAME_2D_2ND	= new uint8_t*[height];
 	uint8_t** REF_FRAME_2D_2ND		= new uint8_t*[height];
 	int32_t** ENC_RES_FRAME_2D_2ND	= new int32_t*[height];
 	int32_t** ENC_TC_FRAME_2D_2ND	= new int32_t*[height];
@@ -232,7 +230,6 @@ int main(int argCnt, char **args){
 	// Split Block Size 2ND FRAME
 	uint8_t** CUR_FRAME_2DS_2ND		= new uint8_t*[height];
 	uint8_t** CUR_REC_FRAME_2DS_2ND	= new uint8_t*[height];
-	uint8_t** PREV_REC_FRAME_2DS_2ND= new uint8_t*[height];
 	uint8_t** REF_FRAME_2DS_2ND		= new uint8_t*[height];
 	int32_t** ENC_RES_FRAME_2DS_2ND	= new int32_t*[height];
 	int32_t** ENC_TC_FRAME_2DS_2ND	= new int32_t*[height];
@@ -258,7 +255,6 @@ int main(int argCnt, char **args){
 		// Regular Block Size 2ND FRAME
 		CUR_FRAME_2D_2ND[row]		= new uint8_t[width];
 		CUR_REC_FRAME_2D_2ND[row]	= new uint8_t[width];
-		PREV_REC_FRAME_2D_2ND[row]	= new uint8_t[width];
 		REF_FRAME_2D_2ND[row]		= new uint8_t[width];
 		ENC_RES_FRAME_2D_2ND[row]	= new int32_t[width];
 		ENC_TC_FRAME_2D_2ND[row]	= new int32_t[width];
@@ -282,7 +278,6 @@ int main(int argCnt, char **args){
 		// Split Block Size 2ND FRAME
 		CUR_FRAME_2DS_2ND[row]		= new uint8_t[width];
 		CUR_REC_FRAME_2DS_2ND[row]	= new uint8_t[width];
-		PREV_REC_FRAME_2DS_2ND[row]	= new uint8_t[width];
 		REF_FRAME_2DS_2ND[row]		= new uint8_t[width];
 		ENC_RES_FRAME_2DS_2ND[row]	= new int32_t[width];
 		ENC_TC_FRAME_2DS_2ND[row]	= new int32_t[width];
@@ -537,7 +532,6 @@ int main(int argCnt, char **args){
 			// File Dumps
 			// ================================================
 
-		
 			// Reconstructed Frames
 			uint8_t *REC_FRAME = new uint8_t[FRAME_SIZE];
 			for (int row = 0; row < height; row++)
@@ -546,7 +540,7 @@ int main(int argCnt, char **args){
 			fclose(recfile);//Weird behavior need to close file
 			recfile = fopen(recfile_name, "a+b");
 			fwrite(REC_FRAME, sizeof(uint8_t), FRAME_SIZE, recfile);
-
+			delete REC_FRAME;
 			// Bitcount Per frame
 			fprintf(coeff_bitcount_file, "%d,%d\n", frame, coeff_bitcount);
 			fprintf(mdiff_bitcount_file, "%d,%d\n", frame, mdiff_bitcount);
@@ -605,6 +599,7 @@ int main(int argCnt, char **args){
 
 			// 2ND FRAME OPERATIONS
 			// ====================================================================
+
 			if (!((frames % 2) && (frame + 1 == frames))) { // Encoding an Additional Frame
 
 				if (((frame + 1) % i_period) == 0) {
@@ -641,10 +636,10 @@ int main(int argCnt, char **args){
 
 			if  ((frames % 2)&& (frame + 1 == frames)) { // ODD Frames so Only ENCODE 1 FRAME
 				
-
+				start_time = clock();// GetTickCount();
 				for (int row = 0; row < height; row += 2*block) {
 
-					std::thread Frame1Rows(RowThread, row, 0,
+					std::thread Frame1Rows(RowThread, row,
 						width, height, FrameType, INTERMODE, ParallelMode, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
 						CUR_FRAME_2D, CUR_REC_FRAME_2D, PREV_REC_FRAME_2D, REF_FRAME_2D, ENC_RES_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,
 						CUR_FRAME_2DS, CUR_REC_FRAME_2DS, PREV_REC_FRAME_2DS, REF_FRAME_2DS, ENC_RES_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS,
@@ -654,14 +649,19 @@ int main(int argCnt, char **args){
 					Frame1Rows.join();
 
 				}
+				if (ParallelMode == FRAMETHREADED)
+					printf("FRAMETHREAD TIME %f\n", (double)(clock() - start_time) / CLOCKS_PER_SEC);
+				if (ParallelMode == SUPERTHREADED)
+					printf("SUPERTHREAD TIME %f\n", (double)(clock() - start_time) / CLOCKS_PER_SEC);
 			}
 			else {// DO 2 FRAMES
 
-				for (int row = 0; row <= height; row += 2 * block) {
+				start_time = clock();// GetTickCount();
+				for (int row = 0; row < height + 4 *block; row += 2 * block) {
 
-					if (row == 0) {// First 2 Rows of FRAME 1 ONLY
+					if (row < 4*block) {// First 4 Block Rows of FRAME 1 ONLY
 
-						std::thread Frame1Rows(RowThread,row, 0,
+						std::thread Frame1Rows(RowThread,row,
 							width, height, FrameType, INTERMODE, ParallelMode, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
 							CUR_FRAME_2D, CUR_REC_FRAME_2D, PREV_REC_FRAME_2D, REF_FRAME_2D, ENC_RES_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,
 							CUR_FRAME_2DS, CUR_REC_FRAME_2DS, PREV_REC_FRAME_2DS, REF_FRAME_2DS, ENC_RES_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS,
@@ -670,29 +670,29 @@ int main(int argCnt, char **args){
 
 						Frame1Rows.join();
 					}
-					else if (row == height) {// Last 2 Rows of FRAME 2 ONLY
+					else if (row >= height) {// Last 4 Block Rows of FRAME 2 ONLY
 						
-						std::thread Frame2Rows(RowThread, row - (2 * block), 0,
+						std::thread Frame2Rows(RowThread, row - (4 * block), 
 							width, height, Frame2Type, INTERMODE, ParallelMode, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
 							CUR_FRAME_2D_2ND, CUR_REC_FRAME_2D_2ND, CUR_REC_FRAME_2D, REF_FRAME_2D_2ND, ENC_RES_FRAME_2D_2ND, ENC_TC_FRAME_2D_2ND, DEC_RES_FRAME_2D_2ND, DEC_TC_FRAME_2D_2ND, QTC_FRAME_2D_2ND, QP_FRAME_2D_2ND,
-							CUR_FRAME_2DS_2ND, CUR_REC_FRAME_2DS_2ND, CUR_REC_FRAME_2DS, REF_FRAME_2DS_2ND, ENC_RES_FRAME_2DS_2ND, ENC_TC_FRAME_2DS_2ND, DEC_RES_FRAME_2DS_2ND, DEC_TC_FRAME_2DS_2ND, QTC_FRAME_2DS_2ND, QP_FRAME_2DS_2ND,
+							CUR_FRAME_2DS_2ND, CUR_REC_FRAME_2DS_2ND, CUR_REC_FRAME_2D, REF_FRAME_2DS_2ND, ENC_RES_FRAME_2DS_2ND, ENC_TC_FRAME_2DS_2ND, DEC_RES_FRAME_2DS_2ND, DEC_TC_FRAME_2DS_2ND, QTC_FRAME_2DS_2ND, QP_FRAME_2DS_2ND,
 							MDIFF_VECTOR_2ND, MDIFF_VECTOR_DIFF_2ND, MDIFF_VECTORS_2ND, MDIFF_VECTOR_DIFFS_2ND
 						);
 						Frame2Rows.join();
 
 					}
-					else {// Do 2 Rows of BOTH FRAMES
+					else {// Do 2 Block Rows of BOTH FRAMES
 
-						std::thread Frame1Rows(RowThread, row, 0,
+						std::thread Frame1Rows(RowThread, row,
 							width, height, FrameType, INTERMODE, ParallelMode, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
 							CUR_FRAME_2D, CUR_REC_FRAME_2D, PREV_REC_FRAME_2D, REF_FRAME_2D, ENC_RES_FRAME_2D, ENC_TC_FRAME_2D, DEC_RES_FRAME_2D, DEC_TC_FRAME_2D, QTC_FRAME_2D, QP_FRAME_2D,
 							CUR_FRAME_2DS, CUR_REC_FRAME_2DS, PREV_REC_FRAME_2DS, REF_FRAME_2DS, ENC_RES_FRAME_2DS, ENC_TC_FRAME_2DS, DEC_RES_FRAME_2DS, DEC_TC_FRAME_2DS, QTC_FRAME_2DS, QP_FRAME_2DS,
 							MDIFF_VECTOR, MDIFF_VECTOR_DIFF, MDIFF_VECTORS, MDIFF_VECTOR_DIFFS
 						);
-						std::thread Frame2Rows(RowThread, row - (2 * block), 0,
+						std::thread Frame2Rows(RowThread, row - (4 * block),
 							width, height, Frame2Type, INTERMODE, ParallelMode, range, range_split, block, block_split, i_period, QP, RDOEnable, FMEnable,
 							CUR_FRAME_2D_2ND, CUR_REC_FRAME_2D_2ND, CUR_REC_FRAME_2D, REF_FRAME_2D_2ND, ENC_RES_FRAME_2D_2ND, ENC_TC_FRAME_2D_2ND, DEC_RES_FRAME_2D_2ND, DEC_TC_FRAME_2D_2ND, QTC_FRAME_2D_2ND, QP_FRAME_2D_2ND,
-							CUR_FRAME_2DS_2ND, CUR_REC_FRAME_2DS_2ND, CUR_REC_FRAME_2DS, REF_FRAME_2DS_2ND, ENC_RES_FRAME_2DS_2ND, ENC_TC_FRAME_2DS_2ND, DEC_RES_FRAME_2DS_2ND, DEC_TC_FRAME_2DS_2ND, QTC_FRAME_2DS_2ND, QP_FRAME_2DS_2ND,
+							CUR_FRAME_2DS_2ND, CUR_REC_FRAME_2DS_2ND, CUR_REC_FRAME_2D, REF_FRAME_2DS_2ND, ENC_RES_FRAME_2DS_2ND, ENC_TC_FRAME_2DS_2ND, DEC_RES_FRAME_2DS_2ND, DEC_TC_FRAME_2DS_2ND, QTC_FRAME_2DS_2ND, QP_FRAME_2DS_2ND,
 							MDIFF_VECTOR_2ND, MDIFF_VECTOR_DIFF_2ND, MDIFF_VECTORS_2ND, MDIFF_VECTOR_DIFFS_2ND
 						);
 
@@ -700,10 +700,11 @@ int main(int argCnt, char **args){
 						Frame2Rows.join();
 
 					}
-
 				}
-
-
+				if (ParallelMode == FRAMETHREADED)
+					printf("FRAMETHREAD TIME %f\n", (double)(clock() - start_time) / CLOCKS_PER_SEC);
+				if (ParallelMode == SUPERTHREADED)
+					printf("SUPERTHREAD TIME %f\n", (double)(clock() - start_time) / CLOCKS_PER_SEC);
 			}
 
 			// 1ST FRAME Differential and Entropy Encode steps 
@@ -743,7 +744,7 @@ int main(int argCnt, char **args){
 			fclose(recfile);//Weird behavior need to close file
 			recfile = fopen(recfile_name, "a+b");
 			fwrite(REC_FRAME, sizeof(uint8_t), FRAME_SIZE, recfile);
-
+			delete REC_FRAME;
 			// Bitcount Per frame
 			fprintf(coeff_bitcount_file, "%d,%d\n", frame, coeff_bitcount);
 			fprintf(mdiff_bitcount_file, "%d,%d\n", frame, mdiff_bitcount);
@@ -765,10 +766,10 @@ int main(int argCnt, char **args){
 				for (int row = 0; row < height; row += block) {
 					for (int col = 0; col < width; col += block) {
 						int bitcount_temp = 0;
-						bitcount_temp = entropy_wrapper(QTC_FRAME_2D_2ND, block, height, width, frame+1, row, col);
+						bitcount_temp = entropy_wrapper(QTC_FRAME_2D_2ND, block, height, width, (frame + 1), row, col);
 						coeff_bitcount = coeff_bitcount + bitcount_temp;
-						diff_enc_wrapper(MDIFF_VECTOR_2ND, MDIFF_VECTOR_DIFF_2ND, Frame2Type, height, width, block, frame+1, row, col);
-						bitcount_temp = encode_mdiff_wrapper(MDIFF_VECTOR_DIFF_2ND, MDIFF_VECTOR_2ND, height, width, block, frame+1, Frame2Type, row, col);
+						diff_enc_wrapper(MDIFF_VECTOR_2ND, MDIFF_VECTOR_DIFF_2ND, Frame2Type, height, width, block, (frame + 1), row, col);
+						bitcount_temp = encode_mdiff_wrapper(MDIFF_VECTOR_DIFF_2ND, MDIFF_VECTOR_2ND, height, width, block, (frame + 1), Frame2Type, row, col);
 						mdiff_bitcount = mdiff_bitcount + bitcount_temp;
 					}
 				}
@@ -790,7 +791,7 @@ int main(int argCnt, char **args){
 				fclose(recfile);//Weird behavior need to close file
 				recfile = fopen(recfile_name, "a+b");
 				fwrite(REC_FRAME, sizeof(uint8_t), FRAME_SIZE, recfile);
-
+				delete REC_FRAME;
 				// Bitcount Per frame
 				fprintf(coeff_bitcount_file, "%d,%d\n", frame + 1, coeff_bitcount);
 				fprintf(mdiff_bitcount_file, "%d,%d\n", frame + 1, mdiff_bitcount);
@@ -824,7 +825,6 @@ int main(int argCnt, char **args){
 		// Regular Block Size 2ND FRAME
 		delete CUR_FRAME_2D_2ND[row];
 		delete CUR_REC_FRAME_2D_2ND[row];
-		delete PREV_REC_FRAME_2D_2ND[row];
 		delete REF_FRAME_2D_2ND[row];
 		delete ENC_RES_FRAME_2D_2ND[row];
 		delete ENC_TC_FRAME_2D_2ND[row];
@@ -848,7 +848,6 @@ int main(int argCnt, char **args){
 		// Split Block Size 2ND FRAME 
 		delete CUR_FRAME_2DS_2ND[row];
 		delete CUR_REC_FRAME_2DS_2ND[row];
-		delete PREV_REC_FRAME_2DS_2ND[row];
 		delete REF_FRAME_2DS_2ND[row];
 		delete ENC_RES_FRAME_2DS_2ND[row];
 		delete ENC_TC_FRAME_2DS_2ND[row];
@@ -874,7 +873,6 @@ int main(int argCnt, char **args){
 	// Regular Block Size 2ND FRAME
 	delete CUR_FRAME_2D_2ND;
 	delete CUR_REC_FRAME_2D_2ND;
-	delete PREV_REC_FRAME_2D_2ND;
 	delete REF_FRAME_2D_2ND;
 	delete ENC_RES_FRAME_2D_2ND;
 	delete ENC_TC_FRAME_2D_2ND;
@@ -898,7 +896,6 @@ int main(int argCnt, char **args){
 	// Split Block Size 2ND FRAME 
 	delete CUR_FRAME_2DS_2ND;
 	delete CUR_REC_FRAME_2DS_2ND;
-	delete PREV_REC_FRAME_2DS_2ND;
 	delete REF_FRAME_2DS_2ND;
 	delete ENC_RES_FRAME_2DS_2ND;
 	delete ENC_TC_FRAME_2DS_2ND;

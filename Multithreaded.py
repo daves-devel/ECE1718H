@@ -21,17 +21,17 @@ FMEnable        	= 0
 infile			= "resource\\TestCIF.yuv"
 width			= 352
 height 			= 288
-frames			= 21
-searchrange		= 8
+frames			= 2
+searchrange		= 16
 nRefFrames		= 1
 RDOEnable       	= 0
-FMEnable        	= 1
+FMEnable        	= 0
 block 			= 16
 qp 			= 5
 i_period 		= 10
 
 # Different Test Cases
-ParallelModes	=	[2]
+ParallelModes	=	[0,2]
 VBSModes	= 	[1]
 
 for ParallelMode in ParallelModes:

@@ -83,7 +83,7 @@ int main(int argCnt, char **args)
 
 		for (int pixel = 0; pixel < FRAME_SIZE; pixel++) {
 			if (REF_FRAME[pixel] != DEC_FRAME[pixel]) {
-				printf("Frame %d does not match on pixel %d\n", frame + 1, pixel);
+				printf("\n========================================\nERROR:Frame %d does not match on pixel %d\n========================================\n", frame + 1, pixel);
 				exit(-1);
 			}
 		}
